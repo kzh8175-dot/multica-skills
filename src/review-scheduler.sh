@@ -19,6 +19,8 @@ PROFILES_DIR="$SCRIPT_DIR/../profiles"
 REVIEW_DIR="$SCRIPT_DIR/../reviews"
 ARCHIVE_DIR="$SCRIPT_DIR/../archive"
 SCORING_DIR="$REVIEW_DIR/scoring"
+# P1-10 防失真修正层（纯函数模块，与调度器同目录）
+ANTI_RULES="$SCRIPT_DIR/anti-distortion-rules.py"
 
 # 颜色定义
 GREEN='\033[0;32m'
@@ -388,36 +390,30 @@ calc_monthly_score() {
     echo "$total $benchmark $score"
 }
 
-# 校验防失真规则（R-71, R-72）
+# 校验防失真规则（R-71, R-72）— P1-10 修订版
+# 修复 B1：只统计季度内 3 个月（旧实现匹配全年 12 个月）；
+# 修复 B2：委托 anti-distortion-rules.py 按结构化事件 ID（R-31/R-32）计数，
+#         不再依赖 '红线|违规|-20' 文本 grep。
+# 输出 summarize() 摘要（两行），供人评表单「四、防失真校验」区渲染。
 check_anti_fraud() {
     local agent_name="$1"
-    local quarter_dir="$SCORING_DIR/events/${agent_name}"
-    local redline_count=0 self_review_missing=0
-
-    # 统计本季度违规次数（R-31 事件 = -20 大额扣分）
-    local rc=0 sr=0
-    for mf in "$quarter_dir"/$(date +"%Y")-??.md; do
-        [ -f "$mf" ] || continue
-        rc=$(grep -cE '红线|违规|-20' "$mf" 2>/dev/null); rc=${rc:-0}
-        sr=$(grep -cE '未提交自评|R-32' "$mf" 2>/dev/null); sr=${sr:-0}
-        redline_count=$((redline_count + rc))
-        self_review_missing=$((self_review_missing + sr))
+    local q_start_month=$(( QUARTER_END_MONTH - 2 ))
+    local months_csv="" m i
+    for i in 0 1 2; do
+        m="$(date +"%Y")-$(printf "%02d" $((q_start_month + i)))"
+        if [ -n "$months_csv" ]; then months_csv="$months_csv,$m"; else months_csv="$m"; fi
     done
 
-    local flags=""
-    flags="红线计数=${redline_count}次"
-    if [ "$redline_count" -ge 2 ]; then
-        flags="${flags}|触发一票否决(R-71):等级上限C "
+    # fail-open：python3/模块不可用时按 0 计（与 anti-distortion-rules.py 口径一致）
+    local fallback=$'R-31 红线事件: 0 次（阈值 2）→ 未触发\nR-32 缺自评事件: 0 次（阈值 2）→ 未触发'
+    if command -v python3 >/dev/null 2>&1 && [ -f "$ANTI_RULES" ]; then
+        python3 "$ANTI_RULES" check \
+            --events-dir "$SCORING_DIR/events" \
+            --agent "$agent_name" \
+            --months "$months_csv" 2>/dev/null || printf '%s\n' "$fallback"
     else
-        flags="${flags}|未触发(需≥2次)"
+        printf '%s\n' "$fallback"
     fi
-    flags="${flags} | 自评缺失计数=${self_review_missing}次"
-    if [ "$self_review_missing" -ge 2 ]; then
-        flags="${flags}|触发降档(R-72):等级降一档"
-    else
-        flags="${flags}|未触发(需≥2次)"
-    fi
-    echo "$flags"
 }
 
 # 生成季度人评表单
@@ -532,8 +528,7 @@ perform_quarterly_review() {
 
 ## 四、防失真校验（自动）
 
-- [ ] 红线一票否决检查: $fraud_flags
-- [ ] 自评缺失检查: （累计未提交自评次数）
+$(printf '%s\n' "$fraud_flags" | sed 's/^/- [ ] /')
 - [ ] 人评评分人 ≥ 2: （人数）
 - [ ] 人评未含"效率"维度: 通过（模板已剔除）
 

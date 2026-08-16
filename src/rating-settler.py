@@ -189,12 +189,17 @@ def get_event_month(meta):
     return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
-def _issue_credited_globally(issue_id, month):
-    """跨文件全局去重：检查 issue 是否已写入任意智能体的同月流水。
+def _issue_credited_globally(issue_id, event, month):
+    """跨文件全局去重：检查 (issue_id, rating.event) 是否已写入任意智能体的同月流水。
 
     修复 F2：E_DUP 原本仅按单文件判断，同一 issue 因 agent 解析差异
     （陈旧映射→未知智能体 vs 实时映射→真实智能体）会写入两个文件，
     聚合器按文件独立求和导致双计。
+
+    修复 S-1（P1-10/KA-75）：去重键由 issue_id 改为 (issue_id, rating.event)。
+    同一 issue 可承载多个不同事件（如 R-21 自评 + R-31 违反约束），不再被
+    E_DUP 拦截；同一 (issue, 事件) 仍只写一次，保持「跨文件不双计」的
+    防聚合双计属性（同一 issue 的归属解析是确定性的，事件不会跨智能体分裂）。
     """
     if not os.path.isdir(EVENTS_DIR):
         return False
@@ -202,9 +207,11 @@ def _issue_credited_globally(issue_id, month):
         f = os.path.join(EVENTS_DIR, agent_dir, f"{month}.md")
         if os.path.isfile(f):
             try:
-                with open(f) as fh:
-                    if issue_id in fh.read():
-                        return True
+                with open(f, encoding="utf-8") as fh:
+                    for line in fh:
+                        fields = [x.strip() for x in line.strip().strip("|").split("|")]
+                        if len(fields) >= 3 and fields[1] == issue_id and fields[2] == event:
+                            return True
             except OSError:
                 continue
     return False
@@ -225,12 +232,13 @@ def append_to_events(agent_name, month, issue_id, meta):
                 f.write("| 时间 | 任务 | 事件 | 积分 |\n")
                 f.write("|------|------|------|:---:|\n")
 
-        # 去重检查（跨文件全局：同一 issue 不得计入多个智能体，防聚合双计）
-        if _issue_credited_globally(issue_id, month):
-            return False, E_DUP, f"issue {issue_id} 已存在于流水（全局去重）"
+        # 去重检查（跨文件全局：(issue_id, rating.event) 同一事件不得双计，
+        # 防聚合双计；同一 issue 不同事件允许共存 —— S-1 修复）
+        event_desc = meta.get("rating.event", "?")
+        if _issue_credited_globally(issue_id, event_desc, month):
+            return False, E_DUP, f"issue {issue_id} 事件 {event_desc} 已存在于流水（全局去重）"
 
         # 确定任务标识
-        event_desc = meta.get("rating.event", "?")
         points = meta["rating.points"]
         ts = meta.get("rating.occurred_at", "")[:16].replace("T", " ")
 

@@ -28,7 +28,7 @@ import tempfile
 import unittest
 
 AGGREGATOR = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    os.path.dirname(os.path.abspath(__file__)),
     "rating-aggregator.py",
 ))
 PYTHON = sys.executable

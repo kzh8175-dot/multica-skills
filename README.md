@@ -19,12 +19,16 @@ agents/
         └── logs/             # 结算/聚合/人评日志
 src/                          # 评分系统核心脚本（P0/P1 交付物）
 ├── rating-aggregator.py      # 聚合器（月度 R-41 / 季度 R-51）
-├── rating-settler.py         # 结算器（每日结算；SRE F1/F2 修复版：实时 agent 映射 + 跨文件全局去重）
+├── rating-settler.py         # 结算器（每日结算；SRE F1/F2 修复版：实时 agent 映射 + 跨文件全局去重 + S-1 (issue,事件) 去重键）
 ├── review-scheduler.sh       # 调度器（含 R-42 description [category=X] 标签解析）
 ├── quarterly-review-judge.py # 季度人评表单自动判定（P1-9：客观/人评/综合/等级 回填）
+├── anti-distortion-rules.py  # 防失真修正层（P1-10：R-71 红线上限 C / R-72 缺自评降档，纯函数）
 ├── test-rating-aggregator.py # 聚合器测试
 ├── test-quarterly-review-judge.py    # 季度人评判定测试（P1-9，20 条用例）
-└── test-review-scheduler-category.sh  # 调度器 category 解析验收测试
+├── test-anti-distortion-rules.py     # 防失真修正层测试（P1-10，19 条用例）
+├── test-rating-settler.py     # 结算器测试（归属解析 6 条 + S-1 去重键 4 条）
+├── test-review-scheduler-category.sh  # 调度器 category 解析验收测试
+└── test-anti-fraud-scheduler.sh       # 调度器 check_anti_fraud 集成验收（P1-10）
 scripts/                      # 运维层（定时任务包装脚本，P0-3）
 ├── run-daily-settlement.sh   # 每日 00:30 结算包装脚本（守卫 + 日志 + 退出码）
 ├── run-monthly-aggregation.sh# 月末聚合包装脚本（守卫：当月最后一天）

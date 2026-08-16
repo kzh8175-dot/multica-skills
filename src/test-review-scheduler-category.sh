@@ -13,7 +13,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCHEDULER="$SCRIPT_DIR/../review-scheduler.sh"
+SCHEDULER="$SCRIPT_DIR/review-scheduler.sh"
 
 # 独立缓存文件：保证本次测试自包含、可复现（不依赖外部残留缓存）。
 # source 会按 "$TMPDIR" 初始化缓存路径，故在 source 后统一覆盖该全局变量。
