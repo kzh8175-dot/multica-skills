@@ -11,6 +11,16 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-74 P1-9 季度人评自动判定脚本入库（并发 main 推进 + UPLOAD_MANIFEST 冲突处理）
+- **任务**：代 开发者工具工程师 提交并推送 P1-9 季度人评表单自动判定脚本（`src/quarterly-review-judge.py` + 测试 + 测试报告，20/20 通过）至 `main`，白名单检查 + UPLOAD_MANIFEST 登记。
+- **新技能 / 加深的技能**：
+  - 交接交付物校验流程：`git show --stat <commit>` 核对文件清单 → 逐文件白名单检查 → 跑验收测试 → secret 扫描（password/token/key/绝对路径）→ 再入库。UPLOAD_MANIFEST 行内字段（开发/验收/审批/提交上传需求）按 RACI 口径逐列填齐，并追加「——已通过白名单检查（…）」。
+  - 交付 commit 内已含 UPLOAD_MANIFEST 行（「待提交」占位）时的标准做法：cherry-pick 时**丢弃该行**（保留 main 版本），内容 commit 与清单登记分两个 commit——内容 commit 落 src/docs/README，清单登记 commit 引用内容 commit 真实 hash（沿用 KA-71/KA-73 既定两 commit 模式）。
+  - 并行 run 会推进 main：本次 checkout 后 `origin/main` 从 `87dff7f` 推进到 `13b7d80`（同角色 KA-71 run 补录能力档案 v0.4）。`git diff origin/main HEAD` 多出「非本次改动的文件」时，先 `git rev-parse <ref>:<path>` 逐 ref 比对 blob，再用 `git branch -a --contains <commit>` 定位新 commit，确认是远程推进而非本地意外改动。
+  - push 前必做 `git fetch origin` 复核 `origin/main`；发现推进即 `git rebase origin/main`，rebase 后 commit hash 变化 → **amend 更新 UPLOAD_MANIFEST 行内引用的内容 commit hash 与登记 commit 消息**，避免清单指向旧 hash。
+- **挑战 / 盲区**：`git diff --stat origin/main HEAD` 出现 capabilities.md 的 11 行删除，初看像本地误改；实为 `origin/main` 远程引用已推进（我的分支仍基于旧 main）。判定要点：先确认本地是否真的改过该文件（`git log origin/main..HEAD -- <path>` 为空即非本地改动），再 fetch 对齐远程。
+- **改进**：所有推送前统一 `git fetch` + `git rev-parse origin/main` 与本地 base 比对；交付物入库前先跑一遍验收测试 + secret 扫描再 cherry-pick。
+
 ### 2026-08-17 · KA-71 P1-6 能力档案模板提交入库（并行建档冲突合并）
 - **任务**：代 技术文档撰写者 提交并推送 KA-71 交付物（`agents/capability-system/template.md` 新模板 + `agents/profiles/技术文档撰写者/capabilities.md`）至 `main`，按白名单检查 + UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -56,6 +66,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-74 与 开发者工具工程师 协作（交接 KA-74 P1-9 季度人评自动判定脚本入库），评分 4/5：交付物清单明确（src/测试/报告 + commit hash + 目标分支），测试 20/20 前置通过；改进——交付 commit 内嵌 UPLOAD_MANIFEST「待提交」占位行与 main 既有行冲突，仓库侧需在 cherry-pick 时拆分处理。
 - KA-71 与 技术文档撰写者 协作（交接 KA-71 交付物入库），评分 4/5：交付物附件齐全、目标仓库/分支/用途明确；改进——并行 run 重复建档未预先对齐，入库时需仓库侧合并去重。
 - KA-54 与 DevOps自动化工程师协作（生产提交 fe41250/f7d8c14，仓库复核闭环），评分 4/5：分工清晰、各自职责内快速闭环；改进——仓库侧可先声明同步状态再等对方提交，减少并行窗口。
 - KA-53 无跨智能体协作评分（本任务由资深战略领导者提供执行方案，直接执行）。
@@ -73,3 +84,4 @@
 | 2026-08-17 | v0.2 | 追加 KA-56：README 报告归档说明更新 + Release 链接有效性校验 |
 | 2026-08-17 | v0.3 | 追加 KA-54：仓库==生产 SHA 复核法、实时远程核对、并发 push 处理；协作评分 |
 | 2026-08-17 | v0.4 | 追加 KA-71：并行建档冲突的 cherry-pick 静默覆盖识别与手工合并；协作评分 |
+| 2026-08-17 | v0.5 | 追加 KA-74：交付物入库校验流程（测试+secret 扫描）、并发 main 推进的 blob 比对诊断、rebase 后清单 hash amend；协作评分 |
