@@ -35,8 +35,7 @@ config/
 docs/
 ├── rating-aggregator-test-report.md  # 聚合器测试报告
 └── runbook.md                # 评分系统定时任务 Runbook（P0-3）
-reports/
-└── reports-2026-08-Q3.tar.gz # 58 个智能体月度/季度报告
+reports/                       # 报告为生成产物不入库（已 .gitignore）；归档见「报告归档」节
 ```
 
 ## P0 交付物（评分系统脚本）
@@ -44,6 +43,12 @@ reports/
 - 来源：KA-16（P0-1 聚合器，已验收）、KA-43（调度器 R-42 修复版，代码审查员验收：9 目标一致 / 幂等 / 无回归）、KA-18（P0-3 定时任务部署 cron：包装脚本 + `crontab-rating.conf` + runbook + `audit-events.py`，owner 终审通过 / SRE 条件通过后修复 F1/F2 并回填证据）。
 - 与生产同步：本仓库内容与生产树 `<WORKSPACE>/prod/rating-system/` 保持「仓库 == 生产」一致；生产树 commit `c576a01`（工作区干净）。
 - 待补充：KA-19 P0-4 重试注入测试；KA-20 P0-5 过滤回归报告。
+
+## 报告归档（Release）
+
+月度/季度评分报告为聚合器运行生成的产物，不进入代码仓库，统一归档至 GitHub Release：
+
+- [reports-2026-08-Q3 · P0 评分系统报告归档（116 份月度/季度报告）](https://github.com/kzh8175-dot/multica-skills/releases/tag/reports-2026-08-Q3)
 
 ## 说明
 
