@@ -17,11 +17,13 @@ agents/
         ├── monthly/          # 月度百分制报告（输出）
         ├── quarterly/        # 季度客观分报告（输出）
         └── logs/             # 结算/聚合/人评日志
-src/                          # 评分系统核心脚本（P0 交付物）
+src/                          # 评分系统核心脚本（P0/P1 交付物）
 ├── rating-aggregator.py      # 聚合器（月度 R-41 / 季度 R-51）
 ├── rating-settler.py         # 结算器（每日结算；SRE F1/F2 修复版：实时 agent 映射 + 跨文件全局去重）
 ├── review-scheduler.sh       # 调度器（含 R-42 description [category=X] 标签解析）
+├── quarterly-review-judge.py # 季度人评表单自动判定（P1-9：客观/人评/综合/等级 回填）
 ├── test-rating-aggregator.py # 聚合器测试
+├── test-quarterly-review-judge.py    # 季度人评判定测试（P1-9，20 条用例）
 └── test-review-scheduler-category.sh  # 调度器 category 解析验收测试
 scripts/                      # 运维层（定时任务包装脚本，P0-3）
 ├── run-daily-settlement.sh   # 每日 00:30 结算包装脚本（守卫 + 日志 + 退出码）
@@ -34,6 +36,7 @@ config/
 └── crontab-rating.conf       # 三定时任务 cron 配置（每日结算 / 月末聚合 / 季度人评）
 docs/
 ├── rating-aggregator-test-report.md  # 聚合器测试报告
+├── quarterly-review-judge-test-report.md  # 季度人评自动判定测试报告（P1-9）
 └── runbook.md                # 评分系统定时任务 Runbook（P0-3）
 reports/                       # 报告为生成产物不入库（已 .gitignore）；归档见「报告归档」节
 ```
