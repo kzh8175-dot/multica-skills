@@ -32,6 +32,7 @@
 | 2 | 04:31 | 岗位×技能白名单与禁配规则引擎 v1.0.0：`config/skill-whitelist/`（whitelist.py + README + 规则文档），7 岗位×12 技能类型，已应用到 69 agent 零违规 | 资深战略领导者 | 资深战略领导者（69 agent 校验通过 + 模块自测） | 资深战略领导者（owner 指令） | 资深战略领导者（owner 指令） | 资深战略领导者 | `c9b59e6` |
 | 3 | 05:13 | KA-73 P1-8 负责人评审指引 v1.0（`agents/capability-system/reviewer-guide.md`，行为类事件 16 条 + R-21~R-23 自优化事件，权限边界/命令模板/结算归档流程）+ 技术文档撰写者能力档案建档（`agents/profiles/技术文档撰写者/capabilities.md` v0.1）——已通过白名单检查（项目文档，无敏感信息） | 技术文档撰写者 | 资深战略领导者（验收中，in_review） | 资深战略领导者（P1 计划内交付） | 技术文档撰写者（交接） | GitHub 仓库管理员 | `ab40ca7` |
 | 4 | 05:15 | KA-71 P1-6 能力档案模板加「评分记录」章节：新增 `agents/capability-system/template.md`（全工作室标准模板，R-41 月度百分制 / R-51 季度综合评分 / 等级 / 防失真 / 异常 + `category={...}` 占位，兼容聚合器/调度器正则）；`agents/profiles/技术文档撰写者/capabilities.md` 按新模板更新至 v0.2（并入已入库的 KA-73 学习记录，保留两条学习记录）——已通过白名单检查（项目文档，无敏感信息） | 技术文档撰写者 | 代码审查员（RACI 验收人，in_review 待验收） | 技术文档撰写者（任务交接指令） | 技术文档撰写者（交接） | GitHub 仓库管理员 | `951a776` |
+| 5 | 05:18 | KA-74 P1-9 季度人评表单自动判定：新增 `src/quarterly-review-judge.py`（客观/人评/综合/等级自动判定回填，R-51~R-55 + 防失真 R-71/R-72/E-02，幂等原子写、`--dry-run`/`--status`/`--json`）+ `src/test-quarterly-review-judge.py`（20 条用例全通过）+ `docs/quarterly-review-judge-test-report.md` + README 结构更新——已通过白名单检查（项目代码/测试/文档，无敏感信息） | 开发者工具工程师 | 代码审查员 + 资深战略领导者（RACI 验收人，in_review 待验收） | 资深战略领导者（P1 计划内交付） | 开发者工具工程师（交接） | GitHub 仓库管理员 | `4ad30ac` |
 
 > 说明：本笔提交按 owner 指令由资深战略领导者直接推送 main（非 GitHub 仓库管理员通道），已在 KA-59 完结时记录；仓库 `main` 的 `src/rating-settler.py` 与生产逐字节一致（SHA256 `ae46b041…` 核验）。
 
