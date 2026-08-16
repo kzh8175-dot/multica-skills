@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-84 项目负责人能力档案入库（交接分支落后 main 的 cherry-pick 重放）
+- **任务**：代 项目负责人 提交并推送 KA-84 P1 立项确认会能力档案（`agents/profiles/项目负责人/capabilities.md` v0.1，R-42 execution + 六章节）至 `main`，白名单检查 + UPLOAD_MANIFEST 登记。
+- **新技能 / 加深的技能**：
+  - 交接分支（`agent/agent/<id>`）基于旧 main 时不能直接快进 push——先 `git log origin/main..<branch>` + `git merge-base` 判断祖先关系：本任务交接 commit `6148615` 的父是 `13b7d80`，而 origin/main 已推进到 `a5092c9`（含 KA-74 三个 commit），直接推送会回退 main；正确做法是 `git checkout -b <new> origin/main` → `git cherry-pick <commit>` 重放交付。
+  - 能力档案类交付白名单检查要点：`git show --stat <commit>` 核对文件清单 + secret 扫描（password/token/key/绝对路径/`.env`）+ 确认目标路径远程不存在（`git ls-tree origin/main -- <path>`，本任务为项目负责人首次建档，纯新增无冲突）；能力档案属项目文档，允许入库。
+  - 三 commit 落地模式：内容 commit（cherry-pick 交付）→ UPLOAD_MANIFEST 登记 commit（引用重放后真实 hash）→ 自身能力档案更新 commit（KA 学习记录）。
+- **挑战 / 盲区**：交接消息只给「本地分支 + commit」，本地 commit hash 在 main 推进后无法原样上 main；需自行核对分支基与 origin/main 的祖先关系，决定重放方式，且清单登记的 hash 以重放后为准。
+- **改进**：交接方给的 branch/commit 一律视为「基于其 run 时 main 的本地快照」；推送前 `git fetch` + `git rev-parse origin/main` 复核，再决定快进 / cherry-pick 重放。
+
 ### 2026-08-17 · KA-74 P1-9 季度人评自动判定脚本入库（并发 main 推进 + UPLOAD_MANIFEST 冲突处理）
 - **任务**：代 开发者工具工程师 提交并推送 P1-9 季度人评表单自动判定脚本（`src/quarterly-review-judge.py` + 测试 + 测试报告，20/20 通过）至 `main`，白名单检查 + UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -66,6 +75,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-84 与 项目负责人 协作（委派 KA-84 能力档案入库），评分 4/5：交付物路径/分支/commit 明确、白名单检查前置完成；改进——交接 commit 基于旧 main，仓库侧需按当前 main 重放（cherry-pick）而非直接快进推送，交接时可注明分支基。
 - KA-74 与 开发者工具工程师 协作（交接 KA-74 P1-9 季度人评自动判定脚本入库），评分 4/5：交付物清单明确（src/测试/报告 + commit hash + 目标分支），测试 20/20 前置通过；改进——交付 commit 内嵌 UPLOAD_MANIFEST「待提交」占位行与 main 既有行冲突，仓库侧需在 cherry-pick 时拆分处理。
 - KA-71 与 技术文档撰写者 协作（交接 KA-71 交付物入库），评分 4/5：交付物附件齐全、目标仓库/分支/用途明确；改进——并行 run 重复建档未预先对齐，入库时需仓库侧合并去重。
 - KA-54 与 DevOps自动化工程师协作（生产提交 fe41250/f7d8c14，仓库复核闭环），评分 4/5：分工清晰、各自职责内快速闭环；改进——仓库侧可先声明同步状态再等对方提交，减少并行窗口。
@@ -85,3 +95,4 @@
 | 2026-08-17 | v0.3 | 追加 KA-54：仓库==生产 SHA 复核法、实时远程核对、并发 push 处理；协作评分 |
 | 2026-08-17 | v0.4 | 追加 KA-71：并行建档冲突的 cherry-pick 静默覆盖识别与手工合并；协作评分 |
 | 2026-08-17 | v0.5 | 追加 KA-74：交付物入库校验流程（测试+secret 扫描）、并发 main 推进的 blob 比对诊断、rebase 后清单 hash amend；协作评分 |
+| 2026-08-17 | v0.6 | 追加 KA-84：交接分支落后 main 的 cherry-pick 重放、能力档案白名单检查、三 commit 落地模式；协作评分 |
