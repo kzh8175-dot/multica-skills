@@ -16,8 +16,8 @@ venv/
 # 运行时缓存（调度器写入 ${TMPDIR}）
 multica-agent-cats-*.tmp
 
-# 报告解压产物
-reports/extracted/
+# 报告（生成产物，已归档至 GitHub Release，不入库）
+reports/
 
 # 日志
 *.log
