@@ -79,7 +79,7 @@ class JudgeComputeTest(unittest.TestCase):
         self.assertEqual(j.compute_reviewer_score(dims, 1), 80)
 
     def test_grade_boundaries(self):
-        """R-55 档位边界：95/85/70/60。"""
+        """R-62~R-66 档位边界：95/85/70/60。"""
         j = self.j
         self.assertEqual(j.grade_for(95), "S")
         self.assertEqual(j.grade_for(94.9), "A")
@@ -117,6 +117,10 @@ class JudgeComputeTest(unittest.TestCase):
         self.assertEqual(j.fmt_score(92), "92")
         self.assertEqual(j.fmt_score(90.0), "90")
         self.assertEqual(j.fmt_score(90.5), "90.5")
+        # 浮点尾差：整数综合分不得显示为 X.0
+        self.assertEqual(j.fmt_score(92.00000000000001), "92")
+        self.assertEqual(j.fmt_score(9.000000000000002), "9")
+        self.assertEqual(j.fmt_score(90.50000000000001), "90.5")
 
 
 class JudgeFormTest(unittest.TestCase):
@@ -306,6 +310,9 @@ class JudgeFormTest(unittest.TestCase):
         self.assertEqual(r["grade"], "A")  # 无 E-02 应为 S，单评分人 → A
         text = self.read_form(root)
         self.assertIn("- [ ] 人评评分人 ≥ 2: 1人（E-02 单评分人，等级上限A）", text)
+        # 单评分人时「人评最终分」回填该评分人分数，并标注非平均
+        self.assertIn("（E-02 单评分人，非平均）", text)
+        self.assertIn("**人评最终分** = (评分人1+评分人2)/2 = **100**（E-02 单评分人，非平均）", text)
 
     def test_r71_cap_c(self):
         """R-71 触发（cap_note 上限C）→ S 被压到 C。"""
@@ -336,6 +343,30 @@ class JudgeFormTest(unittest.TestCase):
         text = self.read_form(root)
         self.assertEqual(text.count("☑"), 1)
         self.assertIn("| B | 70-84 | ☑ | 稳定主力 |", text)
+
+    def test_grade_table_resync_on_grade_change(self):
+        """等级变更后重跑 → 旧 ☑ 清除，仅当前行 ☑（纯函数刷新，防残留）。"""
+        root = self.build_root(objective=100, d=[3, 3, 3, 3, 3], e=[3, 3, 3, 3, 3])
+        first = self.judge(root)
+        # 全 3 分 → 人评 60 → 综合 100×0.8+60×0.2=92 → A
+        self.assertEqual(first["grade"], "A")
+        text = self.read_form(root)
+        self.assertEqual(text.count("☑"), 1)
+        self.assertIn("| A | 85-94 | ☑ | 优秀骨干 |", text)
+
+        # 维度分 3→1 → 人评 20 → 综合 84 → B（跨 A/B 档），重跑后 ☑ 应迁移
+        path = os.path.join(root, "reviews", "scoring", "quarterly", AGENT, f"{QUARTER}.md")
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        text = text.replace("| 3 | 3 | |", "| 1 | 1 | |")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+        second = self.judge(root)
+        self.assertEqual(second["grade"], "B")
+        text = self.read_form(root)
+        self.assertEqual(text.count("☑"), 1)  # 旧 A 行 ☑ 已清除
+        self.assertIn("| B | 70-84 | ☑ | 稳定主力 |", text)
+        self.assertNotIn("| A | 85-94 | ☑ |", text)
 
     def test_resync_on_input_change(self):
         """维度分变化后重跑 → 判定同步刷新（输出为输入的纯函数）。"""
@@ -408,6 +439,13 @@ class JudgeCliTest(unittest.TestCase):
         root = self.build_root()
         proc = self.run_cli(root, "--quarter", "bad")
         self.assertEqual(proc.returncode, 2)
+
+    def test_cli_reject_agent_path_traversal(self):
+        """--agent 含路径分隔符 / .. / 空值 → exit 2（防读写 quarterly/ 之外）。"""
+        root = self.build_root()
+        for bad in ("../escape", "..", "a/b", "a\\b", ".", ""):
+            proc = self.run_cli(root, "--agent", bad)
+            self.assertEqual(proc.returncode, 2, f"--agent {bad!r} 应被拒绝")
 
     def build_root(self, objective=75, d=None, e=None):
         root = tempfile.mkdtemp(prefix="ka74-cli-")

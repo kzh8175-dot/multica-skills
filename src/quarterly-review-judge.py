@@ -7,8 +7,8 @@ quarterly-review-judge.py — 季度人评表单自动判定（方案C P1-9 / KA
 自动判定四要素并回填表单：
   1. 客观分   R-51 季度客观分（rating-aggregator.py 写入「一、」区，本脚本只读取）
   2. 人评分   R-52 单评分人 = Σ(维度分 × 权重) × 20；R-53 人评最终分 = 各评分人平均
-  3. 综合分   R-54 客观分 × 0.8 + 人评最终分 × 0.2
-  4. 等级     R-55 查表 S/A/B/C/D，叠加防失真:
+  3. 综合分   R-61 客观分 × 0.8 + 人评最终分 × 0.2
+  4. 等级     R-62~R-66 查表 S/A/B/C/D，叠加防失真:
                 R-71 红线违规≥2 → 等级上限 C
                 R-72 缺自评≥2   → 等级降一档
                 E-02 单评分人   → 等级上限 A
@@ -41,7 +41,7 @@ from datetime import datetime, timezone
 
 # ---------------------------------------------------------------- 规则常量
 
-# R-55 等级表（下限 → 等级）；与 review-scheduler.sh 表单模板一致
+# R-62~R-66 等级表（下限 → 等级）；与 review-scheduler.sh 表单模板一致
 GRADE_TABLE = [
     (95, "S"), (85, "A"), (70, "B"), (60, "C"),
 ]
@@ -215,7 +215,7 @@ def compute_reviewer_score(dims, reviewer_idx):
 
 
 def grade_for(comprehensive):
-    """R-55: 等级查表（综合分 ≥95→S / ≥85→A / ≥70→B / ≥60→C / <60→D）。"""
+    """R-62~R-66: 等级查表（综合分 ≥95→S / ≥85→A / ≥70→B / ≥60→C / <60→D）。"""
     for low, grade in GRADE_TABLE:
         if comprehensive >= low:
             return grade
@@ -227,8 +227,9 @@ def apply_caps(grade, r71, r72, single_reviewer):
 
     等级排序 S > A > B > C > D（GRADE_ORDER 下标越小越优）；
     「上限 X」= 允许的最优等级为 X —— 仅把更优（下标更小）的等级拉低到 X，
-    更差等级（如 D）不受影响。R-71 作为硬上限最后施加，保证任何情况下
-    等级不超过 C；R-72 先对基础等级降一档（S→A→B→C→D）。
+    更差等级（如 D）不受影响。应用顺序与实现一致：R-72 先对基础等级降一档
+    （S→A→B→C→D）；随后 R-71 把高于 C 的等级压到 C；最后 E-02 把
+    高于 A 的等级压到 A（E-02 在 R-71 之后，R-71 触发时等级已 ≤C，E-02 不再生效）。
     """
     g = grade
     if r72 and g != "D":
@@ -246,6 +247,7 @@ def fmt_score(v):
     """整数/整值浮点显示为整数，否则保留 1 位小数。"""
     if isinstance(v, int):
         return str(v)
+    v = round(v, 6)  # 消除浮点尾差（如 92.00000000000001 → 92）
     if float(v).is_integer():
         return str(int(v))
     return f"{v:.1f}"
@@ -289,7 +291,6 @@ def render_form(text, human_scores, final_score, comprehensive, grade,
     """
     lines = text.splitlines()
     out = []
-    grade_marked = False
     for ln in lines:
         new = ln
         m = re.match(r"^\*\*人评分(?P<n>\d+)\*\*", ln)
@@ -301,16 +302,18 @@ def render_form(text, human_scores, final_score, comprehensive, grade,
                 new = ln
         elif ln.startswith("**人评最终分**"):
             new = set_value_after_eq(ln, fmt_score(final_score))
+            if single_reviewer:
+                new += "（E-02 单评分人，非平均）"
         elif ln.startswith("**季度综合分"):
             new = set_comp_value(ln, fmt_score(comprehensive))
         elif ln.startswith("**本季等级**"):
             new = set_grade_value(ln, grade)
-        elif re.match(r"^\|\s*[SABCD]\s*\|", ln) and not grade_marked:
+        elif re.match(r"^\|\s*[SABCD]\s*\|", ln):
+            # 等级表为纯函数：先清全部行 ☑，仅标记当前等级行（等级变更后重跑不残留）
             fields = [f.strip() for f in ln.strip("|").split("|")]
-            if len(fields) >= 3 and fields[0] == grade:
-                fields[2] = "☑"
+            if len(fields) >= 3:
+                fields[2] = "☑" if fields[0] == grade else ""
                 new = "| " + " | ".join(fields) + " |"
-                grade_marked = True
         elif re.match(r"^- \[ \] 人评评分人|^- \[x\] 人评评分人", ln):
             cnt = len(human_scores)
             if cnt >= 2:
@@ -350,6 +353,8 @@ def atomic_write(path, content):
 
 def judge_form(agent, quarter, agents_root, dry_run=False):
     """判定单个智能体的季度人评表单，返回状态 dict。"""
+    if not agent or "/" in agent or "\\" in agent or ".." in agent:
+        raise ValueError(f"非法的 agent 参数（禁止空值/路径分隔符/..）: {agent!r}")
     _, _, quarterly_dir = scoring_dirs(agents_root)
     form_path = os.path.join(quarterly_dir, agent, f"{quarter}.md")
     status = {"agent": agent, "quarter": quarter, "path": form_path,
@@ -436,7 +441,11 @@ def main():
         sys.exit(2)
 
     read_only = args.dry_run or args.status
-    if args.agent:
+    if args.agent is not None:
+        if (not args.agent.strip() or "/" in args.agent or "\\" in args.agent
+                or args.agent in (".", "..") or ".." in args.agent):
+            print(f"❌ --agent 参数非法（禁止空值/路径分隔符/..）: {args.agent!r}")
+            sys.exit(2)
         agents = [args.agent]
     else:
         agents = discover_agents(quarterly_dir, quarter)

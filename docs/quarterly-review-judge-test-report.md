@@ -13,16 +13,22 @@
 | 文件 | 说明 |
 |---|---|
 | `quarterly-review-judge.py` | 季度人评表单自动判定脚本（Python3，幂等，`--dry-run`/`--status`/`--json`，原子写入） |
-| `test-quarterly-review-judge.py` | 验收测试套件（unittest，20 条用例全通过） |
+| `test-quarterly-review-judge.py` | 验收测试套件（unittest，22 条用例全通过） |
 
-## 二、判定规则（方案C R-51~R-55 + 防失真）
+**返工记录（KA-92）**：审核方独立复现「等级表 ☑ 在等级变更时残留」P1 缺陷，返工修复后重新验收。本次修复与订正：
+
+- **P1 等级表残留**：`render_form` 渲染前先清全部等级行 ☑，仅标记当前等级行；新增 `test_grade_table_resync_on_grade_change`（综合分 92→84 跨 A/B 档，☑ 迁移且计数恒为 1）。
+- **规则编号订正**：综合分 R-54→**R-61**、等级 R-55→**R-62~R-66**（以 `rating-workflow-rulebook.md` v1.0 为准），脚本 docstring / 测试 / 本报告同步订正。
+- **P2 同修**：综合分浮点尾差显示（`fmt_score` 先 `round(v, 6)`）；单评分人「人评最终分」行标注 `（E-02 单评分人，非平均）`；`--agent` 拒绝空值/路径分隔符/`..`（防越界读写，退出码 2）；`apply_caps` docstring 与实现顺序（R-72→R-71→E-02）一致化。
+
+## 二、判定规则（方案C R-51~R-53 + R-61~R-66 + 防失真）
 
 | 要素 | 规则 | 实现 |
 |---|---|---|
 | 客观分 | R-51 (M1+M2+M3)/3，由聚合器写入表单「一、」区 | 本脚本只读取，不回写 |
 | 人评分 | R-52 单评分人 = Σ(维度分×权重)×20；R-53 最终分 = 各评分人平均 | 从表单「二、」维度分表逐行解析（维度/权重/评分人列通用） |
-| 综合分 | R-54 客观×0.8 + 人评×0.2 | 1 位小数显示，整数时不带小数 |
-| 等级 | R-55 S≥95 / A 85-94 / B 70-84 / C 60-69 / D<60 | 综合分查表 |
+| 综合分 | R-61 客观×0.8 + 人评×0.2 | 1 位小数显示，整数时不带小数 |
+| 等级 | R-62~R-66 S≥95 / A 85-94 / B 70-84 / C 60-69 / D<60 | 综合分查表 |
 | 防失真 | R-71 红线≥2→上限C；R-72 缺自评≥2→降一档；E-02 单评分人→上限A | 解析表单 cap_note/防失真区，叠加判定 |
 
 等级叠加顺序：R-72 降一档（对基础等级）→ R-71 硬上限 C → E-02 上限 A（保证任何情况下不超过对应上限）。
@@ -40,21 +46,23 @@
 | 7 | 等级边界：95/85/70/60 档位切换 | ✅ 94.9→A / 85→A / 84.9→B / 70→B / 69.9→C / 60→C / 59.9→D |
 | 8 | 缺失/异常：缺表单/缺客观分/非权重行 不崩 | ✅ missing / no-objective / pending 分级处理 |
 
-## 四、测试套件（20 条用例全通过）
+## 四、测试套件（22 条用例全通过）
 
 ```
 test_apply_caps                                   ... ok   # R-71/R-72/E-02 叠加
-test_fmt_score                                    ... ok   # 整数/整值/一位小数显示
+test_fmt_score                                    ... ok   # 整数/整值/一位小数显示 + 浮点尾差
 test_grade_boundaries                             ... ok   # 等级档位边界
 test_reviewer_score_formula                       ... ok   # R-52 公式 + 缺失维度
+test_cli_bad_quarter_exit2                        ... ok   # 非法季度参数退出码 2
 test_cli_dry_run_exit0                            ... ok   # CLI dry-run 退出码 0
 test_cli_json                                     ... ok   # --json 机器输出
+test_cli_reject_agent_path_traversal              ... ok   # --agent 路径分隔符/.. 拒绝
 test_cli_status_no_write                          ... ok   # --status 只读
-test_cli_bad_quarter_exit2                        ... ok   # 非法季度参数退出码 2
 test_dry_run_no_write                             ... ok   # dry-run 不写
 test_end_to_end_fill                              ... ok   # 端到端判定回填
 test_fresh_objective_only_report_pending          ... ok   # 聚合器客观分报告 → pending
 test_grade_table_marker_only_selected_row         ... ok   # 等级表仅标记判定行
+test_grade_table_resync_on_grade_change           ... ok   # 等级变更后重跑 ☑ 迁移（防残留）
 test_idempotent_second_run_no_write               ... ok   # 二次运行 0 写入
 test_missing_form                                 ... ok   # 缺表单不崩
 test_missing_objective                            ... ok   # 缺客观分不崩
@@ -62,14 +70,14 @@ test_pending_no_scores                            ... ok   # 维度分未填 pen
 test_r71_cap_c                                    ... ok   # 红线上限 C
 test_r72_downgrade                                ... ok   # 缺自评降档
 test_resync_on_input_change                       ... ok   # 输入变化后重跑同步刷新
-test_single_reviewer_e02                          ... ok   # 单评分人上限 A
+test_single_reviewer_e02                          ... ok   # 单评分人上限 A + 非平均标注
 ```
 
 运行命令: `cd <生产路径>/agents/capability-system && python3 tests/test-quarterly-review-judge.py -v`（或 `python3 -m unittest tests.test-quarterly-review-judge -v`）
 
 ## 五、口径说明
 
-1. **表单为纯函数**：输出（人评/综合/等级）仅依赖「客观分 + 人评维度分」两个输入；维度分变化后重跑即同步刷新，不产生漂移。
+1. **表单为纯函数**：输出（人评/综合/等级）仅依赖「客观分 + 人评维度分」两个输入；维度分变化后重跑即同步刷新，不产生漂移——等级表「判定」☑ 同步迁移（旧行清除、仅当前等级行标记），计数恒为 1。
 2. **人评维度分解析**：从表单「二、」维度分表按表头动态识别评分人列（兼容后续扩展列）；某评分人任一维度缺失则判定其「未就绪」，全部评分人就绪才回填。
 3. **客观分只读**：客观分由 `rating-aggregator.py` 维护（R-51），本脚本不写客观分区，避免与聚合器争写。
 4. **幂等**：回填采用「临时文件 + os.replace」原子替换，内容一致则跳过；同一表单重复运行 0 写入。
