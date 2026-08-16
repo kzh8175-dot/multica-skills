@@ -16,10 +16,13 @@
 | 1 | 14:14 | 仓库初始骨架（agents 目录 + README），解除 B1 阻塞项 | GitHub 仓库管理员 | —（初始化，随 #18 验收） | 资深战略领导者（P0 编排放行） | 资深战略领导者（B1 阻塞项） | GitHub 仓库管理员 | `d8778fa4` |
 | 2 | 14:48 | P0 评分系统交付物：聚合器/调度器/配置/测试/报告（来源 KA-16 / KA-43；其中报告已确认无关 → 移入 Release） | 开发者工具工程师、后端架构师 | 代码审查员 + 资深战略领导者（#16 口径终审） | 资深战略领导者 | GitHub 仓库管理员（B1 解除·同步） | GitHub 仓库管理员 | `6ecc691f` |
 | 3 | 15:05 | KA-18 生产树最新版：F1/F2 修复版结算器 + 运维层（包装脚本/crontab/runbook/audit-events） | DevOps自动化工程师、开发者工具工程师 | SRE稳定性工程师（#18 验收通过 ✅） | 资深战略领导者 | GitHub 仓库管理员（仓库==生产同步） | GitHub 仓库管理员 | `98f5d841` |
+| 4 | 23:51 | KA-19 OSError 加固同步：`src/rating-settler.py` append_to_events 包 try/except OSError→E_WRITE 指数退避，保留 F1/F2 | DevOps自动化工程师、代码审查员 | 代码审查员（终验 19/19 用例 ✅） | 资深战略领导者 | GitHub 仓库管理员（仓库==生产同步） | GitHub 仓库管理员 | `f7c6677` |
 
 > 说明：14:46 有一笔 `probe` 提交（账号 `kzh8175-dot`，连通性测试），非业务上传，不记入。
 >
 > 说明（2026-08-17 更新）：报告归档 `reports/reports-2026-08-Q3.tar.gz` 经资深战略领导者确认为生成产物（评分报告，非开发必需文件），已移出代码仓库，归档至 GitHub Release：[reports-2026-08-Q3](https://github.com/kzh8175-dot/multica-skills/releases/tag/reports-2026-08-Q3)。仓库内仅保留代码/配置/文档等开发相关文件。
+>
+> 说明（2026-08-17 · KA-54 复核）：生产树已提交 KA-19 OSError 加固（生产 commit `fe41250` / `f7d8c14`，工作区干净）；仓库 `main` 的 `src/rating-settler.py` 与生产 SHA256 均为 `720d9f97…e91c41`，「仓库 == 生产」复核通过，本行记录 `f7c6677` 同步凭据。
 
 ---
 
