@@ -69,6 +69,44 @@ def load_agents(path="/tmp/agents-v4.json"):
     return {}
 
 
+def load_squads():
+    """加载 squad id → 名称 映射（best-effort：CLI 失败返回空）。
+
+    修复 F3：assignee_type=squad 的 issue 可解析为 squad 名称，不再落入
+    「未知智能体」。
+    """
+    try:
+        result = subprocess.run(
+            ["multica", "squad", "list", "--output", "json"],
+            capture_output=True, text=True, timeout=60,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            data = json.loads(result.stdout)
+            if isinstance(data, list):
+                return {s["id"]: s["name"] for s in data if s.get("id") and s.get("name")}
+    except Exception:
+        pass
+    return {}
+
+
+def resolve_agent_name(issue, agents, squads):
+    """解析 issue 归属 agent 名称。
+
+    优先级：assignee_id（agent）→ assignee_id（squad，解析为 squad 名）
+    → creator_id 兜底。全部失败回落到「未知智能体」，不中断结算主流程。
+    修复 F3：assignee 缺失时回退 creator；squad assignee 按 squad 名解析。
+    """
+    aid = issue.get("assignee_id")
+    if aid:
+        if aid in agents:
+            return agents[aid]
+        if aid in squads:
+            return squads[aid]
+        return "未知智能体"
+    cid = issue.get("creator_id")
+    return agents.get(cid, "未知智能体")
+
+
 def run_cli(args):
     """执行 multica CLI，返回 (ok, parsed_json_or_text)。"""
     try:
@@ -293,8 +331,9 @@ def main():
     print(f"最高决策者: {DECISION_MAKER['name']} ({DECISION_MAKER['id']})")
     print()
 
-    # 加载 agent 映射
+    # 加载 agent 映射（agent + squad，用于归属解析）
     agents = load_agents()
+    squads = load_squads()
 
     # 获取 pending issues
     if args.issue:
@@ -316,8 +355,8 @@ def main():
 
     stats = {"credited": 0, "escalated": 0, "pending": 0, "skipped": 0}
     for issue in issues:
-        # 获取 assignee 名称
-        agent_name = agents.get(issue.get("assignee_id"), "未知智能体")
+        # 解析归属 agent 名称（assignee → squad → creator 兜底）
+        agent_name = resolve_agent_name(issue, agents, squads)
 
         # 读取 metadata
         meta, err = get_issue_metadata(issue["id"])
