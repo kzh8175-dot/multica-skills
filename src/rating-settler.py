@@ -173,29 +173,35 @@ def _issue_credited_globally(issue_id, month):
 
 
 def append_to_events(agent_name, month, issue_id, meta):
-    """追加积分事件到流水文件（幂等去重）。"""
-    os.makedirs(os.path.join(EVENTS_DIR, agent_name), exist_ok=True)
-    events_file = os.path.join(EVENTS_DIR, agent_name, f"{month}.md")
+    """追加积分事件到流水文件（幂等去重）。
 
-    # 创建文件头（若不存在）
-    if not os.path.exists(events_file):
-        with open(events_file, "w") as f:
-            f.write("| 时间 | 任务 | 事件 | 积分 |\n")
-            f.write("|------|------|------|:---:|\n")
+    写失败（OSError）返回 (False, E_WRITE, 描述)，由调用方走指数退避重试。
+    """
+    try:
+        os.makedirs(os.path.join(EVENTS_DIR, agent_name), exist_ok=True)
+        events_file = os.path.join(EVENTS_DIR, agent_name, f"{month}.md")
 
-    # 去重检查（跨文件全局：同一 issue 不得计入多个智能体，防聚合双计）
-    if _issue_credited_globally(issue_id, month):
-        return False, E_DUP, f"issue {issue_id} 已存在于流水（全局去重）"
+        # 创建文件头（若不存在）
+        if not os.path.exists(events_file):
+            with open(events_file, "w") as f:
+                f.write("| 时间 | 任务 | 事件 | 积分 |\n")
+                f.write("|------|------|------|:---:|\n")
 
-    # 确定任务标识
-    event_desc = meta.get("rating.event", "?")
-    points = meta["rating.points"]
-    ts = meta.get("rating.occurred_at", "")[:16].replace("T", " ")
+        # 去重检查（跨文件全局：同一 issue 不得计入多个智能体，防聚合双计）
+        if _issue_credited_globally(issue_id, month):
+            return False, E_DUP, f"issue {issue_id} 已存在于流水（全局去重）"
 
-    line = f"| {ts} | {issue_id} | {event_desc} | {points:+d} |\n"
-    with open(events_file, "a") as f:
-        f.write(line)
-    return True, None, None
+        # 确定任务标识
+        event_desc = meta.get("rating.event", "?")
+        points = meta["rating.points"]
+        ts = meta.get("rating.occurred_at", "")[:16].replace("T", " ")
+
+        line = f"| {ts} | {issue_id} | {event_desc} | {points:+d} |\n"
+        with open(events_file, "a") as f:
+            f.write(line)
+        return True, None, None
+    except OSError as e:
+        return False, E_WRITE, f"写入流水失败: {e}"
 
 
 def settle_one(issue, meta, agent_name, dry_run=False):
