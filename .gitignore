@@ -12,3 +12,12 @@ venv/
 .idea/
 .vscode/
 *.swp
+
+# 运行时缓存（调度器写入 ${TMPDIR}）
+multica-agent-cats-*.tmp
+
+# 报告解压产物
+reports/extracted/
+
+# 日志
+*.log
