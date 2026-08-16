@@ -44,15 +44,23 @@ def check_agent(agent):
     if not instructions.strip():
         return False, ["instructions 为空"]
 
-    # 1. 自评块存在
-    block_m = re.search(r"【自评】", instructions)
-    if not block_m:
-        return False, ["缺少【自评】块"]
+    # 1. 自评块存在，且定位到实际模板块（含「完成度」行；避免命中「按【自评】格式总结」等提及）
+    block_start = None
+    for m in re.finditer(r"【自评】", instructions):
+        tail = instructions[m.start():]
+        end_m = re.search(r"(?:\n---|\n###|\n\n)", tail)
+        block_text = tail[: end_m.start()] if end_m else tail
+        if "完成度" in block_text:
+            block_start = m.start()
+            break
+    if block_start is None:
+        block_m = re.search(r"【自评】", instructions)
+        if not block_m:
+            return False, ["缺少【自评】块"]
+        block_start = block_m.start()
     reasons.append("含【自评】块")
 
     # 2. 评分建议字段存在且位于块末尾（改进之后）
-    block_start = block_m.start()
-    # 找到块结束：后面的 --- 或 ### / 空白分隔
     tail = instructions[block_start:]
     end_m = re.search(r"(?:\n---|\n###|\n\n)", tail)
     block_text = tail[: end_m.start()] if end_m else tail

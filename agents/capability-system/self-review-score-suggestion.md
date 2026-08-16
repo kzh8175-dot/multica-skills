@@ -1,7 +1,7 @@
 # 「评分建议」字段说明（P1-7 / KA-72）
 
 > 配套：规则书《评分方案C rating-workflow-rulebook》§7.4 自评块升级 · 自评模板 `self-review-template.md`
-> 版本：v1.0 · 维护：提示工程专家
+> 版本：v1.1 · 维护：提示工程专家
 
 ## 1. 字段定义
 
@@ -54,11 +54,12 @@
 | 载体 | 更新方式 | 状态 |
 |------|---------|------|
 | 自评模板 `agents/capability-system/self-review-template.md` | 模板文件更新 | ✅ v1.1 |
-| 各智能体 instructions（CLAUDE.md / 技能文件） | `multica agent update --instructions` 批量写入 | 抽样 ≥3 已更新 |
-| 本字段说明 | 本文档 | ✅ v1.0 |
+| 各智能体 instructions（CLAUDE.md / 技能文件） | `multica agent update --instructions` 批量写入（`apply-score-suggestion.py` 幂等落地） | ✅ 全量 59 个含自评块智能体已写入 |
+| 本字段说明 | 本文档 | ✅ v1.1 |
 
 ## 7. 变更记录
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
 | v1.0 | 2026-08-17 | 首次发布（P1-7 / KA-72）：字段定义、取值、边界、缺失处理 |
+| v1.1 | 2026-08-17 | 全量落地（KA-72 遗留待办）：59 个含自评块智能体全部写入；校验脚本修正自评块定位（优先含「完成度」行的模板块）；新增 `apply-score-suggestion.py` 批量落地脚本 |
