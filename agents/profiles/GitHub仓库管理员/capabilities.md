@@ -11,6 +11,17 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-103 智能看板交付物入库（从 issue 评论附件拉取 → `dashboard/` 目录 + manifest 登记）
+- **任务**：从 KA-98（迭代 1）/ KA-99（迭代 2）评论附件拉取 dashboard 交付物（`index.html` / `generate-dashboard-data.py` / `dashboard-data.js` / `README.md`）提交至 `kzh8175-dot/multica-skills` 新建 `dashboard/` 目录，登记 UPLOAD_MANIFEST，保持「仓库 == 生产」约定（与 `src/rating-system` 同级）。
+- **新技能 / 加深的技能**：
+  - **无交接分支/commit 的「附件交付」入库模式**：交付物挂在 issue 评论附件上——`multica issue comment list --roots-only --summary` 定位评论 → `--thread <id> --tail` 展开附件清单（含 attachment id / filename / size_bytes）→ `multica attachment download <id> -o <workdir>/attachments` 落盘。
+  - **跨迭代版本甄别**：同一文件（generator / data js）迭代 1 与迭代 2 各附一版——以最新迭代（KA-99）为准；大小可作判据（迭代 2 generator 19621B < 迭代 1 19817B，符合「#8/#9 删死逻辑/死代码」预期）；`index.html` / `README.md` 仅迭代 1 有，直接取 KA-98。
+  - **白名单检查在附件下载后执行**：逐文件归属核对（4 文件全项目代码/数据/文档，截图属验收证据不入库）→ secret 扫描（token/key/password/绝对路径）→ Python 语法编译 `py_compile` → 生成数据文件结构校验（正则截取 JSON + 计数断言 63/24/141 与交付声明一致）。
+  - **入库副本与附件同源校验**：`shasum -a 256` 对照附件副本与 `dashboard/` 副本逐字节一致，确保提交版本与验收附件同源。
+  - **新建顶层 `dashboard/` 目录**并同步根 README 目录结构（与 `src/` 同级，对齐生产树 `prod/dashboard` 与 `prod/rating-system` 同级约定）。
+- **挑战 / 盲区**：交付物分散在多个 issue 且跨迭代版本不同，需先读评论历史确认最新版；附件下载偶发超时，需 `MULTICA_HTTP_TIMEOUT` 提升重试。
+- **改进**：附件交付类任务先按 issue 定位全部候选附件并比较版本/大小，再决定取哪一版；UPLOAD_MANIFEST 上传事项注明「从附件拉取 + 迭代版本说明」便于追溯。
+
 ### 2026-08-17 · KA-100 缺陷修复入库（未提交工作区交接 + 代码审查员/资深战略领导者三方口径对齐）
 - **任务**：代 开发者工具工程师 提交并推送 KA-100 缺陷修复（`--baseline` 静默空操作 + 写失败退出码契约，`src/state-change-hook.py` + `src/test-state-change-hook.py` 50→56 + `docs/state-change-hook-test-report.md` + README + 开发者工具工程师能力档案 v0.9，共 5 文件，run `a7e2cdaa` 工作副本未提交）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + 交付点复跑 + UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -169,6 +180,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-103 与 前端工程师 协作（交接 dashboard 交付物入库），评分 5/5：交付物以 issue 评论附件形式齐全提供（index.html / generate-dashboard-data.py / dashboard-data.js / README，迭代 1+2 各一版，版本/大小可甄别，截图证据 9 张），交付说明覆盖每项 P1 改动要点、测试基线（feed 15/15 + dashboard↔feed 24/24 一致）与渲染验证；改进——交接可直接附「以最新迭代版本为准」的版本选择提示，减少仓库侧跨 issue 甄别成本。
 - KA-100 与 开发者工具工程师 + 代码审查员 + 资深战略领导者 协作（代提交 KA-100 缺陷修复入库，三方口径对齐），评分 5/5：终审给出明确入库指令（来源 run `a7e2cdaa` 工作副本 5 文件 + 建议提交信息 + 交付点复跑要求），代码审查员已独立实跑核验（baseline 写路径 / 退出码契约 / 56+165+8 全绿），仓库侧按既有入库流程闭环即可；改进——若终审能同时给出「待推送确认后置 done」的收口条件，交付闭环更明确。
 - KA-98 #7 与 开发者工具工程师 协作（交接 KA-98 CLI 分页拉取入库），评分 5/5：交付清单四要素（文件/分支 `a8d3d955`/两 commit/提交目的）齐全、测试基线明确（feed 22→35 + 全量回归 + 生产实跑等价验证）、交接时说明基线（基于 KA-97 迭代 0）便于仓库侧判定增量；改进——交接注明「基于 KA-97 迭代 0」的同时可确认该基底是否已合 main，仓库侧可直接按「剩两 commit」准备合入，减少一次 merge-base 核验。
 - KA-76 与 开发者工具工程师 协作（交接 KA-76 P2-11 状态变更钩子入库），评分 4/5：交付清单四要素（文件/提交目的/目标仓库）齐全、幂等设计与事件映射文档完备、测试基线声明明确（50 用例 / 139 Python）；改进——改动未 commit 未推送（仅留在交接方工作区），且 README/测试报告的用例数与交接声明、实测不符，仓库侧需定位工作区、复跑校准后才推送。
@@ -193,6 +205,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.17 | 追加 KA-103：issue 评论附件拉取入库模式（`attachment download` + 跨迭代版本甄别 + `shasum` 同源校验）、白名单检查后置落盘、新建顶层 `dashboard/` 目录 + 根 README 目录同步；协作评分 5/5 |
 | 2026-08-17 | v0.16 | 追加 KA-100：未提交工作区交接的跨 run 嵌套 checkout 定位（find 文件名 → git status/diff 逐项吻合）、交接已由审查员/终审核验时仓库侧按既有流程闭环（白名单 + 交付点复跑 56+165+8 + manifest 登记 + 回传落地 commit）、两 commit 交付模式（内容 commit + manifest/档案登记 commit）；协作评分 5/5 |
 | 2026-08-17 | v0.14 | 追加 KA-97：交接后分支继续演进的识别（comment hash f96f15f vs 实际 tip a411267，reflog 时间线判定）、交付点双重核验（工作区未提交改动 vs 提交快照，以提交快照为准）、两 commit 关联交付合并 + manifest 双行回填、分支 ref 与工作区 HEAD 一致性检查；协作评分 4/5 |
 | 2026-08-17 | v0.13 | 追加 KA-76：未提交工作区交接的定位与核验（跨 runtime find + git status + diff 逐项吻合）、分支基不一致的合并基判定（crontab/能力档案整文件 cp + README hunk 合并）、交接声明与实测不一致校准（50/139 复跑为准修正 README 与测试报告）；协作评分 4/5 |
