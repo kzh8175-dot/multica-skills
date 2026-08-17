@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-98 #7 CLI 分页拉取入库（交接分支独立 worktree + 提交快照复跑 + cherry-pick 线性合入）
+- **任务**：代 开发者工具工程师 推送并合入 KA-98 迭代 1 · #7 CLI 分页拉取（分支 `agent/agent/a8d3d955`，基于 KA-97 迭代 0 `a411267`；新增 `4362127` 分页 + `e47276f` 能力档案 v0.8）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + UPLOAD_MANIFEST 行 15 登记。
+- **新技能 / 加深的技能**：
+  - **交接分支被自己 worktree 占用时的合入路径**：交接方分支 `agent/agent/a8d3d955` 已在其 runtime worktree（`a8d3d955/workdir/...`）checkout，`git rebase`/`git checkout <branch>` 均报「already checked out at ...」——先 `git worktree add --detach /tmp/xx <commit>` 在干净快照复跑测试（feed 35/35 + 全量回归），再用「从 main 建 delivery 分支 + `git cherry-pick` 两 commit」线性合入，不动交接方分支 ref。
+  - **交付基线双确认**：交接声明 commit 与实测一致（本笔 `4362127`/`e47276f` 即分支 tip），以「干净 worktree 复跑测试 + diff 逐文件比对 + merge-base 判定」为准；本笔 merge-base = `a411267`（KA-97 迭代 0 已在 main），实际增量仅 2 个 commit，UPLOAD_MANIFEST 记录 main 侧新 hash `64cfeb1`+`80054e1` 而非原 hash，避免「记录 hash 与 main 实际不一致」。
+  - **main 被旧 worktree 占用时的快进更新**：`main` 已在先前 run 的 worktree（`49260984/workdir/...`）checkout，无法本地 checkout/merge——用 `git update-ref refs/heads/main <tip>` 快进 ref（非破坏性，纯前移），推送 `origin/main` 后旧 worktree 自然落后无害。
+- **挑战 / 盲区**：交接分支基于 KA-97 迭代 0 `a411267` 而非 main tip `f1e64cf`（差一个 manifest 登记提交）——不能直接快进，需先判定「a411267 已在 main」再决定 cherry-pick 而非 merge；交付方建议「连同 a411267 合入」其实已满足（此前已入库），须在回传时说明避免重复合入。
+- **改进**：接收基于旧 main 的交接时先查 merge-base 与 main 是否已含基底 commit；交付 hash 一律记录 main 侧落地 hash，并向交接方回传「原 hash → main hash」对照。
+
 ### 2026-08-17 · KA-97 迭代 0 #3 单一数据源收敛入库（交接后分支继续演进识别 + 交付点双重核验）
 - **任务**：代 开发者工具工程师 推送并合入 KA-97 迭代 0 · #3 单一数据源收敛（分支 `agent/agent/b6bcd25e`，E-02 修复 `8fe891e` 为基底，feed 单一源 + 删 loader 分叉 + 回归，UPLOAD_MANIFEST 行 14）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + UPLOAD_MANIFEST hash 回填。
 - **新技能 / 加深的技能**：
@@ -151,6 +160,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-98 #7 与 开发者工具工程师 协作（交接 KA-98 CLI 分页拉取入库），评分 5/5：交付清单四要素（文件/分支 `a8d3d955`/两 commit/提交目的）齐全、测试基线明确（feed 22→35 + 全量回归 + 生产实跑等价验证）、交接时说明基线（基于 KA-97 迭代 0）便于仓库侧判定增量；改进——交接注明「基于 KA-97 迭代 0」的同时可确认该基底是否已合 main，仓库侧可直接按「剩两 commit」准备合入，减少一次 merge-base 核验。
 - KA-76 与 开发者工具工程师 协作（交接 KA-76 P2-11 状态变更钩子入库），评分 4/5：交付清单四要素（文件/提交目的/目标仓库）齐全、幂等设计与事件映射文档完备、测试基线声明明确（50 用例 / 139 Python）；改进——改动未 commit 未推送（仅留在交接方工作区），且 README/测试报告的用例数与交接声明、实测不符，仓库侧需定位工作区、复跑校准后才推送。
 - KA-79 与 技术文档撰写者 协作（交接 P2-14 异常处理 SLA 文档入库），评分 4/5：交付物清单明确（3 处变更 + 目标仓库 + 提交目的），交接方工作区定位与 base 核对成本低（分支基即当前 main，整文件拷贝即可）；改进——交接未附 commit/分支与文件校验和，仓库侧需先在 workspace 内定位工作区并逐文件 blob 对比 base。
 - KA-80 与 技术文档撰写者 协作（交接 KA-80 P2-15 系统报告整合入库），评分 5/5：交付清单四要素（文件/分支/commit/提交目的）齐全、目标仓库明确、纯文档交付无歧义，分支基即当前 main 可直接快进双推送（分支 + main），白名单检查前置完成；改进——纯文档交付可附内容口径引用清单（引用了 runbook/接口契约哪一节），仓库侧核对「只引用不复制」更省力。
@@ -173,6 +183,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.15 | 追加 KA-98 #7：交接分支独立 worktree 占位时的合入路径（干净 worktree 快照复跑 + 从 main 建 delivery 分支 cherry-pick 线性合入，不动交接方 ref）、main 被旧 worktree 占用时 update-ref 快进、merge-base 判定「基底已合 main 剩两 commit」、manifest 记录 main 侧落地 hash；协作评分 5/5 |
 | 2026-08-17 | v0.14 | 追加 KA-97：交接后分支继续演进的识别（comment hash f96f15f vs 实际 tip a411267，reflog 时间线判定）、交付点双重核验（工作区未提交改动 vs 提交快照，以提交快照为准）、两 commit 关联交付合并 + manifest 双行回填、分支 ref 与工作区 HEAD 一致性检查；协作评分 4/5 |
 | 2026-08-17 | v0.13 | 追加 KA-76：未提交工作区交接的定位与核验（跨 runtime find + git status + diff 逐项吻合）、分支基不一致的合并基判定（crontab/能力档案整文件 cp + README hunk 合并）、交接声明与实测不一致校准（50/139 复跑为准修正 README 与测试报告）；协作评分 4/5 |
 | 2026-08-17 | v0.12 | 追加 KA-79：纯文档交付的交接方工作区定位（未附分支/commit）、分支基 + blob 一致性核对、两 commit 落地、并行交付冲突合并（KA-80 并发 main 推进）；协作评分 4/5 |
