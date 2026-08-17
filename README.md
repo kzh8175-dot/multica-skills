@@ -37,7 +37,10 @@ dashboard/                    # 智能看板生产交付物（KA-103 入库，�
 ├── index.html                # 生产看板 · 8 页（总览/排行榜/趋势/评分明细/事件流水/预算/升级队列/异常中心），`#page-detail?agent=` 深链
 ├── generate-dashboard-data.py# 数据接口层（只读 · 消费 `src/dashboard-data-feed.py`，动态周期/稳定 agent id/事件 `;` 拆分）
 ├── dashboard-data.js         # 生成数据（`window.DASHBOARD_DATA`，63 智能体 / 24 有数据）
-└── README.md                 # 看板交付说明（使用 / 数据刷新 / 口径 / 已知边界）
+├── README.md                 # 看板交付说明（使用 / 数据刷新 / 口径 / 已知边界）
+├── crontab-dashboard.conf    # 看板数据刷新定时配置（每日 01:45 Asia/Shanghai，KA-108 接线）
+├── scripts/refresh-dashboard.sh  # 看板数据刷新包装脚本（幂等 + 日志 + 失败退出码）
+└── docs/DEPLOY.md            # 看板生产部署记录（路径/访问/刷新/验证 + HTTP 服务，KA-104/KA-108）
 scripts/                      # 运维层（定时任务包装脚本，P0-3）
 ├── run-daily-settlement.sh   # 每日 00:30 结算包装脚本（守卫 + 日志 + 退出码）
 ├── run-state-change-hook.sh  # 状态变更钩子包装脚本（P2-11，00:20 结算前运行）
