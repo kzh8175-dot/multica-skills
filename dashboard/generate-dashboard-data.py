@@ -182,13 +182,19 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
         est = q.get("estimated") or {}
 
         # 防失真 / 异常标记（季度表单已回填值 + 数据缺口）
+        # 数据缺口口径（P1 修复 · KA-106）：季度表单 E_MISS 按 R-51 对「季度内任意
+        # 缺失月」计 0 并标记，而试点期 Q3 仅 8 月结算，全员缺 7/9 月属未到期而非
+        # 缺口；看板侧仅将「当月无数据」（!hasData）计为数据缺口，有当月事件流水的
+        # 智能体不标 E_MISS/E_EMPTY，避免 24 个有 8 月真实数据的智能体被误标「待处理」。
         agent_flags = []
         for f in qflags:
             code = f.split(":")[0].strip()
             if code.startswith("E_MISS"):
-                agent_flags.append({"code": "E_MISS", "month": None, "msg": f})
+                if not month_has:
+                    agent_flags.append({"code": "E_MISS", "month": None, "msg": f})
             elif code.startswith("E_EMPTY"):
-                agent_flags.append({"code": "E_EMPTY", "month": None, "msg": f})
+                if not month_has:
+                    agent_flags.append({"code": "E_EMPTY", "month": None, "msg": f})
             elif code.startswith("E_PARSE"):
                 agent_flags.append({"code": "E_PARSE", "month": None, "msg": f})
         af = q.get("anti_fraud") or {}
@@ -199,8 +205,8 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
         if af.get("e02"):
             agent_flags.append({"code": "E-02", "month": None, "msg": "单评分人上限 A（季度表单已回填）"})
 
-        # has_data：当前月事件流水（feed 只载当月，季度其他月判断恒假——迭代 2 #8 移除死逻辑）
-        has_data = bool(ev.get("rows"))
+        # has_data：当前月事件流水（与 month_has 同源，见上）
+        has_data = month_has
 
         # 事件（当前月）：多事件行按 ';' 拆分，事件流逐条完整呈现
         events = []
