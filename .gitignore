@@ -21,3 +21,6 @@ reports/
 
 # 日志
 *.log
+
+# 嵌套 repo checkout（multica repo checkout 产物，非源文件）
+multica-rating-system/
