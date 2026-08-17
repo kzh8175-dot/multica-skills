@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-96 看板只读数据接口入库（交接分支本地定位 + 交付点快照复跑 + 清单 hash 回填闭环）
+- **任务**：代 开发者工具工程师 推送 KA-96 里程碑 1 看板只读数据接口（commit `0093c62`，分支 `agent/agent/72131425`：`src/dashboard-data-feed.py` 只读 JSON 接口 + `src/test-dashboard-data-feed.py` 15 条用例 + `docs/dashboard-data-interface.md` Schema v1.0 + README 结构更新 + 能力档案 v0.4 + UPLOAD_MANIFEST 登记行）至 `main`，白名单检查 + 清单 hash 回填。
+- **新技能 / 加深的技能**：
+  - 交接分支未推远程时的本地定位：`git branch -a` 确认本地 object store 内存在 `agent/agent/<id>` 分支 → `git cat-file -t <commit>` 确认 commit 可达 → `git log --oneline <branch>` 核对基与内容——本任务分支基恰为当前 main（`bb8f6ce`），单 commit 直接快进 push（`git push origin agent/agent/<id>:main`）。
+  - 只读接口类交付的验收基线：白名单逐文件核对（6 文件：src×2 + docs + README + UPLOAD_MANIFEST + 开发者能力档案，全部项目代码/测试/文档，无敏感信息）+ **交付点快照复跑**（`git worktree add --detach 0093c62` 上跑 `python3 src/test-dashboard-data-feed.py` 15/15 OK）+ 全 diff secret 扫描干净 + `git merge-base` 分支基核对（merge-base == origin/main HEAD）。
+  - UPLOAD_MANIFEST「待推送回填」闭环：交接方登记行预留 hash 占位 → 仓库侧推送后回填真实 commit（`0093c62`），并同步将分支推进到新 main 后 `--ff-only` 对齐本地，保持清单追溯链完整。
+- **挑战 / 盲区**：交接方本地分支未推远程（远程仅 main 与历史 agent 分支），commit 只在 `multica repo checkout` 拉取的本地共享 object store 内可达，需先定位再推送；能力档案改动文件是交接方自己的 `agents/profiles/开发者工具工程师/capabilities.md`（非仓库管理员档案），白名单按同样标准核对内容。
+- **改进**：代码交付类交接统一「分支基判定（ff vs cherry-pick）→ 交付点快照复跑测试 → 白名单逐文件 → secret 扫描 → 推送 → 清单回填 hash」流程；测试命令与预期结果随交接文档可复现。
+
 ### 2026-08-17 · KA-75 P1-10 联调落地入库（多 commit 交付组装：快进 + cherry-pick）
 - **任务**：代 开发者工具工程师 推送 KA-75 P1-10 联调落地（spec §6.2 四项待办，commit `98b4aa1`，分支 `agent/agent/40cb306a`）+ 登记 软件架构师 spec/ADR 终审修订版（commit `bc7d1d6`，分支 `agent/agent/d1398c19`）至 `main`，白名单检查 + UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -102,6 +111,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-96 与 开发者工具工程师 协作（交接 KA-96 里程碑 1 看板只读数据接口入库），评分 5/5：交付清单（文件/分支/commit）+ 测试基线（15/15）+ 生产实跑验证（59 agents / 34 事件行 / 7 预算项 / pending 22）明确，分支基即当前 main 可直接快进，UPLOAD_MANIFEST 预留「待推送回填」占位便于仓库侧闭环回填；改进——测试命令已在接口契约文档注明，仓库侧可直接复跑。
 - KA-75 联调落地与 开发者工具工程师 + 软件架构师 协作（交接 P1-10 联调落地代码 + spec/ADR 终审修订版文档入库），评分 5/5：代码 commit 基即当前 main 可直接快进、文档 commit 独立标注原 hash 便于重放，测试基线 74 Python + 8 bash 明确可复现；改进——交接可注明两份交付的 commit 各自基于哪个 main，减少仓库侧判定组装方式（ff/cherry-pick）的成本。
 - KA-92 与 开发者工具工程师 协作（交接 KA-92 审核返工入库），评分 5/5：交付清单（文件/分支/commit）+ 测试基线（judge 22/22 + 全量回归）明确，提交点在快照上复跑全部复现，分支基即当前 main 可直接快进；改进——返工类交接附「修复后新增用例」说明，仓库侧可对照断言核验改动确已生效。
 - KA-75 与 开发者工具工程师 协作（交接 KA-75 P1-10 防失真机制自动化入库），评分 5/5：交付清单（文件/分支/commit）+ 测试基线（68 条 Python + 8 项 bash）明确，本地复跑全部复现，分支基即当前 main 可直接快进；改进——测试命令可一并附在交接回帖，减少仓库侧从测试报告反查命令的成本。
@@ -120,7 +130,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
-| 2026-08-17 | v0.9 | 追加 KA-75 联调落地：多 commit 交付组装（ff 保原 hash + cherry-pick 重放）、联调类测试基线复跑（74 Python + 8 bash）、白名单对既有生产模块改动的逐条对照；协作评分 |
+| 2026-08-17 | v0.10 | 追加 KA-96：交接分支本地定位（未推远程）、交付点快照复跑（15/15）、UPLOAD_MANIFEST hash 回填闭环；协作评分 5/5 |
 | 2026-08-17 | v0.8 | 追加 KA-92：返工交付的交付点快照复跑基线、权限边界核对、能力档案类文件白名单检查；协作评分 |
 | 2026-08-17 | v0.1 | 首次建档：KA-53 任务后的能力评估与学习记录 |
 | 2026-08-17 | v0.2 | 追加 KA-56：README 报告归档说明更新 + Release 链接有效性校验 |
