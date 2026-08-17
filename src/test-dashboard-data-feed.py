@@ -105,6 +105,49 @@ def seed_fixture(root, dirs):
           "## 三、季度综合分与等级\n"
           "**季度综合分 = 客观分×0.8 + 人评最终分×0.2 = **82**\n"
           "**本季等级**: **B** （等级上限C）\n")
+    # 季度表单（pending 完整模板：含静态描述「E-02: 单评分人可用，等级上限A」
+    # 但无人评判定 → 不得触发 e02，KA-96 代码审查回归用例）
+    write(os.path.join(dirs["quarterly"], "SEO优化专家", "2026-Q3.md"),
+          "# SEO优化专家 - 季度人评表单\n"
+          "**季度**: 2026-Q3\n**规则版本**: 方案C (R-51~R-76)\n"
+          "## 一、季度客观分（系统自动汇总，权重80%）\n"
+          "| 月份 | 积分 | 基准 | 百分制(上限120) |\n"
+          "|------|:---:|:---:|:---:|\n"
+          "| 2026-07 | 0 | 350 | 0 |\n"
+          "**季度客观分** = 3个月均值 = **0** 分（(0+0+0) / 3）\n"
+          "## 二、季度人评（人工填写，权重20%）\n"
+          "| 维度 | 权重 | 评分人1 | 评分人2 | 备注 |\n"
+          "|------|:---:|:---:|:---:|------|\n"
+          "| 交付质量 | 30% |  |  | |\n"
+          "**人评分1** = Σ(维度×权重)×20 = ______\n"
+          "**人评最终分** = (评分人1+评分人2)/2 = ______\n"
+          "## 三、季度综合分与等级\n"
+          "**季度综合分 = 客观分×0.8 + 人评最终分×0.2 = ______**\n"
+          "**本季等级**: ______ \n"
+          "## 四、防失真校验（自动）\n"
+          "- [ ] 红线一票否决检查: 红线计数=0次|未触发(需≥2次) | 自评缺失计数=0次|未触发(需≥2次)\n"
+          "- [ ] 人评评分人 ≥ 2: （人数）\n"
+          "## 五、异常处理记录\n"
+          "| 异常类型 | 是否触发 | 处理动作 |\n"
+          "|---------|:---:|---------|\n"
+          "| 积分流水缺失 |  | E-01: 补记或排除该月 |\n"
+          "| 评分人不足 |  | E-02: 单评分人可用，等级上限A |\n"
+          "| 档案缺失 |  | E-03: 先创建档案 |\n"
+          "| 等级=D |  | E-04: 升级最高决策者专项复盘 |\n")
+    # 季度表单（judged + E-02 单评分人：judge 回填标记 → e02=true）
+    write(os.path.join(dirs["quarterly"], "销售工程师", "2026-Q3.md"),
+          "# 销售工程师 - 季度人评表单\n"
+          "## 一、季度客观分\n"
+          "**季度客观分** = 3个月均值 = **70** 分\n"
+          "## 二、季度人评\n"
+          "| 维度 | 权重 | 评分人1 | 备注 |\n"
+          "|------|:---:|:---:|------|\n"
+          "| 交付质量 | 30% | 5 | |\n"
+          "**人评分1** = Σ(维度×权重)×20 = **100**\n"
+          "**人评最终分** = (评分人1+评分人2)/2 = **100**（E-02 单评分人，非平均）\n"
+          "## 三、季度综合分与等级\n"
+          "**季度综合分 = 客观分×0.8 + 人评最终分×0.2 = **76**\n"
+          "**本季等级**: **B**\n")
     # 防失真日志
     write(os.path.join(dirs["ad"], "开发者工具工程师", "2026-Q3.md"),
           "# 开发者工具工程师 - 防失真决策日志（append-only）\n"
@@ -172,6 +215,29 @@ class TestParsers(unittest.TestCase):
         self.assertIsNone(res["estimated"])
         self.assertTrue(res["anti_fraud"]["r71"])   # （等级上限C）→ R-71
         self.assertFalse(res["anti_fraud"]["r72"])
+        self.assertFalse(res["anti_fraud"]["e02"])  # 双评分人，无 E-02 标记
+
+    def test_parse_quarterly_form_pending_template_no_e02(self):
+        """回归（KA-96 代码审查阻塞项）：pending 完整模板含静态「等级上限A」
+        描述文字，不得触发 e02。"""
+        res = feed.parse_quarterly_form(
+            os.path.join(self.dirs["quarterly"], "SEO优化专家", "2026-Q3.md"))
+        self.assertEqual(res["review_state"], "pending")
+        self.assertIsNone(res["grade"])
+        self.assertFalse(res["anti_fraud"]["e02"],
+                         "模板静态文字「E-02: 单评分人可用，等级上限A」不应触发 e02")
+        self.assertFalse(res["anti_fraud"]["r71"])
+        self.assertFalse(res["anti_fraud"]["r72"])
+
+    def test_parse_quarterly_form_judged_single_reviewer_e02(self):
+        """judge 已回填「（E-02 单评分人，非平均）」标记 → e02=true。"""
+        res = feed.parse_quarterly_form(
+            os.path.join(self.dirs["quarterly"], "销售工程师", "2026-Q3.md"))
+        self.assertEqual(res["review_state"], "judged")
+        self.assertEqual(res["grade"], "B")
+        self.assertEqual(res["human_final"], 100)
+        self.assertTrue(res["anti_fraud"]["e02"])
+        self.assertIsNone(res["estimated"])
 
     def test_parse_anti_distortion_log(self):
         res = feed.parse_anti_distortion_log(
@@ -195,6 +261,27 @@ class TestPureLogic(unittest.TestCase):
         self.assertEqual(feed.grade_for(60), "C")
         self.assertEqual(feed.grade_for(59.9), "D")
         self.assertEqual(feed.grade_for(120), "S")
+
+    def test_anti_fraud_flags_e02_marker_semantics(self):
+        """E-02 仅由 judge 回填标记 + judged 状态触发（KA-96 阻塞项修复）。"""
+        template_pending = (
+            "| 评分人不足 |  | E-02: 单评分人可用，等级上限A |\n"
+            "**本季等级**: ______\n"
+        )
+        # pending 模板含静态「等级上限A」描述 → 不触发
+        self.assertFalse(feed._anti_fraud_flags(template_pending, judged=False)["e02"])
+        # 同一文本即便 judged=False 也不触发（未判定表单无权威 E-02）
+        self.assertFalse(feed._anti_fraud_flags(template_pending, judged=True)["e02"])
+
+        judged_marker_final = "**人评最终分** = **100**（E-02 单评分人，非平均）\n"
+        self.assertTrue(feed._anti_fraud_flags(judged_marker_final, judged=True)["e02"])
+        # judged 但无 E-02 标记 → 不触发
+        self.assertFalse(feed._anti_fraud_flags(
+            "**人评最终分** = **90**\n", judged=True)["e02"])
+
+        # judge「人评评分人 ≥ 2」行标记（另一种回填形式）也触发
+        cnt_marker = "- [ ] 人评评分人 ≥ 2: 1人（E-02 单评分人，等级上限A）\n"
+        self.assertTrue(feed._anti_fraud_flags(cnt_marker, judged=True)["e02"])
 
     def test_keyword_category(self):
         self.assertEqual(feed.keyword_category("数据分析师"), "data")

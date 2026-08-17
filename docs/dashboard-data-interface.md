@@ -73,6 +73,9 @@ python3 src/dashboard-data-feed.py --no-cli --pretty
           "as_of"                    // 时基：聚合器最后一次写报告时间
         },
         "anti_fraud": { "r71", "r72", "e02" },
+        // e02 仅当 review_state==judged 且含 judge 回填标记「（E-02 单评分人」
+        // 时为 true；模板静态描述「E-02: 单评分人可用，等级上限A」不触发
+        // （KA-96 代码审查阻塞项修复，避免 pending 表单误标）
         "flags": ["E_MISS: …"]
       }
     }

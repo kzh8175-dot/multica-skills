@@ -214,11 +214,18 @@ def _grade_value(text):
     return None
 
 
-def _anti_fraud_flags(text):
-    """R-71 / R-72 / E-02 触发标记（与 judge.parse_anti_fraud 同源）。"""
+def _anti_fraud_flags(text, judged=False):
+    """R-71 / R-72 / E-02 触发标记。
+
+    E-02 仅取 judge 回填标记判定：`review_state==judged` 且含「（E-02 单评分人」
+    （judge 在「人评最终分」行追加「（E-02 单评分人，非平均）」、或「人评评分人
+    ≥ 2」行写「（E-02 单评分人，等级上限A）」）。模板自带的描述性文字
+    「E-02: 单评分人可用，等级上限A」（五、异常处理记录）不含全角括号前缀，
+    不触发，避免 pending 表单误标（KA-96 代码审查阻塞项）。
+    """
     r71 = bool(re.search(r"（等级上限C）|触发一票否决\(R-71\)", text))
     r72 = bool(re.search(r"（等级降一档）|触发降档\(R-72\)", text))
-    e02 = "E-02 单评分人" in text or "等级上限A" in text
+    e02 = judged and bool(re.search(r"（E-02 单评分人", text))
     return {"r71": r71, "r72": r72, "e02": e02}
 
 
@@ -274,7 +281,7 @@ def parse_quarterly_form(path):
         "grade": grade,
         "review_state": "judged" if reviewed else "pending",
         "estimated": estimated,
-        "anti_fraud": _anti_fraud_flags(text),
+        "anti_fraud": _anti_fraud_flags(text, judged=reviewed),
         "flags": flags,
     }
 
