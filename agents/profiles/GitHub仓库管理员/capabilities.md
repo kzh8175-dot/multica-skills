@@ -11,6 +11,16 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-102 收尾 · 看板部署访问 URL 固化入库（代领导推分支的 docs 快进合入 main + manifest 登记）
+- **任务**：资深战略领导者 将看板「部署访问（Owner 直达）」章节固化到 `dashboard/README.md`（生产树 + 仓库分支 `agent/agent/73c0235a` commit `0362b2e`），交接「合并/推送至 main，保持仓库 == 生产」。
+- **新技能 / 加深的技能**：
+  - **「领导已推分支、仅需合 main」的交付形态**：与「交接方工作区未提交」不同，本次交付物已 commit + 已推远程分支 → 仓库侧只需 `git log origin/main..<branch>` 核对增量（恰 1 个 docs commit）+ `git merge-base` 判定 main 是否恰为分支基（main == merge-base → 纯快进，无冲突风险）。
+  - **main 被其他 worktree 占用时的快进合入**：`git checkout main` 报「already checked out at <另一 workdir>」（先前 run 的 checkout 占用）→ 不用本地 merge，直接 `git push origin <branch>:main` 做远程快进（`9b99066..0362b2e`），push 前已确认 main 不领先（`git log <branch>..origin/main` 为空），非强制、安全。这与能力档案 v0.16 记录的 `git update-ref` 方案同族，但更简（少一次本地 ref 操作）。
+  - **docs 交付的验收基线**：白名单逐文件（单文件 `dashboard/README.md`，项目文档，无敏感信息）+ `git diff origin/main..<branch>` 全量审阅（14 行新增，仅路径/锚点/下钻说明，无 secret/绝对路径越权）+ 合并后 `git show origin/main:<path>` 复核线上生效。docs 交付无需复跑测试。
+  - **manifest 登记紧跟合入**：合 main 后在 `UPLOAD_MANIFEST.md` 补第 22 行（时间按 commit 时间 20:13、commit 记 main 落地 hash `0362b2e`、上传者 GitHub 仓库管理员），并单独提交 `chore:` 登记 commit 快进推送，与能力档案「两 commit 交付模式」一致。
+- **挑战 / 盲区**：仓库侧本地 checkout 分支为 `agent/github/<id>` 且 main 被他人 worktree 占用，不能走「本地 checkout main + merge」路线，需先判明「main 是否快进可行」再决定远程直接 push。
+- **改进**：接「领导已推分支」交接时先 `git fetch` + 增量/merge-base 双查，确认纯快进后可直接 `git push origin <branch>:main`，省去本地分支切换；docs 变更在 push 后 `git show origin/main:<path>` 复核一次。
+
 ### 2026-08-17 · KA-111 每日上传清单维护（日终核对补录 + 待审批清单更新 + 白名单常态化扫描）
 - **任务**：每日维护 autopilot——用 gh API 拉取当日（00:00–23:59 +0800）全部提交，与 `UPLOAD_MANIFEST.md` 已登记 commit 逐笔比对，补录遗漏、更新「待审批上传清单」、全仓白名单扫描，提交 `chore: upload manifest 2026-08-17`（`b68e651`）并在维护 issue 评论贴出摘要。
 - **新技能 / 加深的技能**：
@@ -216,6 +226,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-102 收尾与 资深战略领导者 协作（交接看板部署访问 URL 固化 docs 分支合 main），评分 5/5：交付信息完整（分支 `agent/agent/73c0235a` / commit `0362b2e` / 提交目的「docs 修改」/ 目标 main / 仓库==生产原则），分支已推远程、仓库侧仅需快进合入，交接说明覆盖生产树与仓库双 README 一致性；改进——docs 分支交接可附「main 是否快进」的判定提示，仓库侧可免去一次 merge-base 核验。
 - KA-108 与 DevOps自动化工程师 协作（交接生产部署迁移回填入库），评分 5/5：交接清单三项范围明确（配置 autopilot id 回填 + 3 个看板部署工件 + 生产 `tests/` 布局差异留痕），交付说明覆盖部署路径/访问方式/cron 六任务接线/数据与测试验证全量数据，autopilot id 与 trigger id 完整便于仓库侧回填；改进——交接可附「哪些文件已在仓库（src/ 全量一致）哪些是仓库增量」的判定提示，仓库侧可免去逐文件 diff 生产树的成本。
 - KA-106 与 前端工程师 协作（交接 KA-106 P1 数据缺口口径修复入库），评分 5/5：交付说明覆盖根因 / 修复点 / 验证数据（异常 63→39、E_MISS 事件 141→117、feed 35/35）+ 明确指定权威源（`prod/dashboard/` 已同步 + 3 个变更文件清单）+ 同步声明评分系统零改动；改进——交接附 3 个文件 sha256 或变更摘要，仓库侧可免去逐文件比对生产树的成本。
 - KA-101 与 开发者工具工程师 协作（代提交 KA-101 非阻塞项修复入库），评分 5/5：交接清单四要素（5 文件 / 来源 run `28599020` / 目标分支 main / 建议提交信息）齐全，基 commit `b64cb64` 明确，交付点复跑要求（白名单逐文件 + 复跑测试）前置说明，交接声明与实测完全一致（65 + 174 + 8 全绿）；改进——base 落后 main 时交接可注明「README 在 main 有 KA-103 推进」的已知差异，仓库侧可直接定位 hunk 合并点。
@@ -244,6 +255,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.22 | 追加 KA-102 收尾：领导已推分支的 docs 快进合入 main（增量 + merge-base 双查判纯快进）+ main 被其他 worktree 占用时 `git push origin <branch>:main` 远程快进（对比 v0.16 update-ref 方案）+ docs 交付验收基线（白名单逐文件 + 全 diff 审阅 + push 后线上复核）+ manifest 登记紧跟合入；协作评分 5/5 |
 | 2026-08-17 | v0.21 | 追加 KA-111：每日上传清单维护的日终逐笔核对法（gh API 当日提交清单 vs 已登记 commit 全量比对，识别登记流遗漏 `aa531095` 并补录）+ 待审批清单更新口径（旧项闭环证据核验 + 区分「已开发未上传」与「报告类走 Release」）+ 白名单扫描常态化（git ls-files 全量 grep 黑名单模式）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-17 | v0.20 | 追加 KA-108：部署迁移交接的仓库回填范围核验（交接声明的 src/ 更新实为已入库，逐文件 diff 定位真增量）+ 仓库↔生产「镜像」布局差异核对（config/↔根、src/↔agents/capability-system、测试布局）+ 部署工件逐字节核验与交付源演进捕获（DEPLOY.md 被并发追加 HTTP 段须重拉最新版）+ 按交接清单入库不越权扩散；协作评分 5/5 |
 | 2026-08-17 | v0.19 | 追加 KA-106：「生产树为权威源」同步模式（`prod/dashboard/` 逐文件 `diff -q` 比对后 cp，`dashboard-data-feed.py` 生产独有不入库）+ 同主题 agent 分支在途提交识别（逐分支 blob 比对判定生产为唯一权威，不合并不入库）+ 生成数据文件回归影响核验（agent 维度 score/level 零变化脚本比对 + E_MISS 计数断言）；协作评分 5/5 |
