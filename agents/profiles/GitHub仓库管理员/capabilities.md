@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-101 非阻塞项修复入库（base 落后 main 时的整文件 cp + hunk 合并 + 变更文件逐项吻合）
+- **任务**：代 开发者工具工程师 提交并推送 KA-101 非阻塞项修复（`--baseline` 分支与 `decide()` 口径对齐 + 测试数据隔离，`src/state-change-hook.py` `_baseline_plan` 纯函数 + `src/test-state-change-hook.py` 56→65 + `docs/state-change-hook-test-report.md` + README 计数同步 + 开发者工具工程师能力档案 v0.10，共 5 文件，run `28599020` 工作副本未提交）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + 交付点复跑 + UPLOAD_MANIFEST 登记。
+- **新技能 / 加深的技能**：
+  - **交接 base 落后 main 的整文件 cp + hunk 合并判定**：交接方分支基 `b64cb64` 落后 origin/main 2 commit（KA-103 dashboard + manifest 登记）→ 先 `git diff b64cb64..origin/main -- <path>` 逐文件判定基一致性（本次 4 文件两基相同 → 整文件 cp 无损）；README 双份改动不重叠（交接方只改 test-state-change-hook.py 计数行、main 只加了 dashboard 段）→ 用 Edit 手工单行替换而非整文件覆盖，保留 main 的 dashboard 结构。
+  - **变更文件逐项吻合核验**：cp 后 `diff -q` 逐个文件与交接方工作区比对（4 文件 IDENTICAL）+ `git diff --stat` 与交接声明数字一致（5 文件 151+/15-，与源码工作区 `git diff --numstat` 完全一致）→ 确保入库版本与验收副本同源。
+  - **交付点复跑基线**：钩子 65 + 全仓 174 Python（15/24/24/11/35/65）+ 8 bash（category 4 + anti-fraud 4）全绿，与交接声明完全一致；`py_compile` 两改动文件通过。
+- **挑战 / 盲区**：README 在交接 base 与 main 之间被 KA-103 推进（新增 dashboard 段），不能整文件 cp 必须 hunk 合并；需先 diff 基差异再决定「整文件 cp vs hunk 合并」，避免把 main 的 dashboard 结构覆盖掉。
+- **改进**：交接方 base 落后 main 时，仓库侧先 `git diff base..origin/main -- <交付文件>` 判基，README 等 main 有推进的文件一律 hunk 合并；cp 后用 `diff -q` + `diff --stat` 双重核验与交接声明吻合。
+
 ### 2026-08-17 · KA-103 智能看板交付物入库（从 issue 评论附件拉取 → `dashboard/` 目录 + manifest 登记）
 - **任务**：从 KA-98（迭代 1）/ KA-99（迭代 2）评论附件拉取 dashboard 交付物（`index.html` / `generate-dashboard-data.py` / `dashboard-data.js` / `README.md`）提交至 `kzh8175-dot/multica-skills` 新建 `dashboard/` 目录，登记 UPLOAD_MANIFEST，保持「仓库 == 生产」约定（与 `src/rating-system` 同级）。
 - **新技能 / 加深的技能**：
@@ -180,6 +189,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-101 与 开发者工具工程师 协作（代提交 KA-101 非阻塞项修复入库），评分 5/5：交接清单四要素（5 文件 / 来源 run `28599020` / 目标分支 main / 建议提交信息）齐全，基 commit `b64cb64` 明确，交付点复跑要求（白名单逐文件 + 复跑测试）前置说明，交接声明与实测完全一致（65 + 174 + 8 全绿）；改进——base 落后 main 时交接可注明「README 在 main 有 KA-103 推进」的已知差异，仓库侧可直接定位 hunk 合并点。
 - KA-103 与 前端工程师 协作（交接 dashboard 交付物入库），评分 5/5：交付物以 issue 评论附件形式齐全提供（index.html / generate-dashboard-data.py / dashboard-data.js / README，迭代 1+2 各一版，版本/大小可甄别，截图证据 9 张），交付说明覆盖每项 P1 改动要点、测试基线（feed 15/15 + dashboard↔feed 24/24 一致）与渲染验证；改进——交接可直接附「以最新迭代版本为准」的版本选择提示，减少仓库侧跨 issue 甄别成本。
 - KA-100 与 开发者工具工程师 + 代码审查员 + 资深战略领导者 协作（代提交 KA-100 缺陷修复入库，三方口径对齐），评分 5/5：终审给出明确入库指令（来源 run `a7e2cdaa` 工作副本 5 文件 + 建议提交信息 + 交付点复跑要求），代码审查员已独立实跑核验（baseline 写路径 / 退出码契约 / 56+165+8 全绿），仓库侧按既有入库流程闭环即可；改进——若终审能同时给出「待推送确认后置 done」的收口条件，交付闭环更明确。
 - KA-98 #7 与 开发者工具工程师 协作（交接 KA-98 CLI 分页拉取入库），评分 5/5：交付清单四要素（文件/分支 `a8d3d955`/两 commit/提交目的）齐全、测试基线明确（feed 22→35 + 全量回归 + 生产实跑等价验证）、交接时说明基线（基于 KA-97 迭代 0）便于仓库侧判定增量；改进——交接注明「基于 KA-97 迭代 0」的同时可确认该基底是否已合 main，仓库侧可直接按「剩两 commit」准备合入，减少一次 merge-base 核验。
@@ -205,6 +215,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.18 | 追加 KA-101：交接 base 落后 main 的整文件 cp + hunk 合并判定（先 diff 基差异 → 基一致整文件 cp、README 等 main 有推进则 hunk 合并）+ 变更文件逐项吻合核验（diff -q + diff --stat 数字对照交接声明）；协作评分 5/5 |
 | 2026-08-17 | v0.17 | 追加 KA-103：issue 评论附件拉取入库模式（`attachment download` + 跨迭代版本甄别 + `shasum` 同源校验）、白名单检查后置落盘、新建顶层 `dashboard/` 目录 + 根 README 目录同步；协作评分 5/5 |
 | 2026-08-17 | v0.16 | 追加 KA-100：未提交工作区交接的跨 run 嵌套 checkout 定位（find 文件名 → git status/diff 逐项吻合）、交接已由审查员/终审核验时仓库侧按既有流程闭环（白名单 + 交付点复跑 56+165+8 + manifest 登记 + 回传落地 commit）、两 commit 交付模式（内容 commit + manifest/档案登记 commit）；协作评分 5/5 |
 | 2026-08-17 | v0.14 | 追加 KA-97：交接后分支继续演进的识别（comment hash f96f15f vs 实际 tip a411267，reflog 时间线判定）、交付点双重核验（工作区未提交改动 vs 提交快照，以提交快照为准）、两 commit 关联交付合并 + manifest 双行回填、分支 ref 与工作区 HEAD 一致性检查；协作评分 4/5 |
