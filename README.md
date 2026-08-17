@@ -30,7 +30,7 @@ src/                          # 评分系统核心脚本（P0/P1 交付物）
 ├── test-anti-distortion-rules.py     # 防失真修正层测试（P1-10，19 条用例）
 ├── test-rating-settler.py     # 结算器测试（归属解析 6 条 + S-1 去重键 4 条）
 ├── test-state-change-hook.py  # 状态变更钩子测试（P2-11，50 条用例，含 main() 集成 6 条）
-├── test-dashboard-data-feed.py # 看板数据接口测试（KA-96，22 条用例，含只读性校验 + KA-97 单一源收敛回归）
+├── test-dashboard-data-feed.py # 看板数据接口测试（KA-96，35 条用例，含只读性校验 + KA-97 单一源收敛回归 + KA-98 CLI 分页）
 ├── test-review-scheduler-category.sh  # 调度器 category 解析验收测试
 └── test-anti-fraud-scheduler.sh       # 调度器 check_anti_fraud 集成验收（P1-10）
 scripts/                      # 运维层（定时任务包装脚本，P0-3）

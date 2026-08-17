@@ -427,34 +427,79 @@ def run_cli(args):
         return None
 
 
+def fetch_all_issues(page_size=200, max_pages=25):
+    """分页拉取全量 issue（multica issue list --limit/--offset）。
+
+    单次 `--limit 200` 会在工作区 issue >200 时静默截断尾部，导致预算条目
+    与 rating.status 计数遗漏（KA-98 #7）。本函数按页拉取，直到空页 / 非满页 /
+    has_more=false / 达最大页数，并对分页期间新插入的 issue 按 id 去重。
+
+    返回 (issues, note):
+      issues  合并后的全量 issue 列表；首页即失败返回 None
+      note    非致命降级说明（后续页失败 / 达最大页数），正常为 None
+    """
+    collected = []
+    offset = 0
+    note = None
+    for page in range(1, max_pages + 1):
+        out = run_cli(["issue", "list", "--limit", str(page_size),
+                       "--offset", str(offset), "--output", "json"])
+        if not out:
+            if not collected:
+                return None, "multica issue list 不可用（离线？）"
+            note = f"第 {page} 页拉取失败，已返回前 {len(collected)} 条"
+            break
+        try:
+            data = json.loads(out)
+        except json.JSONDecodeError:
+            if not collected:
+                return None, "multica 返回 JSON 解析失败"
+            note = f"第 {page} 页 JSON 解析失败，已返回前 {len(collected)} 条"
+            break
+        issues = data.get("issues", data) if isinstance(data, dict) else data
+        if not isinstance(issues, list):
+            if not collected:
+                return None, "multica 返回结构异常"
+            note = f"第 {page} 页结构异常，已返回前 {len(collected)} 条"
+            break
+        if not issues:
+            break
+        collected.extend(issues)
+        has_more = data.get("has_more") if isinstance(data, dict) else None
+        if has_more is False or len(issues) < page_size:
+            break
+        offset += page_size
+    else:
+        note = f"已达最大分页数（{max_pages} 页 × {page_size} 条），结果可能不完整"
+
+    # 分页期间工作区可能插入新 issue，offset 分页会重复/偏移：按 id 去重
+    seen = set()
+    deduped = []
+    for it in collected:
+        if isinstance(it, dict):
+            iid = it.get("id")
+            if iid is not None and iid in seen:
+                continue
+            if iid is not None:
+                seen.add(iid)
+        deduped.append(it)
+    return deduped, note
+
+
 def load_budget(limit=200):
-    """通过 multica issue list 读预算 metadata；CLI 不可用返回 (None, "CLI 不可用")。"""
-    out = run_cli(["issue", "list", "--limit", str(limit), "--output", "json"])
-    if not out:
-        return None, "multica issue list 不可用（离线？）"
-    try:
-        data = json.loads(out)
-    except json.JSONDecodeError:
-        return None, "multica 返回 JSON 解析失败"
-    issues = data.get("issues", data) if isinstance(data, dict) else data
-    if not isinstance(issues, list):
-        return None, "multica 返回结构异常"
-    return filter_budget_issues(issues), None
+    """通过 multica issue list 分页读预算 metadata；CLI 不可用返回 (None, "CLI 不可用")。"""
+    issues, note = fetch_all_issues(page_size=limit)
+    if issues is None:
+        return None, note
+    return filter_budget_issues(issues), note
 
 
 def load_rating_stats(limit=200):
-    """统计 rating.status 分布（异常中心/运行态用）。"""
-    out = run_cli(["issue", "list", "--limit", str(limit), "--output", "json"])
-    if not out:
-        return None, None
-    try:
-        data = json.loads(out)
-    except json.JSONDecodeError:
-        return None, None
-    issues = data.get("issues", data) if isinstance(data, dict) else data
-    if not isinstance(issues, list):
-        return None, None
-    return parse_pending_escalated(issues), None
+    """统计 rating.status 分布（异常中心/运行态用）；分页拉取避免 >limit 截断。"""
+    issues, note = fetch_all_issues(page_size=limit)
+    if issues is None:
+        return None, note
+    return parse_pending_escalated(issues), note
 
 
 def load_cli_categories():
