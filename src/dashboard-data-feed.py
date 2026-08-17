@@ -6,6 +6,13 @@ dashboard-data-feed.py — 智能看板只读数据接口（KA-96）
 职责: 把评分方案 C 的生产数据聚合为一份统一 JSON，供智能看板 8 页
 （总览/排行榜/趋势/评分明细/事件流水/预算/升级队列/异常中心）只读渲染。
 
+单一数据源（KA-97 迭代 0 · #3 单一源收敛）:
+  本脚本是智能看板的**唯一**数据源（Schema v1.0）。早期并行管线
+  `dashboard-data-loader.py`（口径分叉：agent 60/63、排名含无数据智能体、
+  全员分母均值、等级分布预估缺失）已随迭代 0 删除，前端只消费由本脚本
+  聚合映射的 `window.DASHBOARD_DATA`。发现/聚合/口径全部收敛于本模块，
+  回归用例见 `test-dashboard-data-feed.py::TestSingleSourceConvergence`。
+
 数据来源（全部只读，不产生任何写入）:
   1. 月度报告   reviews/scoring/monthly/{agent}/{YYYY-MM}.md   ← rating-aggregator.py
   2. 季度表单   reviews/scoring/quarterly/{agent}/{YYYY-Qn}.md ← 聚合器 + 人评判定

@@ -1,8 +1,23 @@
-# 智能看板 · 数据接口契约（KA-96 里程碑 1）
+# 智能看板 · 数据接口契约（KA-96 里程碑 1 · KA-97 迭代 0 收敛）
 
 > 归属：KA-96 智能看板研发立项 · 协作人：开发者工具工程师（聚合器/结算数据接口对接）
 > 面向：前端工程师（页面实现）、数据可视化工程师（真实数据接入 + 图表）
-> 状态：接口 v1.0 已落地（`src/dashboard-data-feed.py` + 15 条测试全通过）
+> 状态：接口 v1.0 已落地（`src/dashboard-data-feed.py`）；KA-97 迭代 0 完成**单一数据源收敛**（22 条测试全通过）
+
+## 0. 单一数据源收敛（KA-97 · #3）
+
+- **唯一数据源**：智能看板 8 页的真实数据只由 `src/dashboard-data-feed.py`
+  （Schema v1.0）聚合产出；前端通过 `generate-dashboard-data.py` 消费本接口，
+  不再有任何第二处数据管线。
+- **loader 删除**：早期并行管线 `dashboard-data-loader.py`（未在任何仓库交付，
+  输出口径分叉：agent 数 60 vs 63、排名含无数据智能体、季度客观均值全员分母、
+  等级分布预估全 0）已随迭代 0 **删除**，杜绝双管线分叉。
+- **分叉口径清理**：前端只消费 feed；无数据智能体（E_MISS）不参与排名；
+  季度均值/等级分布以有数据智能体为分母计算。
+- **回归锁定**：`src/test-dashboard-data-feed.py` 新增 4 条用例——
+  `TestSingleSourceConvergence` 3 条（发现范围含四目录 / Schema v1.0
+  无 loader 字段契约 / 单一源覆盖全部智能体）+ 事件多事件 `;` 原始串契约 1 条
+  （loader 12 用例并入后，feed 套件 22 条全通过）。
 
 ## 1. 一句话
 
@@ -27,7 +42,7 @@ python3 src/dashboard-data-feed.py --all --pretty
 python3 src/dashboard-data-feed.py --no-cli --pretty
 ```
 
-测试：`python3 src/test-dashboard-data-feed.py`（15 条，含只读性校验）。
+测试：`python3 src/test-dashboard-data-feed.py`（22 条，含只读性校验 + 单一源收敛回归）。
 
 ## 3. 数据来源（口径 = 与评分系统同源）
 
@@ -133,4 +148,4 @@ judged 综合分/等级）直接呈现，不加标注。
   `--agents-dir` 指向生产树。
 
 ---
-*开发者工具工程师 · KA-96 里程碑 1（数据接口打通）*
+*开发者工具工程师 · KA-96 里程碑 1（数据接口打通）· KA-97 迭代 0（单一数据源收敛）*

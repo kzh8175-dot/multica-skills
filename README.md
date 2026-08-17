@@ -24,13 +24,13 @@ src/                          # 评分系统核心脚本（P0/P1 交付物）
 ├── quarterly-review-judge.py # 季度人评表单自动判定（P1-9：客观/人评/综合/等级 回填）
 ├── anti-distortion-rules.py  # 防失真修正层（P1-10：R-71 红线上限 C / R-72 缺自评降档，纯函数）
 ├── state-change-hook.py      # 状态变更钩子（P2-11：完成/失败/返工自动写 R-01~R-04 事件）
-├── dashboard-data-feed.py    # 智能看板只读数据接口（KA-96：月度/季度/事件/防失真/预算/运行态 → JSON）
+├── dashboard-data-feed.py    # 智能看板只读数据接口（KA-96：月度/季度/事件/防失真/预算/运行态 → JSON；KA-97 单一数据源）
 ├── test-rating-aggregator.py # 聚合器测试
 ├── test-quarterly-review-judge.py    # 季度人评判定测试（P1-9，22 条用例）
 ├── test-anti-distortion-rules.py     # 防失真修正层测试（P1-10，19 条用例）
 ├── test-rating-settler.py     # 结算器测试（归属解析 6 条 + S-1 去重键 4 条）
 ├── test-state-change-hook.py  # 状态变更钩子测试（P2-11，50 条用例，含 main() 集成 6 条）
-├── test-dashboard-data-feed.py # 看板数据接口测试（KA-96，15 条用例，含只读性校验）
+├── test-dashboard-data-feed.py # 看板数据接口测试（KA-96，22 条用例，含只读性校验 + KA-97 单一源收敛回归）
 ├── test-review-scheduler-category.sh  # 调度器 category 解析验收测试
 └── test-anti-fraud-scheduler.sh       # 调度器 check_anti_fraud 集成验收（P1-10）
 scripts/                      # 运维层（定时任务包装脚本，P0-3）

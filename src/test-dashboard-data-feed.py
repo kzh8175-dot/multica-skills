@@ -188,6 +188,19 @@ class TestParsers(unittest.TestCase):
         self.assertEqual(len(res["flags"]), 1)         # 坏行被标记
         self.assertIn("积分列无法解析", res["flags"][0])
 
+    def test_parse_events_multi_event_raw_preserved(self):
+        """多事件 `;` 行以原始完整串进入 feed（loader 用例并入）：
+        事件列「R-21:自评;R-22:档案」保留整体，`;` 拆分属下游生成层
+        （前端展示层口径），feed 单一源不做二次解析。"""
+        p = os.path.join(self.dirs["events"], "开发者工具工程师", "2026-08.md")
+        with open(p, "a", encoding="utf-8") as f:
+            f.write("| 2026-08-16 13:00 | issue-4 | R-21:自评;R-22:档案 | +7 |\n")
+        res = feed.parse_events_file(p)
+        last = res["rows"][-1]
+        self.assertEqual(last["event"], "R-21:自评;R-22:档案")
+        self.assertEqual(last["points"], 7)
+        self.assertEqual(res["total"], 17)            # 10 + 7
+
     def test_parse_quarterly_form_pending(self):
         res = feed.parse_quarterly_form(
             os.path.join(self.dirs["quarterly"], "开发者工具工程师", "2026-Q3.md"))
@@ -404,6 +417,104 @@ class TestBuildFeed(unittest.TestCase):
         dirs = feed.scoring_dirs(self.root)
         self.assertEqual(feed.discover_months(dirs), ["2026-08"])
         self.assertEqual(feed.discover_quarters(dirs), ["2026-Q3"])
+
+
+class TestSingleSourceConvergence(unittest.TestCase):
+    """KA-97 迭代 0 · #3 单一数据源收敛：feed 为唯一数据源，无 loader 分叉。
+
+    回归覆盖代码审查发现（KA-96 非阻塞 #3）:
+      - agent 数 60 vs 63 —— 旧 dashboard-data-loader.py 只扫描
+        profiles ∪ events，漏掉仅存在于 monthly/quarterly 的智能体；
+      - loader 输出携带分叉派生字段（rank / quarterPoints /
+        quarter_mean_objective / grade_distribution_est 等），前端不消费。
+    """
+
+    def setUp(self):
+        self.root, self.dirs = make_agents_root()
+        # 仅存在于月度/季度目录的智能体（无档案、无事件流水）
+        # —— 旧 loader 的 discover_agents 会漏掉它（63 vs 60 分叉根因）
+        write(os.path.join(self.dirs["monthly"], "仅月度智能体", "2026-08.md"),
+              "# 仅月度智能体 - 月度积分报告\n"
+              "**月份**: 2026-08\n**类别**: data\n**基准月积分**: 350\n"
+              "## 月度汇总\n"
+              "| 项目 | 数值 |\n|------|:---:|\n"
+              "| 月积分 | 100 |\n| 基准月积分 | 350 |\n| 月度百分制 | 28 |\n")
+        write(os.path.join(self.dirs["quarterly"], "仅月度智能体", "2026-Q3.md"),
+              "# 仅月度智能体 - 季度客观分报告\n"
+              "**季度**: 2026-Q3\n**类别**: data\n**基准月积分**: 350\n"
+              "## 季度客观分\n"
+              "| 月份 | 积分 | 基准 | 百分制 |\n|------|:---:|:---:|:---:|\n"
+              "| 2026-07 | 0 | 350 | 0 |\n| 2026-08 | 100 | 350 | 28 |\n"
+              "| 2026-09 | 0 | 350 | 0 |\n"
+              "**季度客观分** = (0+28+0) / 3 = **9**\n")
+        # 普通智能体（档案 + 事件 + 月度 + 季度 四目录齐全）
+        write(os.path.join(self.dirs["profiles"], "测试智能体", "capabilities.md"),
+              "# 测试智能体\ncategory=technical\n")
+        write(os.path.join(self.dirs["events"], "测试智能体", "2026-08.md"),
+              "| 时间 | 任务 | 事件 | 积分 |\n"
+              "|------|------|------|:---:|\n"
+              "| 2026-08-16 10:00 | i1 | R-21:自评 | +5 |\n")
+        write(os.path.join(self.dirs["monthly"], "测试智能体", "2026-08.md"),
+              "# 测试智能体 - 月度积分报告\n"
+              "**月份**: 2026-08\n**类别**: technical\n**基准月积分**: 300\n"
+              "## 月度汇总\n"
+              "| 项目 | 数值 |\n|------|:---:|\n"
+              "| 月积分 | 5 |\n| 基准月积分 | 300 |\n| 月度百分制 | 1 |\n")
+        write(os.path.join(self.dirs["quarterly"], "测试智能体", "2026-Q3.md"),
+              "# 测试智能体 - 季度客观分报告\n"
+              "**季度**: 2026-Q3\n**类别**: technical\n**基准月积分**: 300\n"
+              "## 季度客观分\n"
+              "| 月份 | 积分 | 基准 | 百分制 |\n|------|:---:|:---:|:---:|\n"
+              "| 2026-07 | 0 | 300 | 0 |\n| 2026-08 | 5 | 300 | 1 |\n"
+              "| 2026-09 | 0 | 300 | 0 |\n"
+              "**季度客观分** = (0+1+0) / 3 = **0**\n")
+
+    def tearDown(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def test_discover_agents_includes_scoring_only_agents(self):
+        """发现范围 = 档案 ∪ 事件 ∪ 月度 ∪ 季度（四目录），不遗漏仅存在于
+        scoring 目录的智能体（KA-97 #3：修复 loader 60 vs 63 分叉）。"""
+        agents = feed.discover_agents(self.root, feed.scoring_dirs(self.root))
+        self.assertIn("仅月度智能体", agents)
+        self.assertIn("测试智能体", agents)
+        self.assertEqual(len(agents), 2)
+
+    def test_feed_schema_v1_contract_no_loader_fields(self):
+        """Schema v1.0 契约：feed 输出不含 loader 分叉字段（derived/rank/
+        quarterPoints/quarter_mean_objective/grade_distribution_est）。"""
+        agents = feed.discover_agents(self.root, feed.scoring_dirs(self.root))
+        data = feed.build_feed(self.root, ["2026-08"], ["2026-Q3"], agents,
+                               use_cli=False)
+        # 顶层结构 = Schema v1.0 八段，无 derived 派生块
+        self.assertEqual(
+            set(data.keys()),
+            {"meta", "agents", "monthly", "quarterly", "events",
+             "anti_distortion", "budget", "runtime"})
+        self.assertNotIn("derived", data)
+        # 智能体条目不含 loader 分叉口径
+        for a in data["agents"]:
+            self.assertNotIn("rank", a)
+            self.assertNotIn("quarterPoints", a)
+            self.assertNotIn("quarterPointsLive", a)
+            self.assertNotIn("monthlyFlags", a)
+        # 派生统计不在 meta 层（loader 曾在 derived 输出）
+        self.assertNotIn("grade_distribution", data["meta"])
+        self.assertNotIn("quarter_mean_objective", data["meta"])
+
+    def test_build_feed_single_source_covers_all_agents(self):
+        """单一源收敛：build_feed 的 agents 覆盖全部发现智能体（含仅 scoring 目录者）。"""
+        agents = feed.discover_agents(self.root, feed.scoring_dirs(self.root))
+        data = feed.build_feed(self.root, ["2026-08"], ["2026-Q3"], agents,
+                               use_cli=False)
+        names = {a["name"] for a in data["agents"]}
+        self.assertIn("仅月度智能体", names)
+        self.assertIn("测试智能体", names)
+        # 仅月度智能体的月度/季度数据正确进入 feed
+        self.assertEqual(
+            data["monthly"]["2026-08"]["仅月度智能体"]["score"], 28)
+        self.assertEqual(
+            data["quarterly"]["2026-Q3"]["仅月度智能体"]["objective"], 9)
 
 
 if __name__ == "__main__":
