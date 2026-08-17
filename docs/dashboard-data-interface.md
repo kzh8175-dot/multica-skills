@@ -1,8 +1,8 @@
-# 智能看板 · 数据接口契约（KA-96 里程碑 1 · KA-97 迭代 0 收敛）
+# 智能看板 · 数据接口契约（KA-96 里程碑 1 · KA-97 迭代 0 收敛 · KA-98 迭代 1 分页）
 
 > 归属：KA-96 智能看板研发立项 · 协作人：开发者工具工程师（聚合器/结算数据接口对接）
 > 面向：前端工程师（页面实现）、数据可视化工程师（真实数据接入 + 图表）
-> 状态：接口 v1.0 已落地（`src/dashboard-data-feed.py`）；KA-97 迭代 0 完成**单一数据源收敛**（22 条测试全通过）
+> 状态：接口 v1.0 已落地（`src/dashboard-data-feed.py`）；KA-97 迭代 0 完成**单一数据源收敛**；KA-98 #7 完成 **CLI 分页拉取**（35 条测试全通过）
 
 ## 0. 单一数据源收敛（KA-97 · #3）
 
@@ -18,6 +18,18 @@
   `TestSingleSourceConvergence` 3 条（发现范围含四目录 / Schema v1.0
   无 loader 字段契约 / 单一源覆盖全部智能体）+ 事件多事件 `;` 原始串契约 1 条
   （loader 12 用例并入后，feed 套件 22 条全通过）。
+
+## 0.1 CLI 分页拉取（KA-98 · #7）
+
+- **背景**：预算与 rating.status 计数经 `multica issue list` 只读拉取，旧实现单次
+  `--limit 200`，工作区 issue >200 时静默截断尾部（预算条目漏、pending 计数偏少）。
+- **修复**：`fetch_all_issues()` 按页拉取（`--limit/--offset`），直到空页 / 非满页 /
+  `has_more=false` / 达最大页数（25 页 × 200），并对分页期间新插入 issue 按 id 去重。
+  预算/pending 计数全量覆盖，不再有 200 上限截断；后续页失败时降级返回已拉取部分
+  并附 `note` 说明。
+- **回归**：`TestCliPagination` 13 条——超量（>200）时预算/pending 跨页不漏、
+  精确倍数、空工作区、CLI 不可用、中途页失败部分返回、达最大页数、老 CLI 裸数组、
+  跨页去重、note 传播。
 
 ## 1. 一句话
 
@@ -42,7 +54,7 @@ python3 src/dashboard-data-feed.py --all --pretty
 python3 src/dashboard-data-feed.py --no-cli --pretty
 ```
 
-测试：`python3 src/test-dashboard-data-feed.py`（22 条，含只读性校验 + 单一源收敛回归）。
+测试：`python3 src/test-dashboard-data-feed.py`（35 条，含只读性校验 + 单一源收敛回归 + CLI 分页）。
 
 ## 3. 数据来源（口径 = 与评分系统同源）
 

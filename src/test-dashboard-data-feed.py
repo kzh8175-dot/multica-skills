@@ -11,15 +11,18 @@ test-dashboard-data-feed.py — dashboard-data-feed 只读数据接口测试（K
   - 类别解析优先级（CLI → 档案 → 推断）
   - 等级查表（R-62~R-66）
   - 预算过滤（纯函数）
+  - issue list 分页拉取（KA-98 #7：>limit 时预算/pending 不截断）
   - build_feed 集成 + 只读性（不改动 agents 根）
 """
 
 import importlib.util
+import json
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 MODULE = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "dashboard-data-feed.py"))
@@ -515,6 +518,205 @@ class TestSingleSourceConvergence(unittest.TestCase):
             data["monthly"]["2026-08"]["仅月度智能体"]["score"], 28)
         self.assertEqual(
             data["quarterly"]["2026-Q3"]["仅月度智能体"]["objective"], 9)
+
+
+class TestCliPagination(unittest.TestCase):
+    """KA-98 #7：issue list 分页拉取，避免 `--limit 200` 截断预算/pending 计数。
+
+    回归覆盖超量场景：工作区 issue >200 时，预算条目与 rating.status 分布
+    必须从全部页拉取，不能只取首页（旧实现静默截断尾部）。
+    """
+
+    def page(self, items, offset=0, limit=200, total=None, has_more=None):
+        """构造 multica issue list --output json 的页响应（dict 形态）。"""
+        if total is None:
+            total = max(offset + len(items), len(items))
+        if has_more is None:
+            has_more = offset + len(items) < total
+        return json.dumps({
+            "issues": items, "total": total,
+            "limit": limit, "offset": offset, "has_more": has_more,
+        }, ensure_ascii=False)
+
+    def issue(self, iid, **md):
+        return {"id": f"i-{iid:04d}", "identifier": f"KA-{iid:03d}",
+                "title": f"issue {iid}", "status": "in_progress", "metadata": md}
+
+    def call_offsets(self, calls):
+        return [c[c.index("--offset") + 1] for c in calls]
+
+    def test_fetch_single_page_short(self):
+        calls = []
+
+        def fake_cli(args):
+            calls.append(args)
+            return self.page([self.issue(i) for i in range(50)], offset=0)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 50)
+        self.assertIsNone(note)
+        self.assertEqual(len(calls), 1)
+
+    def test_fetch_paginates_over_page_size(self):
+        # 250 条：page1 满 200（has_more），page2 余 50
+        calls = []
+
+        def fake_cli(args):
+            calls.append(args)
+            offset = int(args[args.index("--offset") + 1])
+            if offset == 0:
+                return self.page([self.issue(i) for i in range(200)],
+                                 offset=0, total=250)
+            return self.page([self.issue(i) for i in range(200, 250)],
+                             offset=200, total=250)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 250)
+        self.assertIsNone(note)
+        self.assertEqual(self.call_offsets(calls), ["0", "200"])
+
+    def test_fetch_exact_multiple_stops_on_has_more_false(self):
+        # 恰好 400 条：page2 满页但 has_more=false → 停止，不多拉
+        calls = []
+
+        def fake_cli(args):
+            calls.append(args)
+            offset = int(args[args.index("--offset") + 1])
+            if offset == 0:
+                return self.page([self.issue(i) for i in range(200)],
+                                 offset=0, total=400, has_more=True)
+            return self.page([self.issue(i) for i in range(200, 400)],
+                             offset=200, total=400, has_more=False)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 400)
+        self.assertIsNone(note)
+        self.assertEqual(len(calls), 2)
+
+    def test_fetch_empty_workspace(self):
+        def fake_cli(args):
+            return self.page([], offset=0, total=0, has_more=False)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues()
+        self.assertEqual(issues, [])
+        self.assertIsNone(note)
+
+    def test_fetch_cli_unavailable(self):
+        with mock.patch.object(feed, "run_cli", return_value=None):
+            issues, note = feed.fetch_all_issues()
+        self.assertIsNone(issues)
+        self.assertIn("不可用", note)
+
+    def test_fetch_midway_page_failure_keeps_partial(self):
+        def fake_cli(args):
+            offset = int(args[args.index("--offset") + 1])
+            if offset == 0:
+                return self.page([self.issue(i) for i in range(200)],
+                                 offset=0, total=500)
+            return None
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 200)
+        self.assertIn("第 2 页拉取失败", note)
+
+    def test_fetch_max_pages_truncation_note(self):
+        # 每页都满且 has_more=true → 达最大页数后停止并给降级说明
+        def fake_cli(args):
+            offset = int(args[args.index("--offset") + 1])
+            return self.page([self.issue(offset + i) for i in range(200)],
+                             offset=offset, total=10_000, has_more=True)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200, max_pages=3)
+        self.assertEqual(len(issues), 600)
+        self.assertIn("已达最大分页数", note)
+
+    def test_fetch_bare_list_response_fallback(self):
+        # 老 CLI 可能直接返回数组（无 has_more）：按非满页判断终止
+        calls = []
+
+        def fake_cli(args):
+            calls.append(args)
+            offset = int(args[args.index("--offset") + 1])
+            return json.dumps([self.issue(offset + i) for i in range(50)],
+                              ensure_ascii=False)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 50)
+        self.assertIsNone(note)
+        self.assertEqual(len(calls), 1)
+
+    def test_fetch_dedupes_ids_across_pages(self):
+        # page1 与 page2 交叠（offset 分页遇并发插入的防御）：按 id 去重
+        def fake_cli(args):
+            offset = int(args[args.index("--offset") + 1])
+            if offset == 0:
+                return self.page([self.issue(i) for i in range(210)],
+                                 offset=0, total=410)
+            return self.page([self.issue(i) for i in range(200, 210)],
+                             offset=200, total=410)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 210)          # 200 + 10 不重复
+        self.assertIsNone(note)
+
+    def test_load_budget_includes_overflow_entries(self):
+        # >200 条时预算条目分布在第 1/2 页 → 两页都要进 budget（旧 --limit 200 漏尾部）
+        def fake_cli(args):
+            offset = int(args[args.index("--offset") + 1])
+            if offset == 0:
+                p1 = [self.issue(i) for i in range(200)]
+                p1[0] = self.issue(0, **{"budget.ceiling": 100, "budget.spent": 99,
+                                         "budget.variance": -0.01})
+                return self.page(p1, offset=0, total=250)
+            p2 = [self.issue(200 + i) for i in range(50)]
+            p2[0] = self.issue(200, **{"budget.ceiling": 50, "budget.spent": 65.5,
+                                       "budget.variance": 0.31})
+            return self.page(p2, offset=200, total=250)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            entries, note = feed.load_budget()
+        ids = {e["identifier"] for e in entries}
+        self.assertIn("KA-000", ids)      # 首页预算
+        self.assertIn("KA-200", ids)      # 第 2 页预算（旧 --limit 200 会漏掉）
+        self.assertEqual(len(entries), 2)
+        self.assertIsNone(note)
+
+    def test_load_rating_stats_includes_overflow(self):
+        def fake_cli(args):
+            offset = int(args[args.index("--offset") + 1])
+            if offset == 0:
+                p1 = [self.issue(i, **{"rating.status": "pending"})
+                      for i in range(200)]
+                return self.page(p1, offset=0, total=250)
+            p2 = [self.issue(200 + i, **{"rating.status": "escalated"})
+                  for i in range(50)]
+            return self.page(p2, offset=200, total=250)
+
+        with mock.patch.object(feed, "run_cli", fake_cli):
+            stats, note = feed.load_rating_stats()
+        self.assertEqual(stats["pending"], 200)
+        self.assertEqual(stats["escalated"], 50)     # 旧 --limit 200 会漏掉
+        self.assertIsNone(note)
+
+    def test_load_budget_returns_note_on_cli_failure(self):
+        with mock.patch.object(feed, "run_cli", return_value=None):
+            entries, note = feed.load_budget()
+        self.assertIsNone(entries)
+        self.assertIn("不可用", note)
+
+    def test_load_rating_stats_returns_note_on_cli_failure(self):
+        with mock.patch.object(feed, "run_cli", return_value=None):
+            stats, note = feed.load_rating_stats()
+        self.assertIsNone(stats)
+        self.assertIn("不可用", note)
 
 
 if __name__ == "__main__":
