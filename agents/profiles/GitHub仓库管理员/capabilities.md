@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-106 P1 数据缺口口径修复同步（生产树 `prod/dashboard/` 权威源 → 仓库 `dashboard/`，仅看板生成层、评分系统零改动）
+- **任务**：前端工程师完成 KA-106 P1 修复（数据缺口口径收敛：异常中心/事件流仅统计 `!hasData` 为数据缺口，24 个有 8 月真实数据的智能体不再被误标 E_MISS；评分系统零改动），交接 3 个变更文件（`generate-dashboard-data.py` / `dashboard-data.js` / `README.md`），以「生产树已同步」形式指定从 `prod/dashboard/` 入库 `dashboard/` 目录并登记 UPLOAD_MANIFEST。
+- **新技能 / 加深的技能**：
+  - **「生产树为权威源」的同步模式**：交付方不附 commit/分支/附件，明确宣告「`prod/dashboard/` 已同步」→ 仓库侧以生产路径为源逐文件比对（`diff -q` 判定 3 文件 DIFFERS / `index.html` IDENTICAL / `dashboard-data-feed.py` 生产独有不入库），从工作区共享生产树直接 `cp` 携带修改，无需跨 run 定位交接方工作区。
+  - **同主题 agent 分支在途提交的识别**：发现远端存在同主题分支（`agent/agent/4e51ba71` `95dbbcb`、`agent/agent/c732eed6` `7722cf6` 均含同一 P1 修复）——逐分支 `git show <branch>:dashboard/<file>` 与生产文件比对判定权威：`7722cf6` 与生产一致但缺 README 更新且 base 落后 main，`95dbbcb` 与生产全面不同 → 判定生产树为唯一权威源，不走在途分支、不合并他人半成品，直接在 main 上落权威版。
+  - **生成数据文件的回归影响核验**：`dashboard-data.js` 变更 33+/743-，逐项核对——agent 客观分/参考等级/预算/事件流水零变化（脚本比对 agent 维度 score/level 全同），仅 E_MISS/E_EMPTY 数据缺口条目收敛（异常 63→39、E_MISS 事件 141→117），确认修复不触碰评分口径。
+- **挑战 / 盲区**：交付方只给「生产树路径」未给文件 sha256/commit，需自行在生产树与仓库间逐文件比对并识别同主题在途分支；数据文件大 diff 需脚本级核验 score/level 零变化而非仅看 E_MISS 计数。
+- **改进**：同步类任务先确认「权威源是生产树还是交接分支」——生产树以 `diff -q` 逐文件比对后 cp，在途分支一律以生产内容为准复核；数据类文件用结构化比对（agent 维度 score/level 全同 + 计数断言）替代全文审阅。
+
 ### 2026-08-17 · KA-101 非阻塞项修复入库（base 落后 main 时的整文件 cp + hunk 合并 + 变更文件逐项吻合）
 - **任务**：代 开发者工具工程师 提交并推送 KA-101 非阻塞项修复（`--baseline` 分支与 `decide()` 口径对齐 + 测试数据隔离，`src/state-change-hook.py` `_baseline_plan` 纯函数 + `src/test-state-change-hook.py` 56→65 + `docs/state-change-hook-test-report.md` + README 计数同步 + 开发者工具工程师能力档案 v0.10，共 5 文件，run `28599020` 工作副本未提交）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + 交付点复跑 + UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -189,6 +198,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-106 与 前端工程师 协作（交接 KA-106 P1 数据缺口口径修复入库），评分 5/5：交付说明覆盖根因 / 修复点 / 验证数据（异常 63→39、E_MISS 事件 141→117、feed 35/35）+ 明确指定权威源（`prod/dashboard/` 已同步 + 3 个变更文件清单）+ 同步声明评分系统零改动；改进——交接附 3 个文件 sha256 或变更摘要，仓库侧可免去逐文件比对生产树的成本。
 - KA-101 与 开发者工具工程师 协作（代提交 KA-101 非阻塞项修复入库），评分 5/5：交接清单四要素（5 文件 / 来源 run `28599020` / 目标分支 main / 建议提交信息）齐全，基 commit `b64cb64` 明确，交付点复跑要求（白名单逐文件 + 复跑测试）前置说明，交接声明与实测完全一致（65 + 174 + 8 全绿）；改进——base 落后 main 时交接可注明「README 在 main 有 KA-103 推进」的已知差异，仓库侧可直接定位 hunk 合并点。
 - KA-103 与 前端工程师 协作（交接 dashboard 交付物入库），评分 5/5：交付物以 issue 评论附件形式齐全提供（index.html / generate-dashboard-data.py / dashboard-data.js / README，迭代 1+2 各一版，版本/大小可甄别，截图证据 9 张），交付说明覆盖每项 P1 改动要点、测试基线（feed 15/15 + dashboard↔feed 24/24 一致）与渲染验证；改进——交接可直接附「以最新迭代版本为准」的版本选择提示，减少仓库侧跨 issue 甄别成本。
 - KA-100 与 开发者工具工程师 + 代码审查员 + 资深战略领导者 协作（代提交 KA-100 缺陷修复入库，三方口径对齐），评分 5/5：终审给出明确入库指令（来源 run `a7e2cdaa` 工作副本 5 文件 + 建议提交信息 + 交付点复跑要求），代码审查员已独立实跑核验（baseline 写路径 / 退出码契约 / 56+165+8 全绿），仓库侧按既有入库流程闭环即可；改进——若终审能同时给出「待推送确认后置 done」的收口条件，交付闭环更明确。
@@ -215,6 +225,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.19 | 追加 KA-106：「生产树为权威源」同步模式（`prod/dashboard/` 逐文件 `diff -q` 比对后 cp，`dashboard-data-feed.py` 生产独有不入库）+ 同主题 agent 分支在途提交识别（逐分支 blob 比对判定生产为唯一权威，不合并不入库）+ 生成数据文件回归影响核验（agent 维度 score/level 零变化脚本比对 + E_MISS 计数断言）；协作评分 5/5 |
 | 2026-08-17 | v0.18 | 追加 KA-101：交接 base 落后 main 的整文件 cp + hunk 合并判定（先 diff 基差异 → 基一致整文件 cp、README 等 main 有推进则 hunk 合并）+ 变更文件逐项吻合核验（diff -q + diff --stat 数字对照交接声明）；协作评分 5/5 |
 | 2026-08-17 | v0.17 | 追加 KA-103：issue 评论附件拉取入库模式（`attachment download` + 跨迭代版本甄别 + `shasum` 同源校验）、白名单检查后置落盘、新建顶层 `dashboard/` 目录 + 根 README 目录同步；协作评分 5/5 |
 | 2026-08-17 | v0.16 | 追加 KA-100：未提交工作区交接的跨 run 嵌套 checkout 定位（find 文件名 → git status/diff 逐项吻合）、交接已由审查员/终审核验时仓库侧按既有流程闭环（白名单 + 交付点复跑 56+165+8 + manifest 登记 + 回传落地 commit）、两 commit 交付模式（内容 commit + manifest/档案登记 commit）；协作评分 5/5 |
