@@ -4,6 +4,20 @@
 > 基准：原型 B 修订版 v2（`dashboard-prototype-B.html`，浅色专业后台）
 > 数据：评分方案 C 生产树 `<WORKSPACE>/prod/rating-system/` 真实数据（只读）
 
+## 部署访问（Owner 直达）
+
+看板已部署至生产树，**浏览器直接打开**：
+
+```
+/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3/prod/dashboard/index.html
+```
+
+- **路径**：`<WORKSPACE>/prod/dashboard/`（`<WORKSPACE>` = `/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3`）
+- **访问方式**：静态文件，浏览器直接打开 `index.html`（与 `dashboard-data.js` 同目录），无服务依赖
+- **8 页直达**：`#page-overview / #page-leaderboard / #page-trends / #page-detail / #page-events / #page-budget / #page-promotion / #page-escalation`
+- **明细下钻**：`#page-detail?agent=agt-<slug>`（slug = category+名称 SHA-256 前 10 位）
+- **部署记录 / 数据刷新**：`docs/DEPLOY.md` / `scripts/refresh-dashboard.sh`（定时每日 01:45 Asia/Shanghai）
+
 ## 交付物
 
 | 文件 | 说明 |
