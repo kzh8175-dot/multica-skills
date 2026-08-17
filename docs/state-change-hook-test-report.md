@@ -13,7 +13,7 @@
 | 文件 | 说明 |
 |---|---|
 | `state-change-hook.py` | 状态变更钩子（Python3；纯函数 `map_transition`/`classify_completion`/`skip_reason`/`decide` + CLI `--dry-run`/`--issue`/`--baseline`/`--no-auto-baseline`/`--json`） |
-| `test-state-change-hook.py` | 验收测试套件（unittest，**50** 条用例全通过；含 6 条 main() 集成测试） |
+| `test-state-change-hook.py` | 验收测试套件（unittest，**56** 条用例全通过；含 12 条 main() 集成测试） |
 | `run-state-change-hook.sh` | 定时任务包装脚本（守卫 + 日志 + 退出码，`logs/hook/YYYY-MM-DD.log`） |
 | `crontab-rating.conf`（修改） | 新增第 0 项「状态变更钩子」cron 说明（每日 00:20，先于 00:30 结算） |
 
@@ -50,11 +50,12 @@
 | 4 | 事件 metadata：5 键齐备、trigger=reviewer、points 整数且类型为 number | ✅ 2 条用例 |
 | 5 | 决策流：自动 baseline、no-transition、non-scoring、event-written、deferred、escalated、credited-same-event、测试数据隔离 | ✅ 13 条用例 |
 | 6 | 写路径：注入 write 回调验证 6 次写入（5 键事件 + last_status）、dry-run 零写入、写失败报 write-error | ✅ 4 条用例 |
-| 7 | main() 集成：baseline→transition→event→幂等全生命周期、返工检测、baseline 模式、dry-run、非 agent issue 过滤、纯 JSON 输出 | ✅ 6 条用例 |
+| 7 | main() 集成：baseline→transition→event→幂等全生命周期、返工检测、baseline 模式（含缺 baseline 写路径 + dry-run）、退出码契约（write/read-error→exit 1、无错误→exit 0）、dry-run、非 agent issue 过滤、纯 JSON 输出 | ✅ 12 条用例 |
 | 8 | 真实数据 dry-run：83 个 agent 分配 issue → 80 建 baseline + 3 测试数据跳过，0 事件误写 | ✅ 实测 |
+| 9 | KA-100 缺陷修复回归：`--baseline` 缺 baseline 真实写入 `rating.last_status`；写失败/读失败退出码=1、无错误退出码=0（cron 告警契约） | ✅ 6 条新增用例 |
 
-**回归**：聚合器 15 / 结算器 11 / 人评判定 24 / 防失真 24 / 看板数据接口 15 / 状态变更钩子 50
-（**139 条 Python**）+ 调度器 category 4 + 防失真集成 4（**8 项 bash**）全通过。
+**回归**：聚合器 15 / 结算器 11 / 人评判定 24 / 防失真 24 / 看板数据接口 35 / 状态变更钩子 56
+（**165 条 Python**）+ 调度器 category 4 + 防失真集成 4（**8 项 bash**）全通过。
 
 ## 四、幂等与安全设计
 
@@ -80,3 +81,23 @@ bash scripts/run-state-change-hook.sh                              # 定时任�
 
 > 首次上线：先 `--dry-run` 预览 → 正常跑一轮建立 baseline → 后续每日 00:20 cron 自动检测。
 > cron 接线（autopilot 配置）属 P2-12 端到端跑通范畴，由 DevOps 按 `crontab-rating.conf` 第 0 项部署。
+
+## 六、KA-100 缺陷修复记录（P2-12 部署接线前）
+
+代码审查员验收发现的非阻塞项 1、2，已在 P2-12 部署接线前修复：
+
+### 修复 1 · `--baseline` 模式静默空操作（中）
+- **缺陷**：`main()` baseline 分支内联构造的 plan 含 `updates=[("rating.last_status", ...)]` 但从未应用（写路径只在 `process_issue` 内）；缺 baseline 的 issue 报告「建立 baseline」但**零写入**；`test_main_baseline_flag_only_records_missing` 只覆盖「已有 baseline」分支。
+- **修复**：抽出 `_apply_updates(issue, plan, dry_run, write)` 作为统一写路径，`process_issue` 与 baseline 分支共用；baseline 分支显式应用 updates（dry-run 仍只读）。
+- **验收证据**：新增 `test_main_baseline_flag_writes_missing_baseline`（缺 baseline → 真实写入 `rating.last_status`）+ `test_main_baseline_flag_dry_run_writes_nothing`（dry-run 零写入）。
+
+### 修复 2 · 写失败退出码不反映（中）
+- **缺陷**：`main()` 循环内 write-error/read-error 仅计入 stats，脚本恒 exit 0；cron/包装脚本按「退出码非 0」告警（`run-state-change-hook.sh`），写失败会静默通过。
+- **修复**：新增 `_exit_on_error(stats)`，stats 含 write-error/read-error 时 `sys.exit(1)`；JSON 与人类输出两条路径均生效；无错误不调用 exit（契约 exit 0）。
+- **验收证据**：新增 `test_main_exits_1_on_write_error` / `test_main_json_exits_1_on_write_error`（写失败 exit=1）、`test_main_exits_1_on_read_error`（读失败 exit=1）、`test_main_no_error_exits_zero`（无错误不抛 SystemExit）。
+
+### 退出码契约（写入模块 docstring）
+| 场景 | 退出码 |
+|------|:---:|
+| 全部处理成功（含无事件、dry-run） | 0 |
+| 汇总含 write-error / read-error | 1 |

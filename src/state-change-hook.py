@@ -33,11 +33,16 @@ state-change-hook.py — 状态变更钩子（方案C P2-11 / KA-76）
   - 已 escalated → 跳过并报告（升级人工处置，不改写）
   - --dry-run 只读预演，不产生任何写入
 
+退出码契约:
+  - 0: 全部处理成功（含正常无事件、dry-run）
+  - 1: 汇总含 write-error（写 metadata 失败）或 read-error（读 metadata 失败）时退出 1，
+       cron/包装脚本（run-state-change-hook.sh）按「退出码非 0」告警
+
 用法:
   python3 state-change-hook.py                     # 扫描全部 agent 分配 issue
   python3 state-change-hook.py --dry-run           # 预演（不写 metadata）
   python3 state-change-hook.py --issue <id>        # 只处理指定 issue
-  python3 state-change-hook.py --baseline          # 全量仅建 baseline，不写事件
+  python3 state-change-hook.py --baseline          # 全量仅建 baseline（写 rating.last_status），不写事件
   python3 state-change-hook.py --no-auto-baseline  # 缺 baseline 报错跳过（严格）
   python3 state-change-hook.py --json              # 汇总输出 JSON
 """
@@ -305,13 +310,12 @@ def load_agents():
 
 # ---------------------------------------------------------------- 处理
 
-def process_issue(issue, meta, dry_run=False, no_auto_baseline=False, write=None):
-    """处理单个 issue：decide + 应用 updates。返回 plan（含实际 action）。
+def _apply_updates(issue, plan, dry_run=False, write=None):
+    """应用 plan['updates'] 到 issue 的 metadata；写失败 → write-error plan。
 
     write: 注入的写回调 (key, value, vtype) → (ok, err)；None 用真实 set_metadata。
     dry_run: 只读，不应用任何 writes。
     """
-    plan = decide(issue, meta, no_auto_baseline=no_auto_baseline)
     if dry_run or not plan["updates"]:
         return plan
     if write is None:
@@ -319,10 +323,25 @@ def process_issue(issue, meta, dry_run=False, no_auto_baseline=False, write=None
     for key, value, vtype in plan["updates"]:
         ok, err = write(key, value, vtype)
         if not ok:
-            plan = {"action": "write-error", "event": plan["event"], "updates": [],
+            return {"action": "write-error", "event": plan["event"], "updates": [],
                     "reason": f"{key} 写入失败: {err}"}
-            break
     return plan
+
+
+def process_issue(issue, meta, dry_run=False, no_auto_baseline=False, write=None):
+    """处理单个 issue：decide + 应用 updates。返回 plan（含实际 action）。
+
+    write: 注入的写回调 (key, value, vtype) → (ok, err)；None 用真实 set_metadata。
+    dry_run: 只读，不应用任何 writes。
+    """
+    plan = decide(issue, meta, no_auto_baseline=no_auto_baseline)
+    return _apply_updates(issue, plan, dry_run=dry_run, write=write)
+
+
+def _exit_on_error(stats):
+    """写/读失败时退出码=1（cron/包装脚本按非 0 告警）；无错误不调用 exit（契约 exit 0）。"""
+    if stats.get("write-error") or stats.get("read-error"):
+        sys.exit(1)
 
 
 # ---------------------------------------------------------------- 主流程
@@ -376,11 +395,13 @@ def main():
             continue
 
         if args.baseline:
-            # baseline 模式：仅补写缺失的 rating.last_status
+            # baseline 模式：仅补写缺失的 rating.last_status，不写事件
             if "rating.last_status" not in meta:
                 plan = {"action": "baseline", "event": None,
                         "updates": [("rating.last_status", issue.get("status") or "", "string")],
                         "reason": f"建立 baseline {issue.get('status')}"}
+                # 显式应用 updates（与 process_issue 共用写路径；dry-run 只读）
+                plan = _apply_updates(issue, plan, dry_run=args.dry_run)
             else:
                 plan = {"action": "already-baselined", "event": None, "updates": [],
                         "reason": "baseline 已存在"}
@@ -424,6 +445,7 @@ def main():
             "events_written": events_out,
         }
         print(json.dumps(report, ensure_ascii=False, indent=2))
+        _exit_on_error(stats)
         return
 
     print()
@@ -431,6 +453,7 @@ def main():
     for k, v in sorted(stats.items(), key=lambda kv: -kv[1]):
         print(f"  {k}: {v}")
     print(f"  合计: {sum(stats.values())}")
+    _exit_on_error(stats)
 
 
 if __name__ == "__main__":

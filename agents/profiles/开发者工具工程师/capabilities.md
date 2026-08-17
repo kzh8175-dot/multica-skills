@@ -22,6 +22,19 @@
 
 按任务在下方追加学习记录（最新在上）。每条固定四段结构：**任务 → 新技能 / 加深的技能 → 挑战 / 盲区 → 改进**。
 
+### 2026-08-17 · KA-100：状态变更钩子缺陷修复（--baseline 静默空操作 + 写失败退出码）
+
+- **任务**：修复代码审查员验收发现的非阻塞项 1、2（P2-12 部署接线前）。修复 1 `--baseline` 模式静默空操作——`main()` baseline 分支内联构造的 plan 含 `updates=[("rating.last_status", ...)]` 但从未应用（写路径只在 `process_issue` 内），缺 baseline 的 issue 报告「建立 baseline」但零写入；`test_main_baseline_flag_only_records_missing` 只覆盖「已有 baseline」分支。修复 2 写失败退出码不反映——`main()` 循环内 write-error/read-error 仅计入 stats，脚本恒 exit 0，cron/包装脚本按「退出码非 0」告警（`run-state-change-hook.sh`），写失败静默通过。修复：抽出 `_apply_updates(issue, plan, dry_run, write)` 统一写路径（`process_issue` 与 baseline 分支共用，dry-run 仍只读）；新增 `_exit_on_error(stats)`——stats 含 write-error/read-error 时 `sys.exit(1)`，JSON 与人类输出两条路径均生效，无错误不调用 exit（契约 exit 0）。测试 50→56 条全通过（新增：缺 baseline 写路径、baseline dry-run、写失败 exit=1、JSON 写失败 exit=1、读失败 exit=1、无错误 exit 0）；全仓回归 165 Python + 8 bash 全绿。
+- **新技能 / 加深的技能**：
+  - 「分支构造 plan 但未走写路径」类静默空操作：CLI 的多个模式分支（如 `--baseline`）各自内联拼 plan，若写应用只挂在某一条函数路径（如 `process_issue`），其余分支会「报告成功但零写入」——修复把「应用 updates」抽成独立函数 `_apply_updates`，所有产生 writes 的分支走同一写路径，缺陷从结构上不可能再现。
+  - 退出码契约要作为交付接口对待：脚本类的 cron/包装调度按退出码告警，内部 stat 计数与进程退出码是「两层事实」——修复后以「stats 含 write/read-error → exit 1」把内部错误状态显式外化成进程契约，并写入模块 docstring。
+  - 回归用例应覆盖「缺陷描述的缺分支」，而不只是覆盖既有 happy path：原测试 `test_main_baseline_flag_only_records_missing` 只验证「已有 baseline 不重复写」，漏掉「缺 baseline 必须写」这一真实缺陷路径。
+  - 注入式测试的收口：main() 集成测试统一 patch `set_metadata`/`get_issue_metadata`/`run_cli`/`load_agents` 并全部在 tearDown 恢复，新增读错误用例时只需替换单点而不污染其他用例。
+- **挑战 / 盲区**：
+  - `--baseline` 分支不能直接复用 `process_issue`：它需要「缺 baseline 才写、已有则 no-op、绝不写事件」，而 `decide()` 对已有 last_status 的 issue 会检测 transition 并写事件——所以「复用写路径」与「复用决策」是两回事，只在写应用层复用。
+  - 退出码修复要同时覆盖 `--json` 与人类输出两条路径，且「无错误时不能调用 `sys.exit(0)`」——否则成功路径会抛 SystemExit 破坏既有测试的普通调用；`_exit_on_error` 只对错误 exit(1)，成功路径自然返回。
+- **改进**：任何新增 CLI 模式分支时自检「该分支产生的 updates 是否真的被应用」，并补一条覆盖该分支真实写路径的回归；涉及进程退出码的脚本，把退出码契约写进 docstring 并以 `assertRaises(SystemExit)` 用例锁定。
+
 ### 2026-08-17 · KA-98 迭代 1 #7：CLI 分页拉取（--limit 200 截断 → fetch_all_issues 分页）
 
 - **任务**：修复看板数据接口预算/pending 计数的 `multica issue list --limit 200` 静默截断（KA-96 代码审查 #7，工作区 issue >200 时漏尾部预算条目、pending 计数偏少）。新增 `fetch_all_issues(page_size=200, max_pages=25)`：按 `--limit/--offset` 分页拉取直到 空页/非满页/has_more=false/达最大页数，分页期间新插入 issue 按 id 去重；`load_budget`/`load_rating_stats` 改走分页，后续页失败降级返回已拉取部分并附 note。测试：`TestCliPagination` 13 条（超量跨页不漏、精确倍数、空工作区、CLI 不可用、中途页失败部分返回、达最大页数、老 CLI 裸数组、跨页去重、note 传播），feed 套件 22→35 全通过；生产实跑 63 agents 与旧单页逻辑逐位一致（预算 7 条、rating_status pending5/escalated0/credited60）。
@@ -153,6 +166,7 @@
 
 ## 协作关系
 
+- KA-100 缺陷修复与 代码审查员（验收发现非阻塞项 1、2：--baseline 静默空操作 + 写失败退出码）、资深战略领导者（修复立项，P2-12 部署接线前时限）协作，评分 4/5：审查发现以「代码位置 + 具体缺陷 + 修复方向」三段式给出（如「写路径只在 process_issue 内，baseline 分支构造的 plan 未应用」），可直接照单修复；改进——审查验收与部署接线（cron/autopilot）的先后依赖在立项时就锁定，本笔修复后即达 P2-12 接线前置条件。
 - KA-98 迭代 1 与 资深战略领导者（P1 五任务分工，看板 #1/#2/#5/#6 归前端工程师、#7 归本工程师）、前端工程师（并行任务，文件无交集不冲突）协作，评分 4/5：分工按文件/职责边界拆清（我仅动 `dashboard-data-feed.py` + 其测试，前端动 generator/index.html），可直接开工；改进——迭代 0 分支未合 main 时，迭代 1 须以「迭代 0 分支」为基（本笔已基于 KA-97 分支 tip 提交），交接给仓库管理员时说明基线，避免 diff 混入前序工作。
 - KA-97 迭代 0 与 资深战略领导者（风险登记表 R1 派工/升级时限/保守方案裁定）、数据可视化工程师（#3 前端消费侧、loader 分叉口径核对）、代码审查员（#3 双管线分叉发现与「保留 feed 单一源」建议）协作，评分 4/5：审查以「loader 未交付 + 输出 json 可查」推断分叉（60/63、排名、均值分母、分布预估），决策清单给出两条路径（删 or 并入）+ 保守方案（删 loader 保 feed），直接可执行；改进——并行管线「名义交付」风险在里程碑宣称阶段就应带代码/测试可复核门槛，避免「12 用例无法复核」的空头声明。
 - KA-96 阻塞项修复与 代码审查员（E-02 误判复现定位：`_anti_fraud_flags` 子串匹配 + 模板静态文案冲突，含影响面「Q3 人评后全部误标」推演）、资深战略领导者（修复安排/复检收口编排）协作，评分 5/5：审查以「根因（模板自带描述）+ 影响面（推广后全量误标）+ 修复建议（judged 门禁或删子句）」三条直接可执行，复检路径明确；改进——解析类交付前自检「模板静态文案 × 判定关键词」交集，把这类误判拦截在首轮。
@@ -172,6 +186,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.9 | 追加 KA-100 学习记录（缺陷修复：--baseline 静默空操作→`_apply_updates` 统一写路径、写失败退出码→`_exit_on_error(stats)` exit 1、退出码契约入 docstring + SystemExit 用例锁定）+ 协作关系更新（审查「代码位置+缺陷+修复方向」三段式直接可执行，评分 4/5） |
 | 2026-08-17 | v0.8 | 追加 KA-98 #7 学习记录（CLI 分页拉取：静默截断→offset 分页 + has_more/非满页双终止 + 最大页数护栏 + 中途失败降级 + 按 id 去重防并发插入）+ 协作关系更新（迭代 1 分工以文件边界拆清，评分 4/5） |
 | 2026-08-17 | v0.7 | 追加 KA-97 学习记录（单一数据源收敛：删 loader 保 feed、发现范围=口径、Schema 契约测试）+ 协作关系更新（R1 派工/保守方案裁定，评分 4/5） |
 | 2026-08-17 | v0.6 | 追加 KA-96 阻塞项修复学习记录（E-02 误判：模板静态文案 × 判定关键词交集、judged 门禁 + 回填标记锚定、复现→修复→全量验证→回归四步闭环）+ 协作关系更新（代码审查员复现定位直接可执行，评分 5/5） |

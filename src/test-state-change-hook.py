@@ -364,16 +364,22 @@ class TestMainFlow(unittest.TestCase):
         self._orig_run_cli = mod.run_cli
         self._orig_set_metadata = mod.set_metadata
         self._orig_load_agents = mod.load_agents
+        self._orig_get_issue_metadata = mod.get_issue_metadata
         self._orig_argv = sys.argv
         mod.run_cli = self._fake_run_cli
         mod.set_metadata = self._fake_set_metadata
         mod.load_agents = lambda: {"a-1": "测试智能体"}
+        mod.get_issue_metadata = self._fake_get_issue_metadata
 
     def tearDown(self):
         mod.run_cli = self._orig_run_cli
         mod.set_metadata = self._orig_set_metadata
         mod.load_agents = self._orig_load_agents
+        mod.get_issue_metadata = self._orig_get_issue_metadata
         sys.argv = self._orig_argv
+
+    def _fake_get_issue_metadata(self, issue_id):
+        return self.store.get(issue_id, {}), None
 
     def _fake_set_metadata(self, issue_id, key, value, vtype="string"):
         self.store.setdefault(issue_id, {})[key] = value
@@ -444,6 +450,74 @@ class TestMainFlow(unittest.TestCase):
         self.assertNotIn("rating.event", self.store["i-1"])
         event_writes = [w for w in self.writes if w[1] == "rating.event"]
         self.assertEqual(event_writes, [])
+
+    def test_main_baseline_flag_writes_missing_baseline(self):
+        # 缺陷回归（KA-100 修复 1）：缺 baseline 的 issue 必须真实写入 rating.last_status
+        it = issue(id="i-1", identifier="KA-1", status="in_progress", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {}
+        sys.argv = ["state-change-hook.py", "--baseline"]
+        mod.main()
+        self.assertEqual(self.store["i-1"].get("rating.last_status"), "in_progress")
+        # baseline 模式不写事件
+        self.assertNotIn("rating.event", self.store["i-1"])
+        event_writes = [w for w in self.writes if w[1] == "rating.event"]
+        self.assertEqual(event_writes, [])
+
+    def test_main_baseline_flag_dry_run_writes_nothing(self):
+        # --baseline --dry-run：只读预演，缺 baseline 也不产生写入
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {}
+        sys.argv = ["state-change-hook.py", "--baseline", "--dry-run"]
+        mod.main()
+        self.assertNotIn("rating.last_status", self.store["i-1"])
+        self.assertEqual(self.writes, [])
+
+    def test_main_exits_1_on_write_error(self):
+        # 缺陷回归（KA-100 修复 2）：写失败 → 进程退出码=1（cron 告警契约）
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.last_status": "in_review"}
+        def failing_set(issue_id, key, value, vtype="string"):
+            return False, "simulated write failure"
+        mod.set_metadata = failing_set
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_main_json_exits_1_on_write_error(self):
+        # --json 输出同样遵守退出码契约
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.last_status": "in_review"}
+        def failing_set(issue_id, key, value, vtype="string"):
+            return False, "simulated write failure"
+        mod.set_metadata = failing_set
+        sys.argv = ["state-change-hook.py", "--json", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_main_exits_1_on_read_error(self):
+        # 读 metadata 失败 → 计入 read-error → 退出码=1
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_main_no_error_exits_zero(self):
+        # 无错误：不抛 SystemExit（退出码=0 契约）
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.last_status": "done"}
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        mod.main()  # 不应抛 SystemExit
+        self.assertEqual(self.store["i-1"].get("rating.last_status"), "done")
 
     def test_main_dry_run_writes_nothing(self):
         it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1",
