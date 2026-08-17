@@ -6,14 +6,15 @@
 
 ## 部署访问（Owner 直达）
 
-看板已部署至生产树，**浏览器直接打开**：
+看板已上线公网，**浏览器访问**：
 
 ```
-/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3/prod/dashboard/index.html
+http://43.108.86.63/
 ```
 
-- **路径**：`<WORKSPACE>/prod/dashboard/`（`<WORKSPACE>` = `/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3`）
-- **访问方式**：静态文件，浏览器直接打开 `index.html`（与 `dashboard-data.js` 同目录），无服务依赖
+- **公网访问**：`http://43.108.86.63/`（阿里云首尔 · 24/7 在线 · 看板 8 页 + 明细下钻；HTTP 200 已验证）
+- **本机生产树**：`/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3/prod/dashboard/index.html`（静态文件，浏览器直开）
+- **路径**：`<WORKSPACE>/prod/dashboard/`（`<WORKSPACE>` = `/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3`）；服务器 `/opt/dashboard/`
 - **8 页直达**：`#page-overview / #page-leaderboard / #page-trends / #page-detail / #page-events / #page-budget / #page-promotion / #page-escalation`
 - **明细下钻**：`#page-detail?agent=agt-<slug>`（slug = category+名称 SHA-256 前 10 位）
 - **部署记录 / 数据刷新**：`docs/DEPLOY.md` / `scripts/refresh-dashboard.sh`（定时每日 01:45 Asia/Shanghai）
