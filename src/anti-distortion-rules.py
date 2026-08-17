@@ -19,14 +19,15 @@ anti-distortion-rules.py — 防失真修正层（方案C P1-10 / KA-75）
   [防失真修正] 本模块                   → final_grade + corrections ← P1-10
   [裁定]     资深战略领导者             → 终审（override 能力）
 
-判定算法（spec 2.3）:
-  输入: auto_grade ∈ {S,A,B,C,D}；counts = {r31, r32}
+判定算法（spec 2.3，终审 B-3 顺序）:
+  输入: auto_grade ∈ {S,A,B,C,D}；counts = {r31, r32}；single_reviewer ∈ {false,true}
   1. grade ← auto_grade
-  2. 若 r32 ≥ r72_threshold：grade ← demote(grade, 1)；记录 R-72 修正
+  2. 若 single_reviewer 且 grade 优于 A：grade ← A；记录 E-02 修正（封顶 A）
+  3. 若 r32 ≥ r72_threshold：grade ← demote(grade, 1)；记录 R-72 修正
      demote 到 D 为止（D 为地板，不再下探）
-  3. 若 r31 ≥ r71_threshold：grade ← cap(grade, r71_cap)；记录 R-71 修正
-     cap 取「更差者」：S/A/B → C；C → C；D → D（封顶不抬升 D）
-  4. 返回 final_grade = grade
+  4. 若 r31 ≥ r71_threshold：grade ← cap(grade, r71_cap)；记录 R-71 修正
+     cap 取「更差者」：S/A/B → C；C → C；D → D（封顶不抬升 D；R-71 为最终硬性上限）
+  5. 返回 final_grade = grade
 
 失败模式（spec 4）: fail-open 原则 —— 事件数据缺失/异常时不惩罚（按 0 计）；
   惩罚必须建立在可信计数之上，反向风险（应罚未罚）由负责人裁定兜底。
@@ -56,9 +57,9 @@ DEFAULT_CONFIG = {
     "r71_cap": "C",       # R-71 等级上限
 }
 
-# 事件列前缀解析：'R-31:违反约束' → 'R-31'；多事件以 ';' 分隔（与 rating-settler
-# 写流水格式契约一致：事件列首字段恒为 R-xx:）
-EVENT_SEG_RE = re.compile(r"^R-(\d+):")
+# 事件列前缀解析：'R-31:违反约束' / 'R-31：违反约束' → 'R-31'（半角/全角冒号归一化，
+# N-4）；多事件以 ';' 分隔（与 rating-settler 写流水格式契约一致：事件列首字段恒为 R-xx:）
+EVENT_SEG_RE = re.compile(r"^R-(\d+)[：:]")
 DISTORTION_EVENTS = {"31", "32"}
 
 MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
@@ -68,7 +69,7 @@ MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 @dataclass
 class RuleCorrection:
-    rule: str            # "R-71" | "R-72"
+    rule: str            # "E-02" | "R-71" | "R-72"
     action: str          # "cap" | "demote"
     reason: str
     from_grade: str
@@ -82,6 +83,7 @@ class AntiDistortionResult:
     counts: dict
     corrections: list
     config: dict
+    single_reviewer: bool = False
 
 
 # ---------------------------------------------------------------- 计数
@@ -137,9 +139,11 @@ def demote(grade, steps=1):
     return GRADES[min(idx + steps, len(GRADES) - 1)]
 
 
-def apply_anti_distortion(auto_grade, counts, config=None):
-    """纯函数：先 R-72 降档，后 R-71 封顶（R-71 为最终硬性上限）。
+def apply_anti_distortion(auto_grade, counts, single_reviewer=False, config=None):
+    """纯函数：E-02 → R-72 → R-71（终审 B-3 顺序，R-71 为最终硬性上限）。
 
+    E-02: single_reviewer=True 时封顶 A（评审置信度约束，置于最前）；
+    R-72: 降一档（D 为地板）；R-71: 封顶 r71_cap（取更差者，不抬升）。
     返回 AntiDistortionResult: auto_grade / final_grade / counts /
     corrections[RuleCorrection(rule, action, reason, from_grade, to_grade)]。
     无副作用；非法入参抛 ValueError。
@@ -158,7 +162,16 @@ def apply_anti_distortion(auto_grade, counts, config=None):
     grade = auto_grade
     corrections = []
 
-    # 2. R-72 先降档（D 为地板）
+    # 1. E-02 先封顶 A（单评分人；仅当 grade 优于 A 时生效，A/B/C/D 不抬升）
+    if single_reviewer and GRADE_INDEX[grade] < GRADE_INDEX["A"]:
+        from_g = grade
+        grade = "A"
+        corrections.append(RuleCorrection(
+            rule="E-02", action="cap",
+            reason="单评分人，等级上限 A",
+            from_grade=from_g, to_grade=grade))
+
+    # 2. R-72 降一档（D 为地板）
     if r32 >= int(cfg["r72_threshold"]):
         from_g = grade
         to_g = demote(grade, 1)
@@ -184,6 +197,7 @@ def apply_anti_distortion(auto_grade, counts, config=None):
         counts={"r31": r31, "r32": r32},
         corrections=corrections,
         config=cfg,
+        single_reviewer=single_reviewer,
     )
 
 
@@ -198,7 +212,10 @@ def summarize(result):
     # 兼容 counts-only 结果（无 corrections，如调度器表单预检）
     r71_triggered = r31 >= int(cfg["r71_threshold"])
     r72_triggered = r32 >= int(cfg["r72_threshold"])
-    lines = [
+    lines = []
+    if result.single_reviewer:
+        lines.append("E-02 单评分人: 是 → 等级上限 A")
+    lines += [
         f"R-31 红线事件: {r31} 次（阈值 {cfg['r71_threshold']}）→ "
         + (f"触发 R-71：等级上限 {cfg['r71_cap']}" if r71_triggered else "未触发"),
         f"R-32 缺自评事件: {r32} 次（阈值 {cfg['r72_threshold']}）→ "
@@ -213,7 +230,11 @@ def summarize(result):
 
 
 def _decision_sig(result):
-    """判定决策签名（排除时间戳，保证同一次判定幂等可识别）。"""
+    """判定决策签名（排除时间戳，保证同一次判定幂等可识别）。
+
+    N-6（终审）：对齐 sha256 —— 判定输入的规范化 JSON 的 sha256 全量摘要
+    （原实现为 sha1 截断 12 位，联调时统一）。
+    """
     canonical = json.dumps({
         "auto_grade": result.auto_grade,
         "final_grade": result.final_grade,
@@ -225,7 +246,7 @@ def _decision_sig(result):
             for c in result.corrections
         ],
     }, sort_keys=True, ensure_ascii=False)
-    return hashlib.sha1(canonical.encode("utf-8")).hexdigest()[:12]
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def write_decision_log(agents_root, agent, quarter, result):
@@ -306,6 +327,8 @@ def main():
 
     p_apply = sub.add_parser("apply", help="应用防失真规则输出最终等级")
     p_apply.add_argument("--auto-grade", required=True, choices=GRADES)
+    p_apply.add_argument("--single-reviewer", action="store_true",
+                         help="单评分人（E-02：等级上限 A）")
     p_apply.add_argument("--events-dir", required=True)
     p_apply.add_argument("--agent", required=True)
     p_apply.add_argument("--months", required=True, type=parse_months)
@@ -334,7 +357,8 @@ def main():
 
     elif args.cmd == "apply":
         counts = count_distortion_events(args.events_dir, args.agent, args.months)
-        result = apply_anti_distortion(args.auto_grade, counts)
+        result = apply_anti_distortion(args.auto_grade, counts,
+                                       single_reviewer=args.single_reviewer)
         if args.json:
             print(json.dumps({
                 "auto_grade": result.auto_grade,

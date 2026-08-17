@@ -119,6 +119,20 @@ class TestGlobalDedupS1(unittest.TestCase):
         self.assertFalse(ok2)
         self.assertEqual(err2, mod.E_DUP)
 
+    def test_fullwidth_colon_event_dedup(self):
+        # N-4：事件 ID 半/全角冒号归一化——'R-31：违反约束' 与 'R-31:违反约束' 视为同一事件
+        ok1, err1, _ = mod.append_to_events(
+            "测试智能体", "2026-08", "i-1", self._meta("R-31:违反约束", -20, "reviewer"))
+        ok2, err2, _ = mod.append_to_events(
+            "测试智能体", "2026-08", "i-1", self._meta("R-31：违反约束", -20, "reviewer"))
+        self.assertTrue(ok1, err1)
+        self.assertFalse(ok2, "全角冒号同一事件应被幂等拦截")
+        self.assertEqual(err2, mod.E_DUP)
+        # 不同事件（R-31 vs R-32）同一 issue 仍可共存（S-1）
+        ok3, err3, _ = mod.append_to_events(
+            "测试智能体", "2026-08", "i-1", self._meta("R-32：未提交自评", -5, "reviewer"))
+        self.assertTrue(ok3, err3)
+
     def test_cross_file_same_event_dup(self):
         # 跨文件：同一 (issue, 事件) 写入不同智能体文件 → E_DUP（防聚合双计保留）
         meta = self._meta("R-21:自评", 5)

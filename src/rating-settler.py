@@ -17,6 +17,7 @@ rating-settler.py — 评分积分结算器（方案C 阶段3）
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -189,6 +190,21 @@ def get_event_month(meta):
     return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
+def _normalized_event_ids(desc):
+    """事件列 → 归一化事件 ID 集合（N-4：半/全角冒号归一化）。
+
+    'R-31:违反约束' / 'R-31：违反约束' → {'R-31'}；多事件以 ';' 分隔，逐段提取。
+    无法解析的前缀原样保留（向后兼容非 R-xx 事件描述）。用于 S-1 去重键，
+    保证同一事件无论冒号全半角均幂等识别。
+    """
+    ids = set()
+    for seg in str(desc).split(";"):
+        seg = seg.strip()
+        m = re.match(r"^R-(\d+)[：:]", seg)
+        ids.add(f"R-{m.group(1)}" if m else seg)
+    return ids
+
+
 def _issue_credited_globally(issue_id, event, month):
     """跨文件全局去重：检查 (issue_id, rating.event) 是否已写入任意智能体的同月流水。
 
@@ -200,9 +216,11 @@ def _issue_credited_globally(issue_id, event, month):
     同一 issue 可承载多个不同事件（如 R-21 自评 + R-31 违反约束），不再被
     E_DUP 拦截；同一 (issue, 事件) 仍只写一次，保持「跨文件不双计」的
     防聚合双计属性（同一 issue 的归属解析是确定性的，事件不会跨智能体分裂）。
+    联调（N-4）：事件 ID 半/全角冒号归一化后再比对（'R-31:' 与 'R-31：' 视为同一事件）。
     """
     if not os.path.isdir(EVENTS_DIR):
         return False
+    want_ids = _normalized_event_ids(event)
     for agent_dir in os.listdir(EVENTS_DIR):
         f = os.path.join(EVENTS_DIR, agent_dir, f"{month}.md")
         if os.path.isfile(f):
@@ -210,7 +228,8 @@ def _issue_credited_globally(issue_id, event, month):
                 with open(f, encoding="utf-8") as fh:
                     for line in fh:
                         fields = [x.strip() for x in line.strip().strip("|").split("|")]
-                        if len(fields) >= 3 and fields[1] == issue_id and fields[2] == event:
+                        if len(fields) >= 3 and fields[1] == issue_id \
+                                and _normalized_event_ids(fields[2]) & want_ids:
                             return True
             except OSError:
                 continue

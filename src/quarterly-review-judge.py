@@ -8,18 +8,23 @@ quarterly-review-judge.py — 季度人评表单自动判定（方案C P1-9 / KA
   1. 客观分   R-51 季度客观分（rating-aggregator.py 写入「一、」区，本脚本只读取）
   2. 人评分   R-52 单评分人 = Σ(维度分 × 权重) × 20；R-53 人评最终分 = 各评分人平均
   3. 综合分   R-61 客观分 × 0.8 + 人评最终分 × 0.2
-  4. 等级     R-62~R-66 查表 S/A/B/C/D，叠加防失真:
-                R-71 红线违规≥2 → 等级上限 C
-                R-72 缺自评≥2   → 等级降一档
-                E-02 单评分人   → 等级上限 A
+  4. 等级     R-62~R-66 查表 S/A/B/C/D（**原始等级 auto_grade**，未经防失真修正）
+
+防失真修正（P1-10 / KA-75 联调）:
+  本脚本只输出 原始等级 + single_reviewer 表单事实，R-71/R-72/E-02 修正统一委托
+  `anti-distortion-rules.apply_anti_distortion(auto_grade, counts, single_reviewer)`
+  计算（防失真模块唯一权威，B-1/B-3），并由本脚本调用 `write_decision_log` 留痕。
+  旧 `parse_anti_fraud()`（读表单文本触发标记）与 `apply_caps()` 中 R-71/R-72 分支
+  已退役：修正必须建立在事件流水结构化计数之上，不再依赖表单文案。
 
 表单是客观分（聚合器）与人评维度分（人工填写）的「纯函数」：只要维度分就绪，
 本脚本即可把 人评分/综合分/等级 自动判定并回填；人工如需调整判定，应修改输入
 （维度分）而非直接改输出区，重跑即同步（--dry-run 先行预览）。
 
 幂等:
-  - 输出仅依赖（表单内容 + 人评维度分），与运行时间无关；
+  - 输出仅依赖（表单内容 + 人评维度分 + 事件流水计数），与运行时间无关；
   - 写入采用「临时文件 + os.replace」原子替换，内容不变跳过；
+  - 决策日志由 `anti-distortion-rules.write_decision_log` 幂等追加（判定签名去重）；
   - 人评维度分未填时 no-op（标记待填写，exit 0），可安全重跑。
 
 用法:
@@ -33,6 +38,7 @@ quarterly-review-judge.py — 季度人评表单自动判定（方案C P1-9 / KA
 """
 
 import argparse
+import importlib.util
 import os
 import re
 import sys
@@ -61,6 +67,33 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 AGENTS_ROOT_DEFAULT = os.path.normpath(os.path.join(SCRIPT_DIR, ".."))
 
 
+def load_anti_distortion():
+    """加载防失真修正模块（与 judge 同目录；生产镜像 agents/capability-system/ 同约定）。
+
+    返回模块对象；加载失败返回 None → 调用方 fail-open（不应用修正，
+    仅输出原始等级并标注，与 spec 4 fail-open 原则一致）。
+    """
+    candidates = [
+        os.path.join(SCRIPT_DIR, "anti-distortion-rules.py"),
+        os.path.join(os.path.normpath(os.path.join(SCRIPT_DIR, "..", "agents")),
+                     "capability-system", "anti-distortion-rules.py"),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            try:
+                spec = importlib.util.spec_from_file_location(
+                    "anti_distortion_rules", path)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                return mod
+            except Exception:
+                continue
+    return None
+
+
+_ANTI_MOD = load_anti_distortion()
+
+
 # ---------------------------------------------------------------- 路径
 
 def scoring_dirs(agents_root):
@@ -77,6 +110,16 @@ def current_quarter():
     now = datetime.now(timezone.utc)
     q = (now.month - 1) // 3 + 1
     return f"{now.year}-Q{q}"
+
+
+def quarter_months(quarter):
+    """YYYY-Qn → 该季度 3 个月份列表（如 2026-Q3 → ['2026-07','2026-08','2026-09']）。"""
+    m = QUARTER_RE.match(quarter or "")
+    if not m:
+        raise ValueError(f"季度格式非法: {quarter!r}（应为 YYYY-Qn）")
+    year = int(m.group(1))
+    start_month = (int(m.group(2)) - 1) * 3 + 1
+    return [f"{year}-{mm:02d}" for mm in range(start_month, start_month + 3)]
 
 
 def discover_agents(quarterly_dir, quarter):
@@ -185,17 +228,6 @@ def parse_human_section(text):
             "complete": complete, "present": present}
 
 
-def parse_anti_fraud(text):
-    """提取 R-71 / R-72 触发标记（来自表单已写入的判定文案）。
-
-    来源1: `**本季等级**: ______ （等级上限C）/（等级降一档）`
-    来源2: 防失真区 `- [ ] 红线一票否决检查: ...触发一票否决(R-71):等级上限C`
-    """
-    r71 = bool(re.search(r"（等级上限C）|触发一票否决\(R-71\)", text))
-    r72 = bool(re.search(r"（等级降一档）|触发降档\(R-72\)", text))
-    return r71, r72
-
-
 # ---------------------------------------------------------------- 计算
 
 def compute_reviewer_score(dims, reviewer_idx):
@@ -215,30 +247,15 @@ def compute_reviewer_score(dims, reviewer_idx):
 
 
 def grade_for(comprehensive):
-    """R-62~R-66: 等级查表（综合分 ≥95→S / ≥85→A / ≥70→B / ≥60→C / <60→D）。"""
+    """R-62~R-66: 等级查表（综合分 ≥95→S / ≥85→A / ≥70→B / ≥60→C / <60→D）。
+
+    输出**原始等级 auto_grade**（未经任何防失真修正）；R-71/R-72/E-02 修正
+    由防失真模块 `apply_anti_distortion` 统一施加（P1-10 联调，B-1）。
+    """
     for low, grade in GRADE_TABLE:
         if comprehensive >= low:
             return grade
     return GRADE_DEFAULT
-
-
-def apply_caps(grade, r71, r72, single_reviewer):
-    """防失真叠加：R-72 降一档 → R-71 上限C → E-02 上限A。
-
-    等级排序 S > A > B > C > D（GRADE_ORDER 下标越小越优）；
-    「上限 X」= 允许的最优等级为 X —— 仅把更优（下标更小）的等级拉低到 X，
-    更差等级（如 D）不受影响。应用顺序与实现一致：R-72 先对基础等级降一档
-    （S→A→B→C→D）；随后 R-71 把高于 C 的等级压到 C；最后 E-02 把
-    高于 A 的等级压到 A（E-02 在 R-71 之后，R-71 触发时等级已 ≤C，E-02 不再生效）。
-    """
-    g = grade
-    if r72 and g != "D":
-        g = GRADE_ORDER[GRADE_ORDER.index(g) + 1]
-    if r71 and GRADE_ORDER.index(g) < GRADE_ORDER.index("C"):
-        g = "C"
-    if single_reviewer and GRADE_ORDER.index(g) < GRADE_ORDER.index("A"):
-        g = "A"
-    return g
 
 
 # ---------------------------------------------------------------- 渲染回填
@@ -379,9 +396,6 @@ def judge_form(agent, quarter, agents_root, dry_run=False):
         status["note"] = "人评区未填写（维度分就绪后自动判定）"
         return status
 
-    r71, r72 = parse_anti_fraud(text)
-    status["r71"], status["r72"] = r71, r72
-
     human_scores = {}
     for rv in human["reviewers"]:
         if human["complete"].get(rv["idx"]):
@@ -397,12 +411,41 @@ def judge_form(agent, quarter, agents_root, dry_run=False):
     single_reviewer = len(human_scores) < 2
     final_score = sum(human_scores.values()) / len(human_scores)
     comprehensive = obj * 0.8 + final_score * 0.2
-    grade = apply_caps(grade_for(comprehensive), r71, r72, single_reviewer)
+    auto_grade = grade_for(comprehensive)  # 原始等级（未经防失真修正，B-1）
+
+    # 防失真修正（P1-10 联调）：由 anti-distortion-rules 唯一权威计算最终等级。
+    # 计数基于事件流水结构化 R-31/R-32（fail-open：缺事件文件按 0 计，不冤枉）。
+    counts = {"r31": 0, "r32": 0}
+    corrections = []
+    triggers = []
+    result = None
+    if _ANTI_MOD is not None:
+        events_dir, _, _ = scoring_dirs(agents_root)
+        counts = _ANTI_MOD.count_distortion_events(
+            events_dir, agent, quarter_months(quarter))
+        result = _ANTI_MOD.apply_anti_distortion(
+            auto_grade, counts, single_reviewer=single_reviewer)
+        grade = result.final_grade
+        corrections = [
+            {"rule": c.rule, "action": c.action, "reason": c.reason,
+             "from_grade": c.from_grade, "to_grade": c.to_grade}
+            for c in result.corrections
+        ]
+        triggers = [c.rule for c in result.corrections]
+        status["anti_distortion"] = "ok"
+    else:
+        grade = auto_grade  # fail-open：防失真模块缺失不惩罚
+        status["anti_distortion"] = "missing"
+        status["note"] = "防失真模块缺失，未应用修正（fail-open）"
 
     status.update({
         "human_scores": human_scores,
         "human_final": final_score,
         "comprehensive": comprehensive,
+        "auto_grade": auto_grade,
+        "counts": counts,
+        "corrections": corrections,
+        "triggers": triggers,
         "grade": grade,
         "single_reviewer": single_reviewer,
     })
@@ -419,6 +462,10 @@ def judge_form(agent, quarter, agents_root, dry_run=False):
             status["note"] = "已回填判定" if changed else "已是最新（无变化）"
     else:
         status["note"] = "已是最新（无变化）"
+
+    # 决策日志留痕（唯一写入口，幂等：同一判定重复运行不重复追加）
+    if not dry_run and result is not None and status["stage"] == "ok":
+        _ANTI_MOD.write_decision_log(agents_root, agent, quarter, result)
     return status
 
 
@@ -480,10 +527,8 @@ def main():
                 line += " (已是最新)"
             if r["single_reviewer"]:
                 line += " ⚠️E-02单评分人"
-            if r["r71"]:
-                line += " ⚠️R-71上限C"
-            if r["r72"]:
-                line += " ⚠️R-72降档"
+            for rule in r.get("triggers", []):
+                line += f" ⚠️{rule}"
         else:
             line += r["note"]
         print(line)

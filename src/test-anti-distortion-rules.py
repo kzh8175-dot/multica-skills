@@ -49,36 +49,65 @@ def write_event(path, rows):
 
 
 class TestApplyAntiDistortion(unittest.TestCase):
-    """spec 3 边界用例表 10 条全通过。"""
+    """spec 3 边界用例表（终审版 18 条）全通过。"""
 
     CASES = [
-        # (auto_grade, counts, final_grade, triggered_rules)
-        ("S", {"r31": 2, "r32": 0}, "C", {"R-71"}),      # 1 R-31×2 强制 C
-        ("S", {"r31": 0, "r32": 2}, "A", {"R-72"}),      # 2 R-32×2 降一档
-        ("S", {"r31": 1, "r32": 0}, "S", set()),         # 3 R-31×1 不触发
-        ("S", {"r31": 0, "r32": 1}, "S", set()),         # 4 R-32×1 不触发
-        ("A", {"r31": 1, "r32": 1}, "A", set()),         # 5 混合各1不触发
-        ("B", {"r31": 0, "r32": 0}, "B", set()),         # 6 正常数据回归
-        ("S", {"r31": 2, "r32": 2}, "C", {"R-72", "R-71"}),  # 7 双触发先降后封顶
-        ("D", {"r31": 2, "r32": 0}, "D", {"R-71"}),      # 8 R-31×2 且 auto=D 不抬升
-        ("D", {"r31": 0, "r32": 2}, "D", {"R-72"}),      # 9 R-32×2 撞地板
-        ("A", {"r31": 1, "r32": 2}, "B", {"R-72"}),      # 10 R-31×1+R-32×2 仅降档
+        # (auto_grade, counts, final_grade, triggered_rules, single_reviewer, config)
+        ("S", {"r31": 2, "r32": 0}, "C", {"R-71"}, False, None),         # 1 R-31×2 强制 C
+        ("S", {"r31": 0, "r32": 2}, "A", {"R-72"}, False, None),         # 2 R-32×2 降一档
+        ("S", {"r31": 1, "r32": 0}, "S", set(), False, None),            # 3 R-31×1 不触发
+        ("S", {"r31": 0, "r32": 1}, "S", set(), False, None),            # 4 R-32×1 不触发
+        ("A", {"r31": 1, "r32": 1}, "A", set(), False, None),            # 5 混合各1不触发
+        ("B", {"r31": 0, "r32": 0}, "B", set(), False, None),            # 6 正常数据回归
+        ("S", {"r31": 2, "r32": 2}, "C", {"R-72", "R-71"}, False, None), # 7 双触发先降后封顶
+        ("D", {"r31": 2, "r32": 0}, "D", {"R-71"}, False, None),         # 8 R-31×2 且 auto=D 不抬升
+        ("D", {"r31": 0, "r32": 2}, "D", {"R-72"}, False, None),         # 9 R-32×2 撞地板
+        ("A", {"r31": 1, "r32": 2}, "B", {"R-72"}, False, None),         # 10 R-31×1+R-32×2 仅降档
+        ("C", {"r31": 2, "r32": 2}, "D", {"R-72", "R-71"}, False, None), # 11 auto=C 双触发
+        ("C", {"r31": 2, "r32": 0}, "C", {"R-71"}, False, None),         # 12 auto=C 仅 R-31（封顶 no-op）
+        ("C", {"r31": 0, "r32": 2}, "D", {"R-72"}, False, None),         # 13 auto=C 仅 R-32
+        ("S", {"r31": 1, "r32": 0}, "C", {"R-71"}, False, {"r71_threshold": 1}),  # 14 阈值=1 变体
+        ("S", {"r31": 0, "r32": 0}, "A", {"E-02"}, True, None),          # 15 单评分人 封顶 A
+        ("S", {"r31": 0, "r32": 2}, "B", {"E-02", "R-72"}, True, None),  # 16 单评分人 + R-32×2
+        ("S", {"r31": 2, "r32": 0}, "C", {"E-02", "R-71"}, True, None),  # 17 单评分人 + R-31×2
+        ("S", {"r31": 2, "r32": 2}, "C", {"E-02", "R-72", "R-71"}, True, None),  # 18 单评分人+双触发
     ]
 
     def test_all_spec_cases(self):
-        for auto, counts, want_grade, want_rules in self.CASES:
-            with self.subTest(auto=auto, counts=counts):
-                r = mod.apply_anti_distortion(auto, counts)
+        for auto, counts, want_grade, want_rules, single, config in self.CASES:
+            with self.subTest(auto=auto, counts=counts, single=single, config=config):
+                r = mod.apply_anti_distortion(auto, counts,
+                                              single_reviewer=single, config=config)
                 self.assertEqual(r.final_grade, want_grade)
                 self.assertEqual({c.rule for c in r.corrections}, want_rules)
                 self.assertEqual(r.auto_grade, auto)
+                self.assertEqual(r.single_reviewer, single)
 
     def test_dual_trigger_order_r72_first_then_r71_cap(self):
-        # spec 4.1 顺序决策：R-72 先降档（S→A），R-71 最后封顶（A→C）
+        # spec 3 顺序决策：R-72 先降档（S→A），R-71 最后封顶（A→C）
         r = mod.apply_anti_distortion("S", {"r31": 2, "r32": 2})
         self.assertEqual(r.final_grade, "C")
         self.assertEqual([(c.rule, c.from_grade, c.to_grade) for c in r.corrections],
                          [("R-72", "S", "A"), ("R-71", "A", "C")])
+
+    def test_e02_before_r72_order(self):
+        # 终审 B-3 关键语义 #16：S + 单评分人 + R-32×2 → E-02(S→A) → R-72(A→B) = B
+        r = mod.apply_anti_distortion("S", {"r31": 0, "r32": 2}, single_reviewer=True)
+        self.assertEqual(r.final_grade, "B")
+        self.assertEqual([(c.rule, c.from_grade, c.to_grade) for c in r.corrections],
+                         [("E-02", "S", "A"), ("R-72", "A", "B")])
+
+    def test_e02_not_raise_below_a(self):
+        # E-02 仅封顶：auto 为 A/B/C/D 时不受影响（不抬升）
+        self.assertEqual(
+            mod.apply_anti_distortion("A", {"r31": 0, "r32": 0},
+                                      single_reviewer=True).final_grade, "A")
+        self.assertEqual(
+            mod.apply_anti_distortion("B", {"r31": 0, "r32": 0},
+                                      single_reviewer=True).final_grade, "B")
+        self.assertEqual(
+            mod.apply_anti_distortion("D", {"r31": 0, "r32": 0},
+                                      single_reviewer=True).final_grade, "D")
 
     def test_invalid_auto_grade(self):
         with self.assertRaises(ValueError):
@@ -86,12 +115,12 @@ class TestApplyAntiDistortion(unittest.TestCase):
 
     def test_invalid_r71_cap(self):
         with self.assertRaises(ValueError):
-            mod.apply_anti_distortion("S", {"r31": 2}, {"r71_cap": "X"})
+            mod.apply_anti_distortion("S", {"r31": 2}, config={"r71_cap": "X"})
 
     def test_config_override(self):
         # 阈值可配置：r71_threshold=1 时 1 次红线即触发
         r = mod.apply_anti_distortion("S", {"r31": 1, "r32": 0},
-                                      {"r71_threshold": 1})
+                                      config={"r71_threshold": 1})
         self.assertEqual(r.final_grade, "C")
 
 
@@ -168,6 +197,19 @@ class TestCountDistortionEvents(unittest.TestCase):
                 os.path.join(tmp, "events"), "测试智能体", ["2026-07"])
             self.assertEqual(counts, {"r31": 0, "r32": 0})
 
+    def test_fullwidth_colon_normalized(self):
+        # N-4：全角冒号 'R-31：违反约束' 与半角 'R-31:违反约束' 同样计数（前缀解析归一化）
+        with tempfile.TemporaryDirectory() as tmp:
+            ev = os.path.join(tmp, "events", "测试智能体")
+            write_event(os.path.join(ev, "2026-08.md"), [
+                ("2026-08-01 10:00", "i1", "R-31:违反约束", -20),
+                ("2026-08-02 10:00", "i2", "R-31：违反约束", -20),
+                ("2026-08-03 10:00", "i3", "R-32：未提交自评", -5),
+            ])
+            counts = mod.count_distortion_events(
+                os.path.join(tmp, "events"), "测试智能体", ["2026-08"])
+            self.assertEqual(counts, {"r31": 2, "r32": 1})
+
     def test_skip_bad_month_strings(self):
         with tempfile.TemporaryDirectory() as tmp:
             counts = mod.count_distortion_events(
@@ -207,6 +249,16 @@ class TestWriteDecisionLog(unittest.TestCase):
             self.assertIn("R-71 cap: S → C", content)
             # 幂等：同一次判定只记录一条
             self.assertEqual(content.count("防失真判定（2026-Q3）"), 1)
+
+    def test_decision_sig_sha256(self):
+        # N-6：决策签名对齐 sha256（64 位 hex；原实现为 sha1 截断 12 位）
+        result = mod.apply_anti_distortion("S", {"r31": 2, "r32": 0})
+        sig = mod._decision_sig(result)
+        self.assertRegex(sig, r"^[0-9a-f]{64}$")
+        # 同判定签名稳定；不同判定签名不同
+        self.assertEqual(sig, mod._decision_sig(result))
+        other = mod.apply_anti_distortion("A", {"r31": 0, "r32": 2})
+        self.assertNotEqual(sig, mod._decision_sig(other))
 
     def test_append_different_decision(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -274,6 +326,21 @@ class TestCLI(unittest.TestCase):
             self.assertEqual(data["auto_grade"], "S")
             self.assertEqual(data["final_grade"], "C")
             self.assertEqual(data["corrections"][0]["rule"], "R-71")
+
+    def test_cli_apply_single_reviewer_e02(self):
+        """CLI apply --single-reviewer：无事件时 S → E-02 封顶 A。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            ev = os.path.join(tmp, "events", "测试智能体")
+            write_event(os.path.join(ev, "2026-08.md"), [])
+            proc = self.run_cli(
+                "apply", "--auto-grade", "S", "--single-reviewer",
+                "--events-dir", os.path.join(tmp, "events"),
+                "--agent", "测试智能体", "--months", "2026-08", "--json")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            data = json.loads(proc.stdout)
+            self.assertEqual(data["auto_grade"], "S")
+            self.assertEqual(data["final_grade"], "A")
+            self.assertEqual(data["corrections"][0]["rule"], "E-02")
 
     def test_cli_bad_month_exit2(self):
         proc = self.run_cli(

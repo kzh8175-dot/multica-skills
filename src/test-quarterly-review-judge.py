@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test-quarterly-review-judge.py — quarterly-review-judge.py 验收测试（方案C P1-9 / KA-74）
+test-quarterly-review-judge.py — quarterly-review-judge.py 验收测试（方案C P1-9 / KA-74 · P1-10 联调）
 
 覆盖验收标准:
   1. 计算正确性：人评分 / 人评最终分 / 综合分 / 等级 与手工计算逐项一致
@@ -9,7 +9,9 @@ test-quarterly-review-judge.py — quarterly-review-judge.py 验收测试（方�
   3. 幂等：二次运行 0 写入
   4. dry-run 零写
   5. 待填写：人评维度分未填 no-op 不崩
-  6. 防失真：R-71 上限C / R-72 降一档 / E-02 单评分人上限A
+  6. 防失真（P1-10 联调）：修正统一由 anti-distortion-rules 施加——
+     事件流水 R-31→上限C / R-32→降一档 / E-02 单评分人上限A；
+     judge 只输出原始等级 + single_reviewer 并写决策日志
   7. 等级边界：95/85/70/60 档位切换
   8. 缺失/异常：缺表单 / 缺客观分 / 非权重行 不崩
 
@@ -91,26 +93,42 @@ class JudgeComputeTest(unittest.TestCase):
         self.assertEqual(j.grade_for(59.9), "D")
 
     def test_apply_caps(self):
-        """R-71 / R-72 / E-02 叠加。"""
+        """防失真叠加（P1-10 联调后统一由 anti-distortion-rules 唯一权威）。
+
+        `apply_caps`/`parse_anti_fraud` 已退役（judge 只输出原始等级 + single_reviewer），
+        叠加逻辑在 `apply_anti_distortion`。关键行为变更（终审 B-3）：
+        S + 单评分人 + R-32×2 → E-02(S→A) → R-72(A→B) = **B**（旧顺序为 A）。
+        """
         j = self.j
-        self.assertEqual(j.apply_caps("S", False, False, False), "S")
-        # R-71：上限 C（S/A/B → C；C/D 不受影响）
-        self.assertEqual(j.apply_caps("S", True, False, False), "C")
-        self.assertEqual(j.apply_caps("A", True, False, False), "C")
-        self.assertEqual(j.apply_caps("B", True, False, False), "C")
-        self.assertEqual(j.apply_caps("C", True, False, False), "C")
-        self.assertEqual(j.apply_caps("D", True, False, False), "D")
+        ad = j._ANTI_MOD
+        self.assertIsNotNone(ad, "anti-distortion 模块应可加载")
+        # 无触发：正常数据回归
+        self.assertEqual(ad.apply_anti_distortion("S", {"r31": 0, "r32": 0}).final_grade, "S")
+        # R-71：上限 C（S/A/B → C；C 不变；D 不抬升）
+        self.assertEqual(ad.apply_anti_distortion("S", {"r31": 2, "r32": 0}).final_grade, "C")
+        self.assertEqual(ad.apply_anti_distortion("A", {"r31": 2, "r32": 0}).final_grade, "C")
+        self.assertEqual(ad.apply_anti_distortion("B", {"r31": 2, "r32": 0}).final_grade, "C")
+        self.assertEqual(ad.apply_anti_distortion("C", {"r31": 2, "r32": 0}).final_grade, "C")
+        self.assertEqual(ad.apply_anti_distortion("D", {"r31": 2, "r32": 0}).final_grade, "D")
         # R-72：降一档
-        self.assertEqual(j.apply_caps("S", False, True, False), "A")
-        self.assertEqual(j.apply_caps("A", False, True, False), "B")
-        self.assertEqual(j.apply_caps("D", False, True, False), "D")
-        # E-02：上限 A（仅 S → A；A/B/C/D 不受影响）
-        self.assertEqual(j.apply_caps("S", False, False, True), "A")
-        self.assertEqual(j.apply_caps("A", False, False, True), "A")
-        self.assertEqual(j.apply_caps("B", False, False, True), "B")
-        self.assertEqual(j.apply_caps("D", False, False, True), "D")
-        # R-71 + R-72：S 降一档→A，再上限C → C
-        self.assertEqual(j.apply_caps("S", True, True, False), "C")
+        self.assertEqual(ad.apply_anti_distortion("S", {"r31": 0, "r32": 2}).final_grade, "A")
+        self.assertEqual(ad.apply_anti_distortion("A", {"r31": 0, "r32": 2}).final_grade, "B")
+        self.assertEqual(ad.apply_anti_distortion("D", {"r31": 0, "r32": 2}).final_grade, "D")
+        # E-02：单评分人上限 A（仅 S → A；A/B/C/D 不受影响）
+        self.assertEqual(ad.apply_anti_distortion(
+            "S", {"r31": 0, "r32": 0}, single_reviewer=True).final_grade, "A")
+        self.assertEqual(ad.apply_anti_distortion(
+            "A", {"r31": 0, "r32": 0}, single_reviewer=True).final_grade, "A")
+        self.assertEqual(ad.apply_anti_distortion(
+            "B", {"r31": 0, "r32": 0}, single_reviewer=True).final_grade, "B")
+        self.assertEqual(ad.apply_anti_distortion(
+            "D", {"r31": 0, "r32": 0}, single_reviewer=True).final_grade, "D")
+        # E-02 + R-72 叠加（终审 B-3）：S + 单评分人 + R-32×2 → B
+        self.assertEqual(ad.apply_anti_distortion(
+            "S", {"r31": 0, "r32": 2}, single_reviewer=True).final_grade, "B")
+        # E-02 + R-71 叠加：S + 单评分人 + R-31×2 → C（R-71 为最终天花板）
+        self.assertEqual(ad.apply_anti_distortion(
+            "S", {"r31": 2, "r32": 0}, single_reviewer=True).final_grade, "C")
 
     def test_fmt_score(self):
         j = self.j
@@ -234,6 +252,19 @@ class JudgeFormTest(unittest.TestCase):
         j = load_judge()
         return j.judge_form(AGENT, QUARTER, root, dry_run=dry_run)
 
+    def write_events(self, root, rows):
+        """写入事件流水：rows = [(month, issue, event, points), ...]（R-31/R-32 计数源）。"""
+        for month, issue, event, pts in rows:
+            ev_dir = os.path.join(root, "reviews", "scoring", "events", AGENT)
+            os.makedirs(ev_dir, exist_ok=True)
+            path = os.path.join(ev_dir, f"{month}.md")
+            if not os.path.exists(path):
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write("| 时间 | 任务 | 事件 | 积分 |\n")
+                    f.write("|------|------|------|:---:|\n")
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(f"| 2026-{month[5:]} 10:00 | {issue} | {event} | {pts:+d} |\n")
+
     def test_end_to_end_fill(self):
         """维度分就绪 → 客观/人评/综合/等级 全部判定并回填。"""
         # 客观75，评分人1 全5 → 100；评分人2 全4 → 80；最终 90；综合 78；等级 B
@@ -315,26 +346,72 @@ class JudgeFormTest(unittest.TestCase):
         self.assertIn("**人评最终分** = (评分人1+评分人2)/2 = **100**（E-02 单评分人，非平均）", text)
 
     def test_r71_cap_c(self):
-        """R-71 触发（cap_note 上限C）→ S 被压到 C。"""
-        root = self.build_root(objective=100, d=[5, 5, 5, 5, 5], e=[5, 5, 5, 5, 5],
-                               cap="（等级上限C）", fraud="红线计数=2次|触发一票否决(R-71):等级上限C")
+        """R-71 触发（事件流水 2 个 R-31 不同 issue）→ 原始 S 被压到 C。
+
+        P1-10 联调后：修正来自事件流水计数（count_distortion_events），
+        不再解析表单 cap_note/防失真区文案（parse_anti_fraud 已退役）。
+        """
+        root = self.build_root(objective=100, d=[5, 5, 5, 5, 5], e=[5, 5, 5, 5, 5])
+        self.write_events(root, [
+            ("2026-07", "i-1", "R-31:违反约束", -20),
+            ("2026-08", "i-2", "R-31:违反约束", -20),
+        ])
         r = self.judge(root)
         self.assertEqual(r["stage"], "ok")
-        self.assertTrue(r["r71"])
+        self.assertEqual(r["auto_grade"], "S")
+        self.assertEqual(r["counts"], {"r31": 2, "r32": 0})
+        self.assertEqual(r["triggers"], ["R-71"])
         self.assertEqual(r["grade"], "C")
         text = self.read_form(root)
-        self.assertIn("**本季等级**: **C** （等级上限C）", text)
+        self.assertIn("**本季等级**: **C**", text)
 
     def test_r72_downgrade(self):
-        """R-72 触发（cap_note 降一档）→ A 降为 B。"""
-        # 客观90，人评90 → 综合90 → A；R-72 → B
-        root = self.build_root(objective=90, d=[5, 5, 5, 5, 5], e=[4, 4, 5, 4, 4],
-                               cap="（等级降一档）", fraud="红线计数=0次|未触发(需≥2次)|自评缺失计数=2次|触发降档(R-72):等级降一档")
+        """R-72 触发（事件流水 2 个 R-32 不同 issue）→ 原始 A 降为 B。"""
+        root = self.build_root(objective=90, d=[5, 5, 5, 5, 5], e=[4, 4, 5, 4, 4])
+        self.write_events(root, [
+            ("2026-07", "i-1", "R-32:未提交自评", -5),
+            ("2026-08", "i-2", "R-32:未提交自评", -5),
+        ])
         r = self.judge(root)
         self.assertEqual(r["stage"], "ok")
-        self.assertTrue(r["r72"])
+        self.assertEqual(r["auto_grade"], "A")
+        self.assertEqual(r["counts"], {"r31": 0, "r32": 2})
+        self.assertEqual(r["triggers"], ["R-72"])
         self.assertEqual(r["grade"], "B")
-        self.assertIn("**本季等级**: **B** （等级降一档）", self.read_form(root))
+        self.assertIn("**本季等级**: **B**", self.read_form(root))
+
+    def test_single_reviewer_plus_r32(self):
+        """S + 单评分人 + R-32×2 → E-02(S→A) → R-72(A→B) = B（终审 B-3 行为变更）。
+
+        旧实现（apply_caps 顺序 R-72→R-71→E-02）得 A；新顺序 E-02→R-72→R-71 得 B。
+        """
+        root = self.build_root(objective=100, d=[5, 5, 5, 5, 5], e=[None] * 5)
+        self.write_events(root, [
+            ("2026-07", "i-1", "R-32:未提交自评", -5),
+            ("2026-08", "i-2", "R-32:未提交自评", -5),
+        ])
+        r = self.judge(root)
+        self.assertEqual(r["stage"], "ok")
+        self.assertTrue(r["single_reviewer"])
+        self.assertEqual(r["auto_grade"], "S")
+        self.assertEqual(r["grade"], "B")
+        self.assertEqual(r["triggers"], ["E-02", "R-72"])
+
+    def test_decision_log_written_idempotent(self):
+        """judge 调用 write_decision_log 留痕；重复运行幂等（不重复追加）。"""
+        root = self.build_root(objective=75, d=[5, 5, 5, 5, 5], e=[4, 4, 4, 4, 4])
+        first = self.judge(root)
+        self.assertEqual(first["stage"], "ok")
+        log_path = os.path.join(root, "reviews", "scoring",
+                                "anti-distortion", AGENT, f"{QUARTER}.md")
+        self.assertTrue(os.path.isfile(log_path), "决策日志应写入")
+        with open(log_path, encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("final_grade: B", content)
+        # 幂等：二次运行（无输入变化）不重复追加
+        self.judge(root)
+        with open(log_path, encoding="utf-8") as f:
+            self.assertEqual(f.read(), content)
 
     def test_grade_table_marker_only_selected_row(self):
         """等级表仅标记判定行。"""
