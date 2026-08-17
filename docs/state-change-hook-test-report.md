@@ -13,7 +13,7 @@
 | 文件 | 说明 |
 |---|---|
 | `state-change-hook.py` | 状态变更钩子（Python3；纯函数 `map_transition`/`classify_completion`/`skip_reason`/`decide` + CLI `--dry-run`/`--issue`/`--baseline`/`--no-auto-baseline`/`--json`） |
-| `test-state-change-hook.py` | 验收测试套件（unittest，**56** 条用例全通过；含 12 条 main() 集成测试） |
+| `test-state-change-hook.py` | 验收测试套件（unittest，**65** 条用例全通过；含 15 条 main() 集成测试） |
 | `run-state-change-hook.sh` | 定时任务包装脚本（守卫 + 日志 + 退出码，`logs/hook/YYYY-MM-DD.log`） |
 | `crontab-rating.conf`（修改） | 新增第 0 项「状态变更钩子」cron 说明（每日 00:20，先于 00:30 结算） |
 
@@ -50,12 +50,13 @@
 | 4 | 事件 metadata：5 键齐备、trigger=reviewer、points 整数且类型为 number | ✅ 2 条用例 |
 | 5 | 决策流：自动 baseline、no-transition、non-scoring、event-written、deferred、escalated、credited-same-event、测试数据隔离 | ✅ 13 条用例 |
 | 6 | 写路径：注入 write 回调验证 6 次写入（5 键事件 + last_status）、dry-run 零写入、写失败报 write-error | ✅ 4 条用例 |
-| 7 | main() 集成：baseline→transition→event→幂等全生命周期、返工检测、baseline 模式（含缺 baseline 写路径 + dry-run）、退出码契约（write/read-error→exit 1、无错误→exit 0）、dry-run、非 agent issue 过滤、纯 JSON 输出 | ✅ 12 条用例 |
+| 7 | main() 集成：baseline→transition→event→幂等全生命周期、返工检测、baseline 模式（含缺 baseline 写路径 + dry-run + invalid-status/测试数据跳过）、退出码契约（write/read-error→exit 1、无错误→exit 0）、dry-run、非 agent issue 过滤、纯 JSON 输出 | ✅ 15 条用例 |
 | 8 | 真实数据 dry-run：83 个 agent 分配 issue → 80 建 baseline + 3 测试数据跳过，0 事件误写 | ✅ 实测 |
 | 9 | KA-100 缺陷修复回归：`--baseline` 缺 baseline 真实写入 `rating.last_status`；写失败/读失败退出码=1、无错误退出码=0（cron 告警契约） | ✅ 6 条新增用例 |
+| 10 | KA-101 非阻塞项修复：`--baseline` 分支与 `decide()` 口径对齐——未知/空 status 跳过（invalid-status）、`rating.test=true` 测试数据跳过（test-skip），均不写 baseline | ✅ 9 条新增用例 |
 
-**回归**：聚合器 15 / 结算器 11 / 人评判定 24 / 防失真 24 / 看板数据接口 35 / 状态变更钩子 56
-（**165 条 Python**）+ 调度器 category 4 + 防失真集成 4（**8 项 bash**）全通过。
+**回归**：聚合器 15 / 结算器 11 / 人评判定 24 / 防失真 24 / 看板数据接口 35 / 状态变更钩子 65
+（**174 条 Python**）+ 调度器 category 4 + 防失真集成 4（**8 项 bash**）全通过。
 
 ## 四、幂等与安全设计
 
@@ -101,3 +102,17 @@ bash scripts/run-state-change-hook.sh                              # 定时任�
 |------|:---:|
 | 全部处理成功（含无事件、dry-run） | 0 |
 | 汇总含 write-error / read-error | 1 |
+
+## 七、KA-101 非阻塞项修复记录（--baseline 口径对齐）
+
+KA-100 复核发现的两项非阻塞项（代码审查员验收意见），已在 KA-101 修复：
+
+### 修复 1 · `--baseline` 分支绕过 `decide()` 的 invalid-status 校验（低）
+- **现状**：baseline 分支仅判断 `"rating.last_status" not in meta`，未知/空 status 的 issue 也会被真实写入 `rating.last_status`（KA-100 修复后从「静默 no-op」变为「真实写入」）。
+- **修复**：抽出纯函数 `_baseline_plan(issue, meta)`，过滤顺序与 `decide()` 完全一致——未知/空 status → `invalid-status` 跳过；`rating.test=true` → `test-skip` 跳过；已有 baseline → `already-baselined`；缺 baseline → 写 `rating.last_status`。
+- **验收证据**：新增 `TestBaselinePlan` 6 条纯函数用例（valid-missing / invalid-status / empty-status / test-data / existing-baseline / test-data 优先于已有 baseline）+ main() 集成 3 条（`test_main_baseline_flag_skips_invalid_status` / `test_main_baseline_flag_skips_test_data` / `test_main_baseline_flag_mixed_stats`）。
+
+### 修复 2 · `--baseline` 测试数据隔离（确认项）
+- **现状**：`rating.test=true` 的测试数据 issue 在 `--baseline` 下也会写入 `rating.last_status`（`decide()` 的测试隔离在 baseline 分支被绕过）。
+- **处置**：确认「全量建 baseline」**不**应覆盖测试数据——测试数据在 normal 模式下恒为 `test-skip`（不建 baseline、不写事件），baseline 分支与之保持一致，避免测试数据进入真实状态跟踪。
+- **验收证据**：真实数据 `--baseline --dry-run`（93 个 agent 分配 issue）→ 88 baseline + 3 test-skip + 1 already-baselined + 1 read-error，0 事件误写、0 测试数据被写入。

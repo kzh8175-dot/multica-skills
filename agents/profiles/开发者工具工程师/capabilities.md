@@ -22,6 +22,18 @@
 
 按任务在下方追加学习记录（最新在上）。每条固定四段结构：**任务 → 新技能 / 加深的技能 → 挑战 / 盲区 → 改进**。
 
+### 2026-08-17 · KA-101：--baseline 分支 invalid-status 校验 + 测试数据隔离（KA-100 非阻塞项）
+
+- **任务**：修复 KA-100 复核发现的两项非阻塞项。① baseline 分支绕过 `decide()` 的 invalid-status 校验——KA-100 修复后未知/空 status 的 issue 会被真实写入 `rating.last_status`（修复前是静默 no-op 无害）；② `rating.test=true` 测试数据在 `--baseline` 下也会写入 last_status（`decide()` 的测试隔离被 baseline 分支绕过）。修复：抽出纯函数 `_baseline_plan(issue, meta)`，过滤顺序与 `decide()` 完全一致——未知/空 status → `invalid-status` 跳过、`rating.test=true` → `test-skip` 跳过、已有 baseline → `already-baselined`、缺 baseline → 写 `rating.last_status`；`main()` baseline 分支改走该函数 + 既有 `_apply_updates` 写路径。测试 56→65（新增 `TestBaselinePlan` 6 条纯函数 + main() 集成 3 条：invalid-status/test-skip/mixed stats）；全仓回归 174 Python + 8 bash 全绿；真实数据 `--baseline --dry-run` 93 issue → 88 baseline + 3 test-skip + 1 already-baselined，0 事件误写。
+- **新技能 / 加深的技能**：
+  - 「修复引入新副作用」的回归审视：KA-100 把 baseline 分支从「静默 no-op」变成「真实写入」后，原「无害」的绕过行为（不校验 status、不隔离测试数据）升级为「真实污染 last_status」——修复本身需要二次修复；写路径一旦真实化，同一分支的其余过滤语义必须与权威决策函数（`decide()`）逐条对齐。
+  - 过滤顺序即契约：`decide()` 的校验顺序（invalid-status → test-skip → 状态跟踪）是权威口径；baseline 分支复用同一顺序，用 `_baseline_plan` 独立纯函数承接「模式专属决策」，比在 main() 内联拼 plan 更可测、更不易与 `decide()` 分叉。
+  - 处置类非阻塞项（确认项）的决策要落到验收证据：测试数据隔离的「是否处理」以「测试数据 normal 模式恒 test-skip、不建 baseline」为据裁定「全量建 baseline 不覆盖测试数据」，并用真实 dry-run 的 test-skip 计数固化。
+- **挑战 / 盲区**：
+  - `--baseline` 不能整体复用 `decide()`：对已有 last_status 的 issue，`decide()` 会检测 transition 并写事件，而 baseline 模式必须「绝不写事件、已有则 already-baselined」——所以只复用过滤语义，不复用决策，避免模式语义被 `decide()` 的状态机接管。
+  - baseline 分支此前内联拼 plan 且顺序与 `decide()` 无关（只判 last_status 缺失），本次对齐把「先校验、后判基线」的优先级纠正为与 `decide()` 一致（invalid-status/test-skip 优先于 already-baselined）。
+- **改进**：给 CLI 模式分支抽「模式专属决策纯函数」时，先在 docstring 写明过滤顺序与权威函数的关系；涉及「从 no-op 改为真实写」的修复，交付前自检该分支是否继承了权威函数的全部跳过语义。
+
 ### 2026-08-17 · KA-100：状态变更钩子缺陷修复（--baseline 静默空操作 + 写失败退出码）
 
 - **任务**：修复代码审查员验收发现的非阻塞项 1、2（P2-12 部署接线前）。修复 1 `--baseline` 模式静默空操作——`main()` baseline 分支内联构造的 plan 含 `updates=[("rating.last_status", ...)]` 但从未应用（写路径只在 `process_issue` 内），缺 baseline 的 issue 报告「建立 baseline」但零写入；`test_main_baseline_flag_only_records_missing` 只覆盖「已有 baseline」分支。修复 2 写失败退出码不反映——`main()` 循环内 write-error/read-error 仅计入 stats，脚本恒 exit 0，cron/包装脚本按「退出码非 0」告警（`run-state-change-hook.sh`），写失败静默通过。修复：抽出 `_apply_updates(issue, plan, dry_run, write)` 统一写路径（`process_issue` 与 baseline 分支共用，dry-run 仍只读）；新增 `_exit_on_error(stats)`——stats 含 write-error/read-error 时 `sys.exit(1)`，JSON 与人类输出两条路径均生效，无错误不调用 exit（契约 exit 0）。测试 50→56 条全通过（新增：缺 baseline 写路径、baseline dry-run、写失败 exit=1、JSON 写失败 exit=1、读失败 exit=1、无错误 exit 0）；全仓回归 165 Python + 8 bash 全绿。
@@ -166,6 +178,7 @@
 
 ## 协作关系
 
+- KA-101 非阻塞项修复与 代码审查员（KA-100 复核发现非阻塞项 1、2，附「代码位置 + 缺陷 + 修复建议」：baseline 分支绕过 decide() 校验 / 测试数据隔离绕过）、资深战略领导者（backlog 立项 KA-101 并提升 todo 排程）协作，评分 4/5：非阻塞项以「确认项 vs 必改项」区分标注，隔离处置决策给了明确判断依据；改进——修复引入「从 no-op 变为真实写入」的副作用时，应在交付说明中主动列出「该分支新获得的所有写路径语义」供复核对齐。
 - KA-100 缺陷修复与 代码审查员（验收发现非阻塞项 1、2：--baseline 静默空操作 + 写失败退出码）、资深战略领导者（修复立项，P2-12 部署接线前时限）协作，评分 4/5：审查发现以「代码位置 + 具体缺陷 + 修复方向」三段式给出（如「写路径只在 process_issue 内，baseline 分支构造的 plan 未应用」），可直接照单修复；改进——审查验收与部署接线（cron/autopilot）的先后依赖在立项时就锁定，本笔修复后即达 P2-12 接线前置条件。
 - KA-98 迭代 1 与 资深战略领导者（P1 五任务分工，看板 #1/#2/#5/#6 归前端工程师、#7 归本工程师）、前端工程师（并行任务，文件无交集不冲突）协作，评分 4/5：分工按文件/职责边界拆清（我仅动 `dashboard-data-feed.py` + 其测试，前端动 generator/index.html），可直接开工；改进——迭代 0 分支未合 main 时，迭代 1 须以「迭代 0 分支」为基（本笔已基于 KA-97 分支 tip 提交），交接给仓库管理员时说明基线，避免 diff 混入前序工作。
 - KA-97 迭代 0 与 资深战略领导者（风险登记表 R1 派工/升级时限/保守方案裁定）、数据可视化工程师（#3 前端消费侧、loader 分叉口径核对）、代码审查员（#3 双管线分叉发现与「保留 feed 单一源」建议）协作，评分 4/5：审查以「loader 未交付 + 输出 json 可查」推断分叉（60/63、排名、均值分母、分布预估），决策清单给出两条路径（删 or 并入）+ 保守方案（删 loader 保 feed），直接可执行；改进——并行管线「名义交付」风险在里程碑宣称阶段就应带代码/测试可复核门槛，避免「12 用例无法复核」的空头声明。
@@ -186,6 +199,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.10 | 追加 KA-101 学习记录（--baseline 分支与 decide() 口径对齐：invalid-status/测试数据隔离 → `_baseline_plan` 模式专属决策纯函数，过滤顺序与权威函数一致）+ 协作关系更新（非阻塞项区分「必改项/确认项」直接可执行，评分 4/5） |
 | 2026-08-17 | v0.9 | 追加 KA-100 学习记录（缺陷修复：--baseline 静默空操作→`_apply_updates` 统一写路径、写失败退出码→`_exit_on_error(stats)` exit 1、退出码契约入 docstring + SystemExit 用例锁定）+ 协作关系更新（审查「代码位置+缺陷+修复方向」三段式直接可执行，评分 4/5） |
 | 2026-08-17 | v0.8 | 追加 KA-98 #7 学习记录（CLI 分页拉取：静默截断→offset 分页 + has_more/非满页双终止 + 最大页数护栏 + 中途失败降级 + 按 id 去重防并发插入）+ 协作关系更新（迭代 1 分工以文件边界拆清，评分 4/5） |
 | 2026-08-17 | v0.7 | 追加 KA-97 学习记录（单一数据源收敛：删 loader 保 feed、发现范围=口径、Schema 契约测试）+ 协作关系更新（R1 派工/保守方案裁定，评分 4/5） |

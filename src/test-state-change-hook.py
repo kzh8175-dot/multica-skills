@@ -300,6 +300,49 @@ class TestDecide(unittest.TestCase):
         self.assertEqual(plan["updates"], [("rating.last_status", "done", "string")])
 
 
+class TestBaselinePlan(unittest.TestCase):
+    """_baseline_plan 纯函数：--baseline 模式决策与 decide() 口径对齐（KA-101）。
+
+    过滤顺序与 decide() 一致：未知/空 status → 测试数据 → 已有 baseline → 缺 baseline 写。
+    """
+
+    def test_valid_missing_writes_baseline(self):
+        plan = mod._baseline_plan(issue(status="in_progress"), meta())
+        self.assertEqual(plan["action"], "baseline")
+        self.assertEqual(plan["updates"],
+                         [("rating.last_status", "in_progress", "string")])
+
+    def test_invalid_status_skipped(self):
+        plan = mod._baseline_plan(issue(status="archived"), meta())
+        self.assertEqual(plan["action"], "invalid-status")
+        self.assertEqual(plan["updates"], [])
+        self.assertIsNone(plan["event"])
+
+    def test_empty_status_skipped(self):
+        plan = mod._baseline_plan(issue(status=""), meta())
+        self.assertEqual(plan["action"], "invalid-status")
+        self.assertEqual(plan["updates"], [])
+
+    def test_test_data_skipped(self):
+        plan = mod._baseline_plan(issue(status="done"),
+                                  meta(**{"rating.test": True}))
+        self.assertEqual(plan["action"], "test-skip")
+        self.assertEqual(plan["updates"], [])
+
+    def test_existing_baseline_not_overwritten(self):
+        plan = mod._baseline_plan(issue(status="done"),
+                                  meta(**{"rating.last_status": "in_review"}))
+        self.assertEqual(plan["action"], "already-baselined")
+        self.assertEqual(plan["updates"], [])
+
+    def test_test_data_beats_existing_baseline(self):
+        # 过滤顺序：测试数据在已有 baseline 之前 → 报告 test-skip，不写不重写
+        plan = mod._baseline_plan(issue(status="done"),
+                                  meta(**{"rating.last_status": "done",
+                                          "rating.test": True}))
+        self.assertEqual(plan["action"], "test-skip")
+
+
 class TestProcessIssue(unittest.TestCase):
     """process_issue 集成：注入 fake write，验证写入与幂等。"""
 
@@ -473,6 +516,50 @@ class TestMainFlow(unittest.TestCase):
         mod.main()
         self.assertNotIn("rating.last_status", self.store["i-1"])
         self.assertEqual(self.writes, [])
+
+    def test_main_baseline_flag_skips_invalid_status(self):
+        # KA-101 非阻塞项 1：未知/空 status 的 issue 不写 baseline（与 decide() 对齐）
+        it = issue(id="i-1", identifier="KA-1", status="archived", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {}
+        sys.argv = ["state-change-hook.py", "--baseline"]
+        mod.main()
+        self.assertNotIn("rating.last_status", self.store["i-1"])
+        self.assertEqual(self.writes, [])
+
+    def test_main_baseline_flag_skips_test_data(self):
+        # KA-101 非阻塞项 2：rating.test=true 测试数据不写 baseline（测试数据隔离）
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.test": True}
+        sys.argv = ["state-change-hook.py", "--baseline"]
+        mod.main()
+        self.assertNotIn("rating.last_status", self.store["i-1"])
+        self.assertEqual(self.writes, [])
+
+    def test_main_baseline_flag_mixed_stats(self):
+        # 混合场景：有效缺 baseline 写、invalid-status/test-skip 跳过且计入 stats
+        from contextlib import redirect_stdout
+        import io
+        self.issues = [
+            issue(id="i-1", identifier="KA-1", status="in_progress", assignee_id="a-1"),
+            issue(id="i-2", identifier="KA-2", status="archived", assignee_id="a-1"),
+            issue(id="i-3", identifier="KA-3", status="done", assignee_id="a-1"),
+        ]
+        self.store["i-1"] = {}
+        self.store["i-2"] = {}
+        self.store["i-3"] = {"rating.test": True}
+        buf = io.StringIO()
+        sys.argv = ["state-change-hook.py", "--baseline", "--json"]
+        with redirect_stdout(buf):
+            mod.main()
+        data = json.loads(buf.getvalue())
+        self.assertEqual(data["stats"].get("baseline"), 1)
+        self.assertEqual(data["stats"].get("invalid-status"), 1)
+        self.assertEqual(data["stats"].get("test-skip"), 1)
+        self.assertEqual(self.store["i-1"].get("rating.last_status"), "in_progress")
+        self.assertNotIn("rating.last_status", self.store["i-2"])
+        self.assertNotIn("rating.last_status", self.store["i-3"])
 
     def test_main_exits_1_on_write_error(self):
         # 缺陷回归（KA-100 修复 2）：写失败 → 进程退出码=1（cron 告警契约）

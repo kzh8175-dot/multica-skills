@@ -28,6 +28,7 @@ state-change-hook.py — 状态变更钩子（方案C P2-11 / KA-76）
 幂等:
   - 状态跟踪: 每个 issue 的 rating.last_status 记录上次处理的 status；无变更 → no-op
   - 首次运行自动建立 baseline（只记录 status，不写事件），存量 done/cancelled 不触发
+  - --baseline 与 decide() 口径对齐：未知/空 status 与 rating.test=true 的 issue 跳过，不写 baseline
   - 已有 rating.status=pending 的 issue 延后（尊重已有事件，不覆盖；待其结算后补写）
   - 已 credited 且同一事件 → 跳过（结算器 E_DUP 兜底，防双计）
   - 已 escalated → 跳过并报告（升级人工处置，不改写）
@@ -225,6 +226,30 @@ def decide(issue, meta, no_auto_baseline=False):
             "reason": f"{last_status}→{status} → {event['event']}"}
 
 
+def _baseline_plan(issue, meta):
+    """--baseline 模式决策：与 decide() 口径对齐，仅补写缺失的 rating.last_status。
+
+    过滤顺序与 decide() 一致（未知/空 status → 测试数据 → 已有 baseline）：
+      - 未知/空 status → invalid-status（跳过，不写）
+      - rating.test=true → test-skip（测试数据隔离，不写）
+      - 已有 baseline  → already-baselined（不重写）
+      - 缺 baseline    → baseline（写 rating.last_status，不写事件）
+    """
+    status = issue.get("status") or ""
+    if status not in VALID_STATUSES:
+        return {"action": "invalid-status", "event": None, "updates": [],
+                "reason": f"未知状态 {status!r}"}
+    if meta.get("rating.test") is True:
+        return {"action": "test-skip", "event": None, "updates": [],
+                "reason": "测试数据"}
+    if "rating.last_status" in meta:
+        return {"action": "already-baselined", "event": None, "updates": [],
+                "reason": "baseline 已存在"}
+    return {"action": "baseline", "event": None,
+            "updates": [("rating.last_status", status, "string")],
+            "reason": f"建立 baseline {status}"}
+
+
 # ---------------------------------------------------------------- IO
 
 def run_cli(args):
@@ -395,16 +420,11 @@ def main():
             continue
 
         if args.baseline:
-            # baseline 模式：仅补写缺失的 rating.last_status，不写事件
-            if "rating.last_status" not in meta:
-                plan = {"action": "baseline", "event": None,
-                        "updates": [("rating.last_status", issue.get("status") or "", "string")],
-                        "reason": f"建立 baseline {issue.get('status')}"}
-                # 显式应用 updates（与 process_issue 共用写路径；dry-run 只读）
-                plan = _apply_updates(issue, plan, dry_run=args.dry_run)
-            else:
-                plan = {"action": "already-baselined", "event": None, "updates": [],
-                        "reason": "baseline 已存在"}
+            # baseline 模式：仅补写缺失的 rating.last_status，不写事件；
+            # _baseline_plan 与 decide() 口径对齐（invalid-status / 测试数据跳过）
+            plan = _baseline_plan(issue, meta)
+            # 显式应用 updates（与 process_issue 共用写路径；dry-run 只读）
+            plan = _apply_updates(issue, plan, dry_run=args.dry_run)
         else:
             plan = process_issue(issue, meta, dry_run=args.dry_run,
                                  no_auto_baseline=args.no_auto_baseline)
