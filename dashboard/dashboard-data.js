@@ -17,7 +17,7 @@ window.DASHBOARD_DATA = {
     "month": "2026-08",
     "monthLabel": "08月",
     "year": "2026",
-    "generatedAt": "2026-08-17T07:00:14Z",
+    "generatedAt": "2026-08-17T09:43:49Z",
     "schemaVersion": "1.0",
     "agentCount": 63,
     "agentsWithData": 24,
@@ -178,18 +178,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/DevOps自动化工程师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/DevOps自动化工程师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 16:33",
@@ -269,18 +258,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/GitHub 仓库管理员/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/GitHub 仓库管理员/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 16:10",
@@ -414,11 +392,6 @@ window.DASHBOARD_DATA = {
           "code": "E_MISS",
           "month": null,
           "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/SEO优化专家/2026-09.md"
-        },
-        {
-          "code": "E-02",
-          "month": null,
-          "msg": "单评分人上限 A（季度表单已回填）"
         }
       ],
       "events": [],
@@ -510,18 +483,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/UI 完稿审核者/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/UI 完稿审核者/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:31",
@@ -566,18 +528,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/UI设计师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/UI设计师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 21:36",
@@ -834,18 +785,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/代码审查员/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/代码审查员/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 16:10",
@@ -950,18 +890,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-16T14:03:45Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/会议记录专家/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/会议记录专家/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 10:56",
@@ -1059,18 +988,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/前端工程师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/前端工程师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:47",
@@ -1553,18 +1471,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/工作室运营/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/工作室运营/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 20:02",
@@ -1616,18 +1523,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/工作流程架构师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/工作流程架构师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 13:20",
@@ -1672,18 +1568,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/开发者工具工程师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/开发者工具工程师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 22:21",
@@ -1936,18 +1821,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/技术文档撰写者/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/技术文档撰写者/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:55",
@@ -2073,18 +1947,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/提示工程专家/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/提示工程专家/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 21:55",
@@ -2295,18 +2158,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:55:11Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/数据工程师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/数据工程师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:54",
@@ -2425,18 +2277,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/最小变更工程师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/最小变更工程师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 00:14",
@@ -2481,18 +2322,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/未知智能体/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/未知智能体/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:55",
@@ -2816,18 +2646,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/视觉设计专家/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/视觉设计专家/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 21:37",
@@ -2925,18 +2744,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/设计部/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/设计部/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 22:37",
@@ -3041,18 +2849,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/财务主管/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/财务主管/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 20:39",
@@ -3097,18 +2894,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/财务规划与分析分析师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/财务规划与分析分析师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 17:12",
@@ -3167,18 +2953,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/财务跟踪与规划专员/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/财务跟踪与规划专员/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 01:40",
@@ -3251,18 +3026,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/资深战略领导者/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/资深战略领导者/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:43",
@@ -3483,18 +3247,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/软件架构师/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/软件架构师/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-17 04:28",
@@ -3698,18 +3451,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:57:42Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/项目负责人/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/项目负责人/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 21:28",
@@ -3782,18 +3524,7 @@ window.DASHBOARD_DATA = {
         "basis": "objective_only",
         "asOf": "2026-08-17T04:54:24Z"
       },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/高级项目经理/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/高级项目经理/2026-09.md"
-        }
-      ],
+      "flags": [],
       "events": [
         {
           "ts": "08-16 12:55",
@@ -4537,24 +4268,6 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-0fec6cf760",
-      "agentName": "DevOps自动化工程师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-bfd2ccbf65",
-      "agentName": "GitHub 仓库管理员",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-afe694e47e",
       "agentName": "Jira-工作流管理员",
       "code": "E_MISS",
@@ -4575,24 +4288,6 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-81d6001d41",
       "agentName": "SRE稳定性工程师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-c75f45bc32",
-      "agentName": "UI 完稿审核者",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-0bb0a8990c",
-      "agentName": "UI设计师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -4636,15 +4331,6 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-8588f07535",
-      "agentName": "代码审查员",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-b71cd75c95",
       "agentName": "企业培训课程设计师",
       "code": "E_MISS",
@@ -4654,26 +4340,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-0a0457d5ef",
-      "agentName": "会议记录专家",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-2ee8a91640",
       "agentName": "内容创作者",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-78fc9ec9c6",
-      "agentName": "前端工程师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -4753,33 +4421,6 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-1f3d07b41f",
-      "agentName": "工作室运营",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-f1b7ee32e7",
-      "agentName": "工作流程架构师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-86b19678a2",
-      "agentName": "开发者工具工程师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-35cdf8caee",
       "agentName": "微信公众号经理",
       "code": "E_MISS",
@@ -4807,26 +4448,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-9b441d91b7",
-      "agentName": "技术文档撰写者",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-fee8ad8850",
       "agentName": "抖音策略师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-9bd1015696",
-      "agentName": "提示工程专家",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -4861,35 +4484,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-d10933dd4f",
-      "agentName": "数据工程师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-42d0c10096",
       "agentName": "文档生成专家",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-564fc923d1",
-      "agentName": "最小变更工程师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-926f7bf351",
-      "agentName": "未知智能体",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -4942,15 +4538,6 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-2e1fca2109",
-      "agentName": "视觉设计专家",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-4d0451cf2b",
       "agentName": "视频优化专家",
       "code": "E_MISS",
@@ -4960,53 +4547,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-10b6936df6",
-      "agentName": "设计部",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-259b0dc9d9",
       "agentName": "语言翻译专家",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-c19df32f88",
-      "agentName": "财务主管",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-5281ea3857",
-      "agentName": "财务规划与分析分析师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-92c83e8158",
-      "agentName": "财务跟踪与规划专员",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-1bbefb050c",
-      "agentName": "资深战略领导者",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -5025,15 +4567,6 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-dc15f0c64e",
       "agentName": "轮播图自动生成专家",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-1830d318fd",
-      "agentName": "软件架构师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -5061,24 +4594,6 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-2124b72fe4",
       "agentName": "零售退货与客户恢复专家",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-9d0b2fe724",
-      "agentName": "项目负责人",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
-      "agentId": "agt-1e68972005",
-      "agentName": "高级项目经理",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -5220,9 +4735,9 @@ window.DASHBOARD_DATA = {
     "aggregation": "2026-08-17T04:57:42Z",
     "review": "2026-08-17T04:58:05Z",
     "ratingStatus": {
-      "pending": 7,
+      "pending": 10,
       "escalated": 0,
-      "credited": 60
+      "credited": 59
     },
     "settlementSchedule": "每日 00:30",
     "aggregationSchedule": "月末最后一日 01:15（R-41/R-51）",
@@ -5240,82 +4755,10 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-0a0457d5ef",
-      "agentName": "会议记录专家",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/会议记录专家/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-0bb0a8990c",
-      "agentName": "UI设计师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/UI设计师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-0fec6cf760",
-      "agentName": "DevOps自动化工程师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/DevOps自动化工程师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-10b6936df6",
-      "agentName": "设计部",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/设计部/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-15f00a6869",
       "agentName": "多平台出版商",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/多平台出版商/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-1830d318fd",
-      "agentName": "软件架构师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/软件架构师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-1bbefb050c",
-      "agentName": "资深战略领导者",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/资深战略领导者/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-1e68972005",
-      "agentName": "高级项目经理",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/高级项目经理/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-1f3d07b41f",
-      "agentName": "工作室运营",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/工作室运营/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -5352,15 +4795,6 @@ window.DASHBOARD_DATA = {
       "agentName": "数据可视化工程师",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/数据可视化工程师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-2e1fca2109",
-      "agentName": "视觉设计专家",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/视觉设计专家/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -5420,24 +4854,6 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-5281ea3857",
-      "agentName": "财务规划与分析分析师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/财务规划与分析分析师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-564fc923d1",
-      "agentName": "最小变更工程师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/最小变更工程师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-56d81115e4",
       "agentName": "AI-身份与信任架构师",
       "code": "E-01",
@@ -5483,37 +4899,10 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-78fc9ec9c6",
-      "agentName": "前端工程师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/前端工程师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-81d6001d41",
       "agentName": "SRE稳定性工程师",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/SRE稳定性工程师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-8588f07535",
-      "agentName": "代码审查员",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/代码审查员/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-86b19678a2",
-      "agentName": "开发者工具工程师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/开发者工具工程师/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -5537,24 +4926,6 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-926f7bf351",
-      "agentName": "未知智能体",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/未知智能体/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-92c83e8158",
-      "agentName": "财务跟踪与规划专员",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/财务跟踪与规划专员/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-93b8d15a0c",
       "agentName": "社交媒体师",
       "code": "E-01",
@@ -5564,37 +4935,10 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-9b441d91b7",
-      "agentName": "技术文档撰写者",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/技术文档撰写者/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-9bd1015696",
-      "agentName": "提示工程专家",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/提示工程专家/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-9c3b17db47",
       "agentName": "知乎策略师",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/知乎策略师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-9d0b2fe724",
-      "agentName": "项目负责人",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/项目负责人/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -5681,42 +5025,6 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-bfd2ccbf65",
-      "agentName": "GitHub 仓库管理员",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/GitHub 仓库管理员/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-c19df32f88",
-      "agentName": "财务主管",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/财务主管/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-c75f45bc32",
-      "agentName": "UI 完稿审核者",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/UI 完稿审核者/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-d10933dd4f",
-      "agentName": "数据工程师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/数据工程师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-d4eeb36ec0",
       "agentName": "SEO优化专家",
       "code": "E-01",
@@ -5762,15 +5070,6 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-f1b7ee32e7",
-      "agentName": "工作流程架构师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/工作流程架构师/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-f272cc755a",
       "agentName": "百度SEO专家",
       "code": "E-01",
@@ -5796,15 +5095,6 @@ window.DASHBOARD_DATA = {
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-d4eeb36ec0",
-      "agentName": "SEO优化专家",
-      "code": "E-02",
-      "desc": "单评分人上限 A（季度表单已回填）",
-      "ts": "本季",
-      "status": "已标记",
-      "kind": "防失真"
     }
   ]
 };
