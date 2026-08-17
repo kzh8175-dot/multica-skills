@@ -44,8 +44,10 @@ docs/
 ├── rating-aggregator-test-report.md  # 聚合器测试报告
 ├── quarterly-review-judge-test-report.md  # 季度人评自动判定测试报告（P1-9）
 ├── dashboard-data-interface.md       # 智能看板数据接口契约（KA-96，Schema v1.0 + 8 页字段映射）
-└── runbook.md                # 评分系统定时任务 Runbook（P0-3）
-reports/                       # 报告为生成产物不入库（已 .gitignore）；归档见「报告归档」节
+├── runbook.md                # 评分系统定时任务 Runbook（P0-3）
+├── system-report-spec.md     # 系统报告整合规范（P2-15：周报/月报/季度报告统一输出 + 归档）
+└── report-templates/         # 系统报告统一模板（周报/月报/季度报告三份，P2-15）
+reports/                       # 报告为生成产物不入库（已 .gitignore）；归档见「系统报告」节
 ```
 
 ## P0 交付物（评分系统脚本）
@@ -54,9 +56,19 @@ reports/                       # 报告为生成产物不入库（已 .gitignore
 - 与生产同步：本仓库内容与生产树 `<WORKSPACE>/prod/rating-system/` 保持「仓库 == 生产」一致；生产树 commit `c576a01`（工作区干净）。
 - 待补充：KA-19 P0-4 重试注入测试；KA-20 P0-5 过滤回归报告。
 
-## 报告归档（Release）
+## 系统报告（统一输出与归档 · P2-15）
 
-月度/季度评分报告为聚合器运行生成的产物，不进入代码仓库，统一归档至 GitHub Release：
+三类系统运行报告统一输出骨架与归档口径，见 **[系统报告整合规范](docs/system-report-spec.md)**，
+统一模板见 **[docs/report-templates/](docs/report-templates/)**（周报/月报/季度报告三份）。
+
+| 报告类型 | 周期 | 执行人(R) | 模板 | 归档 |
+|----------|------|-----------|------|------|
+| 系统监控周报（P2-13） | 每周五 | SRE稳定性工程师 + 数据可视化工程师 | [周报模板](docs/report-templates/weekly-report-template.md) | GitHub Release（产物） |
+| 月度百分制报告（R-41） | 每月末 | 自动化（`rating-aggregator.py`） | [月报模板](docs/report-templates/monthly-report-template.md) | GitHub Release（产物） |
+| 季度综合评分报告（R-51 + 人评） | 每季末 | 自动化 + `quarterly-review-judge.py`（P1-9） | [季度报告模板](docs/report-templates/quarterly-report-template.md) | GitHub Release（产物） |
+
+**归档原则**：报告为生成产物，不入代码仓库（`reports/` 已 `.gitignore`），统一打包发布至
+GitHub Release；规范/模板/索引入库维护。
 
 - [reports-2026-08-Q3 · P0 评分系统报告归档（116 份月度/季度报告）](https://github.com/kzh8175-dot/multica-skills/releases/tag/reports-2026-08-Q3)
 
