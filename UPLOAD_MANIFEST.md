@@ -49,19 +49,23 @@
 | 18 | 17:43 | KA-101 非阻塞项修复（KA-100 后续）：`src/state-change-hook.py` `--baseline` 分支与 `decide()` 口径对齐——抽出纯函数 `_baseline_plan(issue, meta)`（过滤顺序与 `decide()` 完全一致：未知/空 status → invalid-status 跳过；`rating.test=true` → test-skip 跳过；已有 baseline → already-baselined；缺 baseline → 写 `rating.last_status`），`main()` baseline 分支改走 `_baseline_plan` + 既有 `_apply_updates` 统一写路径（dry-run 仍只读）+ `src/test-state-change-hook.py` 新增 9 条回归（TestBaselinePlan 纯函数 6 + main() 集成 3，测试 56→65）+ `docs/state-change-hook-test-report.md` KA-101 修复记录 + README 测试计数同步 56→65 + 开发者工具工程师能力档案 v0.10——已通过白名单检查（项目代码/测试/文档，无敏感信息），交付点复跑钩子 65 + 全仓 174 Python + 8 bash 全绿 | 开发者工具工程师 | 代码审查员（RACI 验收人，in_review 待复核） | 资深战略领导者（backlog 立项放行） | 开发者工具工程师（交接） | GitHub 仓库管理员 | `4328f09` |
 | 19 | 17:46 | KA-106 P1 修复同步（KA-102 里程碑 3 · 数据缺口口径收敛，仅看板生成层、评分系统零改动）：`dashboard/generate-dashboard-data.py` E_MISS/E_EMPTY 仅对「当月无事件流水」（`!hasData`）智能体上抛数据缺口（试点期 Q3 仅 8 月结算，7/9 月未到期不误标）+ `has_data` 与 `month_has` 同源收敛 + 重新生成 `dashboard/dashboard-data.js`（异常 63→39、E_MISS 事件 141→117，agent 客观分/参考等级零变化）+ `dashboard/README.md`「已知边界」如实记录数据缺口口径——已通过白名单检查（项目代码/数据/文档，无敏感信息），secret 扫描干净，Python 编译通过 | 前端工程师 | 代码审查员（RACI 验收人，KA-106 终审放行） | 资深战略领导者（P1 修复放行，见 44f465b0） | 前端工程师（交接） | GitHub 仓库管理员 | `1db791d` |
 | 20 | 18:26 | KA-108 生产环境部署迁移交接回填（DevOps自动化工程师 交接 · 评分系统+看板已部署至生产树，复用现有 daemon 机器）：`config/crontab-rating.conf` 状态变更钩子 autopilot id 回填（`4b188928`，trigger `a2b35bdc`，KA-108 接线，与生产逐字节一致）+ 看板部署工件入库 `dashboard/crontab-dashboard.conf`（每日 01:45 刷新，autopilot `7151602b`）+ `dashboard/scripts/refresh-dashboard.sh`（幂等刷新包装脚本，保留可执行位）+ `dashboard/docs/DEPLOY.md`（生产部署记录：路径/访问/刷新/验证 + HTTP 服务 launchd）+ 根 README dashboard 目录结构更新——已通过白名单检查（项目配置/脚本/文档，无敏感信息），secret 扫描干净，三个工件与生产树逐字节一致核验 | DevOps自动化工程师 | SRE稳定性工程师（KA-108 部署前可靠性基线 + 验收口径） | 资深战略领导者（KA-108 部署放行，复用现有机器不阻塞） | DevOps自动化工程师（交接） | GitHub 仓库管理员 | `c7902cd` |
+| 21 | 17:47 | Top5 工具提示去硬编码（KA-102 里程碑 3 联调/审查流 dashboard 显示修正）：`dashboard/dashboard-data.js` data-desc 硬编码「试点期有数据智能体 14/59」随数据增长已失真（当前 63 智能体 / 24 有数据）→ 改为不携带具体计数的动态描述，避免每次重生成数据后工具提示过期——已通过白名单检查（项目代码，无敏感信息） | 前端工程师 | 代码审查员 + 资深战略领导者（KA-102 联调/审查流，in_review 待终审） | 资深战略领导者（KA-102 联调放行） | 前端工程师（交接） | GitHub 仓库管理员 | `aa53109` |
+
+> 说明（2026-08-17 每日维护回填）：本笔 `aa531095` 于当日 17:47 提交、早于 KA-108（18:26）入库，但此前登记流未覆盖，经 18:45 每日维护逐笔核对当日提交时补录。
 
 > 说明：本笔提交按 owner 指令由资深战略领导者直接推送 main（非 GitHub 仓库管理员通道），已在 KA-59 完结时记录；仓库 `main` 的 `src/rating-settler.py` 与生产逐字节一致（SHA256 `ae46b041…` 核验）。
 
 ---
 
-## 二、待审批上传清单（截至 2026-08-16 收工）
+## 二、待审批上传清单（截至 2026-08-17 收工）
 
 | 事项 | 当前状态 | 阻塞/待办 | 上传者 |
 |------|----------|-----------|--------|
-| P0-4 重试注入测试整改（KA-51） | 整改中（in_progress） | 开发整改 → 代码审查员复验 → 通过后上传 | GitHub 仓库管理员 |
-| P0-4 重试注入测试（#19） | 待重新验收（in_review） | 依赖 KA-51 整改结果 | GitHub 仓库管理员 |
-| 每日结算 / 月末聚合 / 季度人评 报告（#46/47/48） | in_review | 数据核对通过后按需上传 | GitHub 仓库管理员 |
-| 其余 in_review 文档（#37/#36/#41/#15 等） | in_review | 终审通过后按需上传 | GitHub 仓库管理员 |
+| KA-107 P3 季度复盘前置准备：四份方法论文档（`docs/p3-quarterly-prereq/`：季度链路预演报告+问题清单 / Q4 数据就绪检查清单 / 规则校准方法论 / 方案效果评估方法论） | 已开发，in_review | 资深战略领导者验收中 → 通过后申请上传 | GitHub 仓库管理员 |
+| KA-110 基础设施决策：采购/复用决策表（KA-50 ②③④⑤⑦） | 调研完成，in_review | owner 拍板定稿 → 决策记录如需入库再申请 | GitHub 仓库管理员 |
+| KA-109 首轮数据冒烟验证：冒烟结论 + 问题清单 | 执行中，in_review | 数据核对通过后按需上传（报告类产物按 KA-80 口径走 Release 归档，不强制入库） | GitHub 仓库管理员 |
+
+> 说明：截至 2026-08-16 收工的待审批项已全部闭环——P0-4 重试注入测试整改（KA-51 / #19）已入库（`f7c6677`，08-16 第 4 行）；每日结算/月末聚合/季度人评报告（#46/47/48）已归档 GitHub Release `reports-2026-08-Q3`；其余 in_review 文档（#37/#36/#41/#15 等）均已完成。当日白名单检查：仓库 66 个文件全部为项目相关文件，无凭据/临时文件/日志/无关产物，无拦截项。
 
 ---
 
