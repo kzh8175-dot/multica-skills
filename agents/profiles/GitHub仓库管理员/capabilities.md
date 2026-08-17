@@ -11,6 +11,16 @@
 
 ## 持续学习
 
+### 2026-08-17 · KA-97 迭代 0 #3 单一数据源收敛入库（交接后分支继续演进识别 + 交付点双重核验）
+- **任务**：代 开发者工具工程师 推送并合入 KA-97 迭代 0 · #3 单一数据源收敛（分支 `agent/agent/b6bcd25e`，E-02 修复 `8fe891e` 为基底，feed 单一源 + 删 loader 分叉 + 回归，UPLOAD_MANIFEST 行 14）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + UPLOAD_MANIFEST hash 回填。
+- **新技能 / 加深的技能**：
+  - **交接后分支继续演进的识别**：交接 comment 声明 commit `f96f15f`（21 条用例），但实际推送时分支 tip 已是 amend 后的 `a411267`（22 条，新增 loader 多事件 `;` 原始串契约回归）——用 `git reflog show --date=iso agent/agent/<id>` 确认提交时间线：交接 comment（13:41）之后 13:43 仍有一次 amend，交付方 run 把工作区未提交的 loader 用例并入提交。推送**当前 tip** 而非按 comment 字面 hash，交付点以「分支 tip + 测试实测 + manifest 描述」三重一致为准。
+  - **交付点双重核验**：① 交接方工作区 vs 干净 worktree 快照（`git worktree add /tmp/xx <commit>`）复跑测试——工作区含未提交改动（22 条）≠ 提交快照（21 条），以**提交快照**为准判定交付基线；② 对最新 tip 复跑 feed 22/22 + 全量回归 + secret 扫描 + 白名单逐文件（6 文件：README/manifest/能力档案/接口文档/feed/测试，全部项目文件无敏感信息）。
+  - **两 commit 关联交付的合并**：E-02 修复（`8fe891e`，manifest 行 13）与 KA-97 收敛（`a411267`，行 14）同分支先后落地，main 快进 `9b04004..a411267` 一次到位，两条 manifest 记录分别回填对应 commit hash。
+  - **分支 ref 与工作区 HEAD 一致性的坑**：`git branch -a` 的 ref 解析可能滞后于交接方工作区 HEAD（工作区已在最新 commit 而共享 ref 仍指向旧 hash），推送前用 `git rev-parse <branch>` + `git log -1` 双确认分支真实 tip。
+- **挑战 / 盲区**：交接 comment 的 commit hash 与推送时实际 tip 不一致（交接后 amend），若按字面 hash 推送会漏掉 loader 用例回归；需要从 reflog + 测试计数 + manifest 描述交叉判断「哪个才是最终交付态」。
+- **改进**：涉及代码交接时不以 comment 中的 commit hash 为唯一依据，推送前始终 `git fetch` + 复核分支 tip、在干净 worktree 复跑测试并记录「comment 声明 vs 实测 tip」差异，向交接方回传最终实际 hash。
+
 ### 2026-08-17 · KA-76 P2-11 状态变更钩子入库（未提交工作区交接 + 交接声明与实测不一致校准）
 - **任务**：代 开发者工具工程师 提交并推送 KA-76 P2-11 状态变更钩子（`src/state-change-hook.py` + `src/test-state-change-hook.py` 50 条用例 + `scripts/run-state-change-hook.sh` + `config/crontab-rating.conf` 第 0 项 + `docs/state-change-hook-test-report.md` + 开发者工具工程师能力档案 v0.5 + README 结构更新）至 `kzh8175-dot/multica-skills` 的 `main`，白名单检查 + UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -163,6 +173,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-17 | v0.14 | 追加 KA-97：交接后分支继续演进的识别（comment hash f96f15f vs 实际 tip a411267，reflog 时间线判定）、交付点双重核验（工作区未提交改动 vs 提交快照，以提交快照为准）、两 commit 关联交付合并 + manifest 双行回填、分支 ref 与工作区 HEAD 一致性检查；协作评分 4/5 |
 | 2026-08-17 | v0.13 | 追加 KA-76：未提交工作区交接的定位与核验（跨 runtime find + git status + diff 逐项吻合）、分支基不一致的合并基判定（crontab/能力档案整文件 cp + README hunk 合并）、交接声明与实测不一致校准（50/139 复跑为准修正 README 与测试报告）；协作评分 4/5 |
 | 2026-08-17 | v0.12 | 追加 KA-79：纯文档交付的交接方工作区定位（未附分支/commit）、分支基 + blob 一致性核对、两 commit 落地、并行交付冲突合并（KA-80 并发 main 推进）；协作评分 4/5 |
 | 2026-08-17 | v0.11 | 追加 KA-80：纯文档交付的验收基线（分支基判定 + 白名单逐文件 + secret 扫描 + 分支/main 双推送）、报告产物/规范模板归档二分；协作评分 5/5 |
