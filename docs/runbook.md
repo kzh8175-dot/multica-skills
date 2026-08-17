@@ -40,6 +40,8 @@ multica autopilot runs <id> --output json      # 等待 run 完成，确认 stat
 
 ## 3. 告警与 SLA
 
+> 完整异常分级 / 响应矩阵 / 升级路径见 **`docs/exception-handling-sla.md`（异常处理 SLA）**；本节为运行态告警速查。
+
 ### 告警降级路径（与 SRE 对齐口径）
 - **L1 脚本失败**（包装脚本退出码非 0）：运行 agent 在本 job issue 评论告警，并创建 `评分定时任务失败` issue（P1，assignee=SRE稳定性工程师，@SRE）；
 - **L2 24h 未处置**：升级资深战略领导者（escalated 项 SLA 48h 内完成升级）；
