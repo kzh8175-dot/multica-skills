@@ -178,17 +178,23 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
         month_total = ev.get("total", 0) if month_has else 0
         month_pct = m.get("score", 0) if name in monthly else 0
 
+        # has_data：当前月事件流水（feed 只载当月，季度其他月判断恒假——迭代 2 #8 移除死逻辑）
+        has_data = month_has
+
         qflags = q.get("flags", []) or []
         est = q.get("estimated") or {}
 
         # 防失真 / 异常标记（季度表单已回填值 + 数据缺口）
+        # P1 口径修复（KA-106 代码审查 · 数据缺口跨页不一致 39 vs 63）：
+        # E_MISS/E_EMPTY 仅对「当月无数据」智能体记为数据缺口；有当月数据的智能体，
+        # 季度内部分月份缺失（7/9 月未到期 / 待补记）不算缺口——Q3 试点仅 8 月结算，
+        # 全员季度表单都带 7/9 月 E_MISS，原逻辑把 24 个有 8 月真实数据的智能体误标
+        # 「数据缺口·待处理」。异常中心 / 事件流 / 排行榜 / 明细页据此跨页一致。
         agent_flags = []
         for f in qflags:
             code = f.split(":")[0].strip()
-            if code.startswith("E_MISS"):
-                agent_flags.append({"code": "E_MISS", "month": None, "msg": f})
-            elif code.startswith("E_EMPTY"):
-                agent_flags.append({"code": "E_EMPTY", "month": None, "msg": f})
+            if (code.startswith("E_MISS") or code.startswith("E_EMPTY")) and not has_data:
+                agent_flags.append({"code": code, "month": None, "msg": f})
             elif code.startswith("E_PARSE"):
                 agent_flags.append({"code": "E_PARSE", "month": None, "msg": f})
         af = q.get("anti_fraud") or {}
@@ -198,9 +204,6 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
             agent_flags.append({"code": "R-72", "month": None, "msg": "R-32 缺自评 ≥2 次，等级降一档（季度表单已回填）"})
         if af.get("e02"):
             agent_flags.append({"code": "E-02", "month": None, "msg": "单评分人上限 A（季度表单已回填）"})
-
-        # has_data：当前月事件流水（feed 只载当月，季度其他月判断恒假——迭代 2 #8 移除死逻辑）
-        has_data = bool(ev.get("rows"))
 
         # 事件（当前月）：多事件行按 ';' 拆分，事件流逐条完整呈现
         events = []
@@ -275,6 +278,8 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
         "points": None, "status": "排队中",
     })
     for a in agents_out:
+        # 仅「当月无数据」智能体进入事件流缺口标记（P1 口径：有数据智能体的
+        # 7/9 月缺失为未到期/待补记，不算缺口，见上方 agent_flags 注释）
         if any(f["code"] == "E_MISS" for f in a["flags"]):
             event_rows.append({
                 "ts": f"{qmonths[0][5:7]}-01 00:00", "agentId": a["id"], "agentName": a["name"],
