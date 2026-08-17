@@ -17,9 +17,9 @@ window.DASHBOARD_DATA = {
     "month": "2026-08",
     "monthLabel": "08月",
     "year": "2026",
-    "generatedAt": "2026-08-17T09:43:49Z",
+    "generatedAt": "2026-08-17T13:25:05Z",
     "schemaVersion": "1.0",
-    "agentCount": 63,
+    "agentCount": 62,
     "agentsWithData": 24,
     "humanReview": "pending",
     "humanReviewWindow": "09-28 ~ 09-30",
@@ -37,7 +37,7 @@ window.DASHBOARD_DATA = {
       "creative": "创意",
       "technical": "技术"
     },
-    "note": "试点初期·数据样本不足：63 个智能体中仅 24 个有 8月 事件流水；2026 Q3 人评待运行（09-28 ~ 09-30），综合分/等级按系统当前状态显示「待运行」，参考等级（预估）由客观分映射，随季度人评转正式。"
+    "note": "试点初期·数据样本不足：62 个智能体中仅 24 个有 8月 事件流水；2026 Q3 人评待运行（09-28 ~ 09-30），综合分/等级按系统当前状态显示「待运行」，参考等级（预估）由客观分映射，随季度人评转正式。"
   },
   "agents": [
     {
@@ -152,20 +152,20 @@ window.DASHBOARD_DATA = {
       "category": "technical",
       "categoryLabel": "技术",
       "benchmark": 300,
-      "monthTotal": 30,
-      "monthPct": 10,
+      "monthTotal": 40,
+      "monthPct": 13,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        30,
+        40,
         0
       ],
       "quarterPcts": [
         0,
-        10,
+        13,
         0
       ],
-      "objective": 3.0,
+      "objective": 4.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -173,13 +173,27 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 3.0,
+        "comprehensive": 4.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:54:24Z"
+        "asOf": "2026-08-17T10:15:07Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 10:12",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 10:12",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-16 16:33",
           "code": "R-21",
@@ -232,20 +246,20 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 20,
-      "monthPct": 5,
+      "monthTotal": 30,
+      "monthPct": 7,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        20,
+        30,
         0
       ],
       "quarterPcts": [
         0,
-        5,
+        7,
         0
       ],
-      "objective": 1.0,
+      "objective": 2.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -253,13 +267,27 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 1.0,
+        "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:54:24Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 07:31",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 07:31",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-16 16:10",
           "code": "R-21",
@@ -404,21 +432,21 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 0,
-      "monthPct": 0,
-      "monthHasData": false,
+      "monthTotal": 10,
+      "monthPct": 2,
+      "monthHasData": true,
       "quarterTotals": [
         0,
-        0,
+        10,
         0
       ],
       "quarterPcts": [
         0,
-        0,
+        2,
         0
       ],
       "objective": 0.0,
-      "hasData": false,
+      "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
       "composite": null,
@@ -428,26 +456,25 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-16T14:03:45Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
-      "flags": [
+      "flags": [],
+      "events": [
         {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/SRE稳定性工程师/2026-07.md"
+          "ts": "08-17 05:06",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
         },
         {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/SRE稳定性工程师/2026-08.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/SRE稳定性工程师/2026-09.md"
+          "ts": "08-17 05:06",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
         }
       ],
-      "events": [],
       "q2": null,
       "q2g": null
     },
@@ -759,20 +786,20 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 10,
-      "monthPct": 2,
+      "monthTotal": 15,
+      "monthPct": 3,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        10,
+        15,
         0
       ],
       "quarterPcts": [
         0,
-        2,
+        3,
         0
       ],
-      "objective": 0.0,
+      "objective": 1.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -780,13 +807,20 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 0.0,
+        "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:54:24Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 09:47",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-16 16:10",
           "code": "R-21",
@@ -962,20 +996,20 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 15,
-      "monthPct": 3,
+      "monthTotal": 30,
+      "monthPct": 7,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        15,
+        30,
         0
       ],
       "quarterPcts": [
         0,
-        3,
+        7,
         0
       ],
-      "objective": 1.0,
+      "objective": 2.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -983,13 +1017,34 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 1.0,
+        "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:57:42Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 05:51",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:51",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:51",
+          "code": "R-23",
+          "desc": "协作反馈",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-17 04:47",
           "code": "R-21",
@@ -1542,20 +1597,20 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 40,
-      "monthPct": 10,
+      "monthTotal": 95,
+      "monthPct": 23,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        40,
+        95,
         0
       ],
       "quarterPcts": [
         0,
-        10,
+        23,
         0
       ],
-      "objective": 3.0,
+      "objective": 7.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -1563,13 +1618,90 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 3.0,
+        "comprehensive": 7.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:57:42Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 09:40",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 09:40",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 09:40",
+          "code": "R-23",
+          "desc": "协作反馈",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 07:18",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 07:18",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 07:18",
+          "code": "R-23",
+          "desc": "协作反馈",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:40",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:40",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:40",
+          "code": "R-23",
+          "desc": "协作反馈",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:10",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:10",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-16 22:21",
           "code": "R-21",
@@ -1795,20 +1927,20 @@ window.DASHBOARD_DATA = {
       "category": "data",
       "categoryLabel": "数据",
       "benchmark": 350,
-      "monthTotal": 25,
-      "monthPct": 7,
+      "monthTotal": 35,
+      "monthPct": 10,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        25,
+        35,
         0
       ],
       "quarterPcts": [
         0,
-        7,
+        10,
         0
       ],
-      "objective": 2.0,
+      "objective": 3.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -1816,13 +1948,27 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 2.0,
+        "comprehensive": 3.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:57:42Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 05:09",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 05:09",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-17 04:55",
           "code": "R-21",
@@ -2132,20 +2278,20 @@ window.DASHBOARD_DATA = {
       "category": "data",
       "categoryLabel": "数据",
       "benchmark": 350,
-      "monthTotal": 20,
-      "monthPct": 5,
+      "monthTotal": 30,
+      "monthPct": 8,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        20,
+        30,
         0
       ],
       "quarterPcts": [
         0,
-        5,
+        8,
         0
       ],
-      "objective": 1.0,
+      "objective": 2.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -2153,13 +2299,27 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 1.0,
+        "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:55:11Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 10:02",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 10:02",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-17 04:54",
           "code": "R-21",
@@ -2283,65 +2443,6 @@ window.DASHBOARD_DATA = {
           "ts": "08-17 00:14",
           "code": "R-21",
           "desc": "自评",
-          "points": 5,
-          "month": "2026-08"
-        }
-      ],
-      "q2": null,
-      "q2g": null
-    },
-    {
-      "id": "agt-926f7bf351",
-      "name": "未知智能体",
-      "category": "execution",
-      "categoryLabel": "执行",
-      "benchmark": 400,
-      "monthTotal": 15,
-      "monthPct": 3,
-      "monthHasData": true,
-      "quarterTotals": [
-        0,
-        15,
-        0
-      ],
-      "quarterPcts": [
-        0,
-        3,
-        0
-      ],
-      "objective": 1.0,
-      "hasData": true,
-      "human": null,
-      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
-      "composite": null,
-      "grade": null,
-      "reviewState": "pending",
-      "estimated": {
-        "comprehensive": 1.0,
-        "grade": "D",
-        "basis": "objective_only",
-        "asOf": "2026-08-17T04:57:42Z"
-      },
-      "flags": [],
-      "events": [
-        {
-          "ts": "08-17 04:55",
-          "code": "R-21",
-          "desc": "自评",
-          "points": 5,
-          "month": "2026-08"
-        },
-        {
-          "ts": "08-17 04:44",
-          "code": "R-21",
-          "desc": "自评",
-          "points": 5,
-          "month": "2026-08"
-        },
-        {
-          "ts": "08-17 04:44",
-          "code": "R-22",
-          "desc": "更新能力档案",
           "points": 5,
           "month": "2026-08"
         }
@@ -3000,20 +3101,20 @@ window.DASHBOARD_DATA = {
       "category": "creative",
       "categoryLabel": "创意",
       "benchmark": 300,
-      "monthTotal": 55,
-      "monthPct": 18,
+      "monthTotal": 70,
+      "monthPct": 23,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        55,
+        70,
         0
       ],
       "quarterPcts": [
         0,
-        18,
+        23,
         0
       ],
-      "objective": 6.0,
+      "objective": 7.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -3021,13 +3122,34 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 6.0,
+        "comprehensive": 7.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:57:42Z"
+        "asOf": "2026-08-17T13:14:32Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 04:55",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 04:44",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-17 04:44",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-17 04:43",
           "code": "R-21",
@@ -3425,17 +3547,17 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 25,
-      "monthPct": 6,
+      "monthTotal": 30,
+      "monthPct": 7,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        25,
+        30,
         0
       ],
       "quarterPcts": [
         0,
-        6,
+        7,
         0
       ],
       "objective": 2.0,
@@ -3449,10 +3571,17 @@ window.DASHBOARD_DATA = {
         "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T04:57:42Z"
+        "asOf": "2026-08-17T10:13:05Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-17 07:34",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-16 21:28",
           "code": "R-21",
@@ -3565,6 +3694,240 @@ window.DASHBOARD_DATA = {
       "status": "排队中"
     },
     {
+      "ts": "08-17 10:12",
+      "agentId": "agt-0fec6cf760",
+      "agentName": "DevOps自动化工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 10:12",
+      "agentId": "agt-0fec6cf760",
+      "agentName": "DevOps自动化工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 10:02",
+      "agentId": "agt-d10933dd4f",
+      "agentName": "数据工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 10:02",
+      "agentId": "agt-d10933dd4f",
+      "agentName": "数据工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 09:47",
+      "agentId": "agt-8588f07535",
+      "agentName": "代码审查员",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 09:40",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 09:40",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 09:40",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-23",
+      "desc": "协作反馈",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 07:34",
+      "agentId": "agt-9d0b2fe724",
+      "agentName": "项目负责人",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 07:31",
+      "agentId": "agt-bfd2ccbf65",
+      "agentName": "GitHub 仓库管理员",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 07:31",
+      "agentId": "agt-bfd2ccbf65",
+      "agentName": "GitHub 仓库管理员",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 07:18",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 07:18",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 07:18",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-23",
+      "desc": "协作反馈",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:51",
+      "agentId": "agt-78fc9ec9c6",
+      "agentName": "前端工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:51",
+      "agentId": "agt-78fc9ec9c6",
+      "agentName": "前端工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:51",
+      "agentId": "agt-78fc9ec9c6",
+      "agentName": "前端工程师",
+      "code": "R-23",
+      "desc": "协作反馈",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:40",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:40",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:40",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-23",
+      "desc": "协作反馈",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:10",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:10",
+      "agentId": "agt-86b19678a2",
+      "agentName": "开发者工具工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:09",
+      "agentId": "agt-9b441d91b7",
+      "agentName": "技术文档撰写者",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:09",
+      "agentId": "agt-9b441d91b7",
+      "agentName": "技术文档撰写者",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:06",
+      "agentId": "agt-81d6001d41",
+      "agentName": "SRE稳定性工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-17 05:06",
+      "agentId": "agt-81d6001d41",
+      "agentName": "SRE稳定性工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
       "ts": "08-17 04:55",
       "agentId": "agt-9b441d91b7",
       "agentName": "技术文档撰写者",
@@ -3584,8 +3947,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "08-17 04:55",
-      "agentId": "agt-926f7bf351",
-      "agentName": "未知智能体",
+      "agentId": "agt-1bbefb050c",
+      "agentName": "资深战略领导者",
       "code": "R-21",
       "desc": "自评",
       "points": 5,
@@ -3638,8 +4001,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "08-17 04:44",
-      "agentId": "agt-926f7bf351",
-      "agentName": "未知智能体",
+      "agentId": "agt-1bbefb050c",
+      "agentName": "资深战略领导者",
       "code": "R-21",
       "desc": "自评",
       "points": 5,
@@ -3647,8 +4010,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "08-17 04:44",
-      "agentId": "agt-926f7bf351",
-      "agentName": "未知智能体",
+      "agentId": "agt-1bbefb050c",
+      "agentName": "资深战略领导者",
       "code": "R-22",
       "desc": "更新能力档案",
       "points": 5,
@@ -4286,15 +4649,6 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-81d6001d41",
-      "agentName": "SRE稳定性工程师",
-      "code": "E_MISS",
-      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
-      "points": null,
-      "status": "已标记"
-    },
-    {
-      "ts": "07-01 00:00",
       "agentId": "agt-3ce9522e67",
       "agentName": "个人成长教练",
       "code": "E_MISS",
@@ -4602,20 +4956,31 @@ window.DASHBOARD_DATA = {
   ],
   "budget": {
     "points": {
-      "ceiling": 66300,
-      "spent": 375,
-      "variance": 65925,
-      "utilization": 0.6,
+      "ceiling": 65100,
+      "spent": 505,
+      "variance": 64595,
+      "utilization": 0.8,
       "categories": [
+        {
+          "category": "execution",
+          "label": "执行",
+          "agents": 17,
+          "benchmark": 400,
+          "ceiling": 20400,
+          "spent": 250,
+          "variance": 20150,
+          "utilization": 1.2,
+          "status": "正常"
+        },
         {
           "category": "creative",
           "label": "创意",
           "agents": 10,
           "benchmark": 300,
           "ceiling": 9000,
-          "spent": 80,
-          "variance": 8920,
-          "utilization": 0.9,
+          "spent": 95,
+          "variance": 8905,
+          "utilization": 1.1,
           "status": "正常"
         },
         {
@@ -4624,20 +4989,9 @@ window.DASHBOARD_DATA = {
           "agents": 10,
           "benchmark": 350,
           "ceiling": 10500,
-          "spent": 90,
-          "variance": 10410,
-          "utilization": 0.9,
-          "status": "正常"
-        },
-        {
-          "category": "execution",
-          "label": "执行",
-          "agents": 18,
-          "benchmark": 400,
-          "ceiling": 21600,
-          "spent": 165,
-          "variance": 21435,
-          "utilization": 0.8,
+          "spent": 110,
+          "variance": 10390,
+          "utilization": 1.0,
           "status": "正常"
         },
         {
@@ -4646,9 +5000,9 @@ window.DASHBOARD_DATA = {
           "agents": 7,
           "benchmark": 300,
           "ceiling": 6300,
-          "spent": 40,
-          "variance": 6260,
-          "utilization": 0.6,
+          "spent": 50,
+          "variance": 6250,
+          "utilization": 0.8,
           "status": "正常"
         },
         {
@@ -4731,13 +5085,13 @@ window.DASHBOARD_DATA = {
     ]
   },
   "runtime": {
-    "settlement": "2026-08-17T04:57:31Z",
-    "aggregation": "2026-08-17T04:57:42Z",
-    "review": "2026-08-17T04:58:05Z",
+    "settlement": "2026-08-17T13:14:04Z",
+    "aggregation": "2026-08-17T13:14:32Z",
+    "review": "2026-08-17T13:14:32Z",
     "ratingStatus": {
-      "pending": 10,
+      "pending": 0,
       "escalated": 0,
-      "credited": 59
+      "credited": 71
     },
     "settlementSchedule": "每日 00:30",
     "aggregationSchedule": "月末最后一日 01:15（R-41/R-51）",
@@ -4894,15 +5248,6 @@ window.DASHBOARD_DATA = {
       "agentName": "小红书专家",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/小红书专家/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
-      "agentId": "agt-81d6001d41",
-      "agentName": "SRE稳定性工程师",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/SRE稳定性工程师/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
