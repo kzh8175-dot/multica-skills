@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-18 · KA-154 双仓库代码交付入库（聚合器单行多事件拆分 + 看板 feed 生产同步版 · 逐仓库 FF + 交付点快照复跑 + 双端口径一致性核验）
+- **任务**：代 DevOps自动化工程师 推送 KA-154 修复至两个仓库 `main`——`multica-rating-system`（聚合器单行多事件拆分，commit `c810890`）+ `multica-skills`（`src/dashboard-data-feed.py` 自生产同步 KA-114 已部署未入库口径 + `parse_events_file` 单行多事件 `;` 拆分、R-21/R-22 子事件排除、R-23 等计入 `events.total`，+ `src/test-dashboard-data-feed.py` 35/35，commit `a8fa3ed`），白名单检查 + 双仓库 UPLOAD_MANIFEST 登记。
+- **新技能 / 加深的技能**：
+  - **双仓库代码交付的逐仓库入库**：一次交接覆盖两仓库时各自独立处理——每仓库 `git fetch origin` → 分支基判定（均 = `origin/main` HEAD）→ 干净 fast-forward「分支 + main」双推，交付方原 commit hash 原样落地（`c810890` / `a8fa3ed`），manifest 逐仓库登记互不干扰。
+  - **交付点快照复跑**：在交付 commit 的 detached worktree 复跑 feed 35/35 + 聚合器 25/25，与交接声明逐项吻合后才推送；feed 侧「rows 保留完整基线、total 拆分剔除」的双口径从测试断言确认。
+  - **生产同步版 feed 的白名单核对**：`src/dashboard-data-feed.py` 含 KA-114 已部署未入库口径（R-61 0.6/0.4 权重、R-21/R-22 剔除），属生产→仓库同步交付物，按交接说明只推送清单内文件（src×2），不越界同步 `dashboard/` 目录版本。
+- **挑战 / 盲区**：多仓库推送时 remote 状态需逐仓库 fetch 复核，一个仓库的推进不影响另一个的 FF 判定；feed 与聚合器共享 `split_event_points` 口径（积分均分、余数给前几条），两处实现须交叉核对一致，防止双端口径漂移。
+- **改进**：双仓库交接统一「逐仓库 fetch → 分支基判定 → 交付点快照复跑 → 白名单 + secret 扫描 → 双推 → 逐仓库 manifest 登记」流程，回传分别给出落地 commit 与分支地址。
+
 ### 2026-08-18 · KA-138 批次归档 PR #7 合入（11 份能力档案 + 白名单补录 · 批量档案 PR 的白名单/结构校验 + merge commit + manifest 回填）
 - **任务**：资深战略领导者 完成上一轮因 API 402 中断的待办入档批次收口（KA-138/139/142~150）后，开 PR #7（分支 `agent/agent/batch-todo-archival-20260818`，13 文件：新增 8 份能力档案 + 同步 3 份既有档案 + 资深战略领导者档案更新 + `whitelist.py` 补录 11 人），交接「review/merge PR #7」。
 - **新技能 / 加深的技能**：
@@ -300,6 +309,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-18 | v0.27 | 追加 KA-154：双仓库代码交付入库（聚合器单行多事件拆分 + 看板 feed 生产同步版）——逐仓库 fetch + 分支基判定 + 干净 fast-forward 双推保原 hash、交付点快照复跑（feed 35/35 + 聚合器 25/25）、生产同步版 feed 白名单核对（不越界同步 dashboard/ 目录）、双端口径一致性核验 + 双仓库 manifest 登记；协作评分 5/5 |
 | 2026-08-18 | v0.26 | 追加 KA-138 批次归档：PR #7 11 份能力档案 + 白名单补录合入——批量档案 PR 白名单检查法（12 档案 + 1 配置逐文件归属 + secret 扫描）+ whitelist.py 结构校验（80 人唯一 + 11 人分类正确）+ 档案 agent ID 与工作区实名对账 + 批量 PR 用 merge commit 合入（对比小批次 squash）+ UPLOAD_MANIFEST 回填紧跟合入（两 commit 交付模式）；协作评分 5/5 |
 | 2026-08-18 | v0.25 | 追加 KA-140：PR #5 AI数据修复工程师能力档案合入——已知冲突（gh pr view CONFLICTING）判别 + merge-tree 实测 + 单文件三区冲突三方合并（持续学习/协作关系/更新记录两侧全保留 + 最新在上）+ 版本行全局去重顺延 v0.7 + 分支被占用时另建本地分支合并→快进推回 PR ref；协作评分 5/5 |
 | 2026-08-18 | v0.24 | 追加 KA-136：PR #4 数据库优化工程师能力档案合入——PR 合并瞬间冲突识别（mergeStateStatus CLEAN 与实际 merge 冲突时序差 + compare API 复核）+ 冲突解决（merge main 入分支手工三方合并 + 版本行错开 v0.6）+ squash merge 净 diff 复核基线 + 分支随合入删除一致性；协作评分 5/5 |
