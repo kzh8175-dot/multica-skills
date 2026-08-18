@@ -580,6 +580,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
         异常中心
         <span class="badge-count" id="nav-esc-badge" hidden>0</span>
       </button>
+      <button class="nav-item" data-page="page-members" onclick="gotoPage('page-members')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        成员
+        <span class="badge-count" id="nav-mb-badge" hidden>0</span>
+      </button>
     </nav>
 
     <div class="nav-foot">
@@ -1019,6 +1024,59 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
         </div>
       </div>
     </section>
+
+    <!-- ======================== 页面 9 · 成员 ======================== -->
+    <section class="page" id="page-members">
+      <div class="page-head">
+        <div>
+          <div class="page-title">成员</div>
+          <div class="page-desc" id="mb-desc"></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="exportTable('mb-table','成员.csv')">导出</button>
+        </div>
+      </div>
+
+      <div class="grid g-kpi" id="mb-kpis"></div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="toolbar">
+          <div class="tb-search" style="width:220px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+            <input id="mb-search" placeholder="搜索成员…" oninput="filterMembers()">
+          </div>
+          <select class="select" id="mb-dept" onchange="filterMembers()">
+            <option value="">全部部门</option>
+          </select>
+          <select class="select" id="mb-status" onchange="filterMembers()">
+            <option value="">全部状态</option>
+            <option value="active">活跃</option>
+            <option value="unknown">未同步 / 已归档</option>
+          </select>
+          <span class="spacer"></span>
+          <span class="src-note">名单与 Multica 系统同步（每日 01:45 刷新）· 数据以评分系统为准</span>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl" id="mb-table">
+            <thead>
+              <tr>
+                <th>成员</th>
+                <th>部门</th>
+                <th>类别</th>
+                <th class="num">基准 <span class="src-tag" data-desc="R-42 类别基准月积分">R-42</span></th>
+                <th class="num">月度积分 <span class="src-tag" data-desc="当月事件流水积分合计">R-01~33</span></th>
+                <th class="num">月度百分制 <span class="src-tag" data-desc="R-41 = 月积分 ÷ 基准 × 100（0-120）">R-41</span></th>
+                <th class="num">季度客观分 <span class="src-tag" data-desc="R-51 = (7月+8月+9月 R-41) ÷ 3">R-51</span></th>
+                <th>参考等级 <span class="src-tag" data-desc="人评待运行 → 参考等级（预估），正式等级待季度人评">预估</span></th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="mb-body"></tbody>
+          </table>
+        </div>
+        <div class="card-foot" id="mb-foot"></div>
+      </div>
+    </section>
     </main>
   </div>
 </div>
@@ -1109,7 +1167,7 @@ function lastNMonths(month, n) {
 var PAGE_TITLES = {
   'page-overview': '总览', 'page-leaderboard': '排行榜', 'page-trends': '趋势分析',
   'page-detail': '评分明细', 'page-events': '事件流水', 'page-budget': '预算看板',
-  'page-promotion': '升级队列', 'page-escalation': '异常中心'
+  'page-promotion': '升级队列', 'page-escalation': '异常中心', 'page-members': '成员'
 };
 function parseHash() {
   var h = (location.hash || '').replace(/^#/, '');
@@ -1391,7 +1449,20 @@ function renderDetail(agentId) {
   var sel = document.getElementById('d-agent-select');
   if (sel) { sel.value = agentId || ''; }
   if (!a) {
-    if (empty) empty.style.display = '';
+    var member = null;
+    (D.members || []).forEach(function (m) { if (m.id === agentId) member = m; });
+    if (empty) {
+      if (member) {
+        empty.querySelector('.empty').innerHTML =
+          '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
+          '<div><b>' + esc(member.name) + '</b> 已登记为成员（与 Multica 系统同步），但尚未有评分数据（未结算 / 未生成评分报告）。新增/删除成员次日随看板刷新自动同步。</div>';
+      } else {
+        empty.querySelector('.empty').innerHTML =
+          '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>' +
+          '<div><b>请选择智能体</b>，或从排行榜 / 成员 / 事件流 / 异常中心行内下钻</div>';
+      }
+      empty.style.display = '';
+    }
     if (main) main.style.display = 'none';
     return;
   }
@@ -1678,6 +1749,84 @@ function renderEscalation() {
   document.getElementById('es-timeline').innerHTML = tlHtml;
 }
 
+/* ================= 成员 ================= */
+var _mbFiltered = [];
+function memberStatusPill(m) {
+  if (m.status === 'active') return pill('tag-green', '活跃');
+  if (m.status === 'archived') return pill('tag-gray', '已归档');
+  return pill('tag-amber', '未同步');
+}
+function renderMembers() {
+  document.getElementById('mb-desc').innerHTML =
+    '智能体成员 · 与 Multica 系统同步（每日 01:45 刷新）· 点击成员名查看评分明细';
+
+  var total = D.meta.memberCount != null ? D.meta.memberCount : D.members.length;
+  var withData = D.meta.membersWithData != null ? D.meta.membersWithData
+    : D.members.filter(function (m) { return m.hasData; }).length;
+  var depts = {}, noDept = 0, inactive = 0;
+  D.members.forEach(function (m) {
+    if (m.dept) depts[m.dept] = 1; else noDept++;
+    if (m.status !== 'active') inactive++;
+  });
+  var kpis = [
+    { label: '成员总数', src: 'agent list', srcDesc: '当前工作区智能体成员（与 Multica 系统同步）', val: total, unit: '个', sub: '有数据 ' + withData + ' 个' },
+    { label: '部门数', src: 'org-chart', srcDesc: 'org-chart.conf 组织架构部门数', val: Object.keys(depts).length, unit: '个', sub: '待分配 ' + noDept + ' 个' },
+    { label: '未同步 / 已归档', src: 'sync', srcDesc: 'live 名单缺失（已归档/删除但文件仍在）或未登记', val: inactive, unit: '个', sub: '需人工确认' },
+    { label: '有数据成员', src: 'R-41', srcDesc: D.meta.month + ' 有事件流水的成员', val: withData, unit: '个', sub: D.meta.month + ' 事件流水' }
+  ];
+  var html = '';
+  kpis.forEach(function (k) {
+    html += '<div class="card kpi"><div class="kpi-top"><span class="kpi-label">' + k.label + '</span><span class="spacer" style="flex:1"></span><span class="src-tag" data-desc="' + esc(k.srcDesc) + '">来源 ' + k.src + '</span></div>' +
+      '<div class="kpi-value tnum">' + k.val + '<span class="unit">' + k.unit + '</span></div><div class="kpi-sub">' + k.sub + '</div></div>';
+  });
+  document.getElementById('mb-kpis').innerHTML = html;
+
+  var sel = document.getElementById('mb-dept');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">全部部门</option>';
+  Object.keys(depts).sort().forEach(function (d) {
+    var o = document.createElement('option'); o.value = d; o.textContent = d; sel.appendChild(o);
+  });
+  sel.value = cur;
+
+  filterMembers();
+}
+function filterMembers() {
+  var q = (document.getElementById('mb-search').value || '').trim();
+  var dept = document.getElementById('mb-dept').value;
+  var status = document.getElementById('mb-status').value;
+  var rows = D.members.filter(function (m) {
+    if (q && m.name.indexOf(q) < 0 && (m.dept || '').indexOf(q) < 0) return false;
+    if (dept && m.dept !== dept) return false;
+    if (status) {
+      if (status === 'active' && m.status !== 'active') return false;
+      if (status === 'unknown' && m.status === 'active') return false;
+    }
+    return true;
+  });
+  _mbFiltered = rows;
+  var html = '';
+  rows.forEach(function (m) {
+    var flagHtml = !m.hasData ? noDataTag() : '';
+    html += '<tr>' +
+      '<td>' + agentCell(m) + '</td>' +
+      '<td>' + (m.dept ? esc(m.dept) : pill('tag-gray', '待分配')) + '</td>' +
+      '<td><span class="tag" style="background:' + catColor(m.category) + '1A;color:' + catColor(m.category) + '">' + esc(m.categoryLabel) + '</span></td>' +
+      '<td class="num tnum">' + m.benchmark + '</td>' +
+      '<td class="num">' + scoreCell(m.monthTotal, m.hasData) + '</td>' +
+      '<td class="num">' + scoreCell(m.monthPct, m.hasData) + '</td>' +
+      '<td class="num">' + scoreCell(m.objective, m.hasData) + '</td>' +
+      '<td>' + (m.hasData && m.estimatedGrade ? pill('tag-grade' + m.estimatedGrade, m.estimatedGrade) + ' <span class="est-tag" style="font-size:9.5px">参考</span>' : '<span style="color:var(--text-3)">—</span>') + '</td>' +
+      '<td>' + memberStatusPill(m) + ' ' + flagHtml + '</td>' +
+      '</tr>';
+  });
+  if (!rows.length) html = '<tr><td colspan="9" class="empty">无匹配成员</td></tr>';
+  document.getElementById('mb-body').innerHTML = html;
+  document.getElementById('mb-foot').innerHTML =
+    '共 <b>' + rows.length + '</b> 个成员（与 Multica 系统同步 · 每日 01:45 刷新）· 点击成员名查看评分明细' +
+    '<span class="spacer"></span><span class="src-note">名单口径 = multica agent list ∪ 评分系统文件目录；新增/删除智能体次日自动反映</span>';
+}
+
 /* ---------- 操作反馈 ---------- */
 var toastTimer = null;
 function showToast(msg) {
@@ -1843,6 +1992,9 @@ function exportTable(tableId, filename) {
   if (eb) { eb.textContent = evN; eb.hidden = false; }
   var xb = document.getElementById('nav-esc-badge');
   if (xb) { xb.textContent = escN; xb.hidden = false; }
+  var mbN = (D.members || []).filter(function (m) { return m.status !== 'active'; }).length;
+  var mb = document.getElementById('nav-mb-badge');
+  if (mb) { mb.textContent = mbN; mb.hidden = mbN === 0; }
 
   renderOverview();
   renderLeaderboard();
@@ -1851,6 +2003,7 @@ function exportTable(tableId, filename) {
   renderBudget();
   renderPromotion();
   renderEscalation();
+  renderMembers();
   pageFromHash();
 })();
 </script>
