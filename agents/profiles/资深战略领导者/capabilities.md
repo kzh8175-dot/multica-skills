@@ -173,6 +173,14 @@
 
 ### 新学到的技能 (按时间倒序)
 
+#### 2026-08-18 - 公网看板部署自动化根治（KA-155 续）
+**学会**:
+- 服务器形态探测与自动写通道判定：公网 `43.108.86.63` 为 `python3 -m http.server`（`Server: SimpleHTTP/0.6`），仅 GET/HEAD，PUT/POST/OPTIONS 均 501 → 无上传端点；SSH 实测「TCP 22 通但 banner 交换超时」（防火墙放行握手不放行数据）；本机无 Aliyun CLI/凭据、无服务器侧 runtime → 结论：当前无任何自动写路径，数据同步唯一收口是服务器侧一次性安装 cron 拉取
+- 数据同步自动化根治方案：服务器 cron 每 5 分钟 curl `multica-skills` main 的 `dashboard-data.js` → SHA256 比对 → 仅变化时备份+覆盖（幂等）→ 此后任何「推送仓库」即自动上线，owner 不再需要 Workbench 人工部署；纯静态 http.server 读盘响应，覆盖即生效无需重启
+**应用**:
+- 新增 `dashboard/scripts/auto-pull-dashboard.sh`（幂等拉取）+ `install-server-auto-pull.sh`（一次性安装 cron + 立即拉取），本地端到端模拟验证通过（旧 `91198eaf` → 新 `aaa85e0b`，重跑幂等）
+**来源任务**: KA-155 看板公网同步（owner 要求自动化收口）
+
 #### 2026-08-18 - 看板公网数据同步收尾编排（KA-155）
 **学会**:
 - 数据变更类修复交付链的收尾闭环：修复 → 本地刷新 → 打包 → 公网部署 → verify → 回填总控；本地/打包/模拟校验由执行方完成，公网部署因自动化环境无 SSH（TCP 22 通但 banner 交换超时）须走「推送仓库 + 服务器 curl」或 owner Workbench 外部通道
@@ -571,6 +579,11 @@ multica issue metadata set <issue-id> --key rating.occurred_at --value "<ISO8601
 - ⛔ 严禁设置 trigger=reviewer；无法确定 issue-id 时跳过
 
 ## 更新记录
+
+### 2026-08-18 - 公网看板部署自动化根治（KA-155 续）
+- owner 要求「自动处理、减少人工环节」：探测确认公网为纯静态 `python3 -m http.server`（无上传端点）、SSH banner 超时、无服务器侧 runtime/凭据——数据同步唯一收口为服务器侧一次性 cron 拉取
+- 新增 `dashboard/scripts/auto-pull-dashboard.sh`（幂等拉取：SHA256 比对、变化才覆盖+备份）+ `install-server-auto-pull.sh`（安装每 5 分钟 cron + 立即拉取收口当前待同步数据）；本地端到端模拟通过
+- 持续学习新增「服务器形态探测 + 自动写通道判定 + 数据同步 cron 根治」能力
 
 ### 2026-08-18 - 看板公网数据同步收尾编排（KA-155）
 - 承接 DevOps自动化工程师 KA-155 公网部署交接：核验部署包 `dashboard-data.js` SHA256 `aaa85e0b…`（generatedAt 2026-08-18T06:14:48Z、前端 10 + 开发者工具 30 = 季度累计 40）与公网现状（仍 KA-153 旧代 `91198eaf…`、季度累计 20，verify FAIL 为预期待部署状态）
