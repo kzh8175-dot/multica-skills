@@ -185,24 +185,27 @@ class TestParsers(unittest.TestCase):
     def test_parse_events_file(self):
         res = feed.parse_events_file(
             os.path.join(self.dirs["events"], "开发者工具工程师", "2026-08.md"))
-        self.assertEqual(res["total"], 10)            # +5 +5，坏行不计
+        self.assertEqual(res["total"], 0)             # R-21/R-22 均排除（KA-114）
         self.assertEqual(len(res["rows"]), 2)
         self.assertEqual(res["rows"][0]["event"], "R-21:自评")
         self.assertEqual(len(res["flags"]), 1)         # 坏行被标记
         self.assertIn("积分列无法解析", res["flags"][0])
 
     def test_parse_events_multi_event_raw_preserved(self):
-        """多事件 `;` 行以原始完整串进入 feed（loader 用例并入）：
-        事件列「R-21:自评;R-22:档案」保留整体，`;` 拆分属下游生成层
-        （前端展示层口径），feed 单一源不做二次解析。"""
+        """多事件 `;` 行以原始完整串进入 rows；`total` 按子事件拆分（KA-154）。
+
+        rows 保留完整基线（事件流水页由生成层 `split_events` 拆分呈现）；
+        `total` 拆分后剔除 R-21/R-22 子事件、计入 R-23 子事件（与聚合器一致）。
+        """
         p = os.path.join(self.dirs["events"], "开发者工具工程师", "2026-08.md")
         with open(p, "a", encoding="utf-8") as f:
-            f.write("| 2026-08-16 13:00 | issue-4 | R-21:自评;R-22:档案 | +7 |\n")
+            f.write("| 2026-08-16 13:00 | issue-4 | R-21:自评;R-22:档案;R-23:协作反馈 | +15 |\n")
         res = feed.parse_events_file(p)
         last = res["rows"][-1]
-        self.assertEqual(last["event"], "R-21:自评;R-22:档案")
-        self.assertEqual(last["points"], 7)
-        self.assertEqual(res["total"], 17)            # 10 + 7
+        self.assertEqual(last["event"], "R-21:自评;R-22:档案;R-23:协作反馈")
+        self.assertEqual(last["points"], 15)
+        # 拆分后 R-21/R-22 排除、R-23 +5 计入；其余行 R-21/R-22 已排除
+        self.assertEqual(res["total"], 5)
 
     def test_parse_quarterly_form_pending(self):
         res = feed.parse_quarterly_form(
@@ -398,9 +401,9 @@ class TestBuildFeed(unittest.TestCase):
         self.assertEqual(q["资深战略领导者"]["review_state"], "judged")
         self.assertEqual(q["资深战略领导者"]["grade"], "B")
 
-        # 事件
+        # 事件（R-21/R-22 排除 → total 0，KA-114 + KA-154 口径）
         e = feed_data["events"]["2026-08"]["开发者工具工程师"]
-        self.assertEqual(e["total"], 10)
+        self.assertEqual(e["total"], 0)
 
         # 防失真
         d = feed_data["anti_distortion"]["2026-Q3"]["开发者工具工程师"]

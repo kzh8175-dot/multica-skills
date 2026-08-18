@@ -24,7 +24,7 @@ dashboard-data-feed.py — 智能看板只读数据接口（KA-96）
 口径（与 rating-aggregator.py / quarterly-review-judge.py 严格一致，避免跨页冲突）:
   R-41  月度百分制 = clamp(月积分 ÷ 基准 × 100, 0, 120)
   R-51  季度客观分 = (M1+M2+M3) / 3（缺失月按 0 计）
-  R-61  季度综合分 = 客观分 × 0.8 + 人评最终分 × 0.2
+  R-61  季度综合分 = 客观分 × 0.6 + 人评最终分 × 0.4
   R-62~66 等级查表: ≥95 S / ≥85 A / ≥70 B / ≥60 C / <60 D
   R-71  红线事件 ≥2 → 等级上限 C；R-72 缺自评 ≥2 → 降一档；E-02 单评分人 → 上限 A
 
@@ -59,6 +59,13 @@ AGENTS_ROOT_DEFAULT = os.path.normpath(os.path.join(SCRIPT_DIR, ".."))
 MONTH_RE = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])$")
 QUARTER_RE = re.compile(r"^(\d{4})-Q([1-4])$")
 POINTS_RE = re.compile(r"^[+-]?\d+$")
+RULE_RE = re.compile(r"^(R-\d+)")  # 事件描述中的规则号，如 'R-21:自评' → 'R-21'
+
+# KA-114 迁移口径（与 rating-aggregator.py 同源）：R-21 自评 / R-22 档案纪律
+# 计入历史基线，不计入新版权重。事件流水页仍完整展示全部行（含自评/纪律），
+# 但 events.total（看板「月积分」/manifest 指纹）按新口径剔除。
+SELF_REVIEW_PREFIXES = ("R-21",)
+DISCIPLINE_PREFIXES = ("R-22",)
 
 # R-62~R-66 等级表（与 quarterly-review-judge.py 同源）
 GRADE_TABLE = [(95, "S"), (85, "A"), (70, "B"), (60, "C")]
@@ -293,11 +300,41 @@ def parse_quarterly_form(path):
     }
 
 
+def split_event_points(event_desc, pts):
+    """单行多事件拆分（KA-154 · 与聚合器 split_event_points 同口径）。
+
+    事件描述可含多个 `;` 分隔子事件（如 `R-21:自评;R-22:更新能力档案;R-23:协作反馈`）。
+    行积分按子事件数均分（余数给前几条）；无 `;` 时整行为单个事件、保留整行积分。
+    返回 [(rule, desc, sub_pts), ...]；子事件无 `R-\d+` 规则号时 rule 为 ""。
+    """
+    parts = [p.strip() for p in (event_desc or "").split(";") if p.strip()]
+    if not parts:
+        parts = [event_desc or ""]
+    n = len(parts)
+    out = []
+    for i, part in enumerate(parts):
+        if ":" in part:
+            code, _, desc = part.partition(":")
+            code, desc = code.strip(), desc.strip()
+        else:
+            code, desc = part, part
+        m = RULE_RE.match(code)
+        rule = m.group(1) if m else ""
+        sub_pts = pts if n == 1 else pts // n + (1 if i < pts % n else 0)
+        out.append((rule, desc, sub_pts))
+    return out
+
+
 def parse_events_file(path):
     """解析事件流水 → {total, rows: [{time, issue, event, points}], flags}。
 
     points 列无法解析的行记入 flags（与聚合器 E_PARSE 同源，不中断）。
     文件缺失返回 None。
+
+    KA-114 + KA-154 迁移口径：`total` 剔除 R-21 自评 / R-22 档案纪律（计入
+    历史基线、不计入新版权重，与聚合器一致）；单行多事件（`;` 分隔）按子事件
+    拆分、积分均分（余数给前几条），R-23 等子事件计入 total；`rows` 仍完整
+    返回全部行（事件流水页由生成层 `split_events` 拆分呈现）。
     """
     if not os.path.exists(path):
         return None
@@ -328,7 +365,12 @@ def parse_events_file(path):
                 "points": int(fields[-1]),
             }
             rows.append(row)
-            total += row["points"]
+            # 新口径（KA-114 + KA-154）：单行多事件拆分后，R-21/R-22 子事件
+            # 不参与 total，其余子事件按拆分积分计入（rows 保留完整基线）
+            for rule, _sub_desc, sub_pts in split_event_points(fields[2], row["points"]):
+                if rule in SELF_REVIEW_PREFIXES or rule in DISCIPLINE_PREFIXES:
+                    continue
+                total += sub_pts
         else:
             flags.append(f"L{lineno} 积分列无法解析: {fields[-1]}")
     return {"total": total, "rows": rows, "flags": flags}
@@ -502,29 +544,106 @@ def load_rating_stats(limit=200):
     return parse_pending_escalated(issues), note
 
 
-def load_cli_categories():
-    """读 multica agent list 的 R-42 `[category=X]` 标签（best-effort）。"""
-    cats = {}
+def load_cli_agents():
+    """读 multica agent list 的实时成员表（best-effort，成员页同步数据源）。
+
+    返回 list[dict]（每名成员一条：{name, id, category, archived, description}）；
+    以**列表**返回而不按规范化名建字典，是因为「UI 设计师」与「UI设计师」是两个
+    不同成员，按 norm 去键会互相覆盖。CLI 不可用 / 返回结构异常时返回 []。
+    """
+    agents = []
     out = run_cli(["agent", "list", "--output", "json"])
     if not out:
-        return cats
+        return agents
     try:
         data = json.loads(out)
     except json.JSONDecodeError:
-        return cats
+        return agents
     if not isinstance(data, list):
-        return cats
+        return agents
     for agent in data:
         if not isinstance(agent, dict) or not agent.get("name"):
             continue
+        name = agent["name"]
         cat = agent.get("category") or agent.get("agent.category")
         if not cat:
             m = DESC_CATEGORY_RE.search(agent.get("description") or "")
             if m:
                 cat = m.group(1)
-        if cat and cat in VALID_CATEGORIES:
-            cats[NORM_RE.sub("", agent["name"].lower())] = cat
+        if cat not in VALID_CATEGORIES:
+            cat = None
+        agents.append({
+            "name": name,
+            "id": agent.get("id"),
+            "category": cat,
+            "archived": bool(agent.get("archived_at")),
+            "description": agent.get("description") or "",
+        })
+    return agents
+
+
+def load_cli_categories():
+    """读 multica agent list 的 R-42 `[category=X]` 标签（best-effort）。"""
+    cats = {}
+    for rec in load_cli_agents():
+        if rec.get("category"):
+            cats[NORM_RE.sub("", rec["name"].lower())] = rec["category"]
     return cats
+
+
+ORG_SECTION_RE = re.compile(r"^\[department\s+(.+)\]$")
+
+
+def load_org_chart(agents_root):
+    """解析 org-chart.conf → 部门归属表 {成员精确名: dept_name}。
+
+    兼容两种登记格式（KA-114 B-2 统一后新格式为唯一格式）：
+      ① 新格式（单行）：`部门名|主管|成员1|成员2|...` —— `|` 拆分，
+         首字段部门名，第 3 字段起为成员（主管须为成员之首）；
+      ② 旧格式（兼容保留）：`[department X]` 段 + `members=成员1,成员2,...`。
+    顶层评分链锚点键（`ORG_*`，`KEY=VALUE` 且 KEY 全大写）不计入部门。
+    文件缺失返回 {}。
+    注意：以**精确名**为键（「UI 设计师」与「UI设计师」是两个不同成员），
+    规范化（去空格/短横）匹配由调用方在确无精确命中时兜底。
+    """
+    path = os.path.join(agents_root, "capability-system", "org-chart.conf")
+    if not os.path.exists(path):
+        path = os.path.join(agents_root, "config", "org-chart.conf")
+    if not os.path.exists(path):
+        return {}
+    org = {}
+    dept = None
+    try:
+        with open(path, encoding="utf-8") as f:
+            for raw in f:
+                line = raw.split("#", 1)[0].strip()
+                if not line:
+                    continue
+                # 顶层评分链锚点键（ORG_TOP_SUPERVISOR / ORG_OWNER / ORG_LEAD_REVIEWER2）
+                # 非部门登记行，跳过（与 test-org-chart-conf.py 同口径）
+                if "=" in line and line.split("=", 1)[0].strip().isupper():
+                    continue
+                # 新格式：`部门名|主管|成员1|成员2|...`
+                if "|" in line:
+                    parts = [p.strip() for p in line.split("|")]
+                    if len(parts) >= 3 and parts[0] and parts[1] and parts[2]:
+                        dept_name = parts[0]
+                        for member in parts[2:]:
+                            if member:
+                                org[member] = dept_name
+                    continue
+                # 旧格式：`[department X]` 段 + `members=...`
+                m = ORG_SECTION_RE.match(line)
+                if m:
+                    dept = m.group(1)
+                    continue
+                if dept and line.startswith("members"):
+                    members_csv = line.split("=", 1)[1].strip()
+                    for member in [x.strip() for x in members_csv.split(",") if x.strip()]:
+                        org[member] = dept
+    except OSError:
+        pass
+    return org
 
 
 # ---------------------------------------------------------------- 组装
