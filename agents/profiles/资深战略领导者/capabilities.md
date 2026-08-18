@@ -173,6 +173,15 @@
 
 ### 新学到的技能 (按时间倒序)
 
+#### 2026-08-18 - 看板公网数据同步收尾编排（KA-155）
+**学会**:
+- 数据变更类修复交付链的收尾闭环：修复 → 本地刷新 → 打包 → 公网部署 → verify → 回填总控；本地/打包/模拟校验由执行方完成，公网部署因自动化环境无 SSH（TCP 22 通但 banner 交换超时）须走「推送仓库 + 服务器 curl」或 owner Workbench 外部通道
+- 公网 verify FAIL 的双因判别：先刷新本地 `dashboard-manifest.json` 排除「manifest 代差」误报，再比对公网 SHA256/generatedAt 判定「数据未同步」——KA-153 踩过 manifest 代差误报，KA-155 已先刷新 manifest 再判定公网差异
+- 仓库治理的提交通道归属：multica-skills 的 GitHub 提交通道唯一归属 GitHub 仓库管理员（UPLOAD_MANIFEST §四），交付物准备方（分支 + commit）与 main 落地推送方分离；本次数据 commit `48070a7` 推分支 `agent/agent/14c43c51`，交接仓库管理员快进 main，避免绕过唯一提交通道
+**应用**:
+- KA-155：将 DevOps 部署包 `dashboard-data.js`（SHA256 `aaa85e0b…`、generatedAt 2026-08-18T06:14:48Z、季度累计 40）纳入 multica-skills `dashboard/` 目录并提交（`48070a7`），推分支交接 GitHub 仓库管理员；服务器 `/opt/dashboard` 覆盖交接 owner Workbench 执行（curl raw URL 或 tarball 一键部署）
+**来源任务**: KA-155 看板公网同步（KA-154 R-23 修复数据 20→40）
+
 #### 2026-08-18 - 待办批次推进：中断批次恢复 + 8 档案补齐 + 白名单补录（KA-138/142~150）
 **学会**:
 - 中断批次恢复法：上一轮同一批 11 个入档任务因 API 402（余额不足）中断，遗留「结论文档已贴但档案未落盘 / 档案已落盘但结论未贴」的错位状态。恢复时先核四态：①档案目录是否存在；②结论文档是否已贴；③org-chart.conf 是否登记；④名册 KA-124 是否登记——逐项补齐缺口而非全部重做
@@ -562,6 +571,12 @@ multica issue metadata set <issue-id> --key rating.occurred_at --value "<ISO8601
 - ⛔ 严禁设置 trigger=reviewer；无法确定 issue-id 时跳过
 
 ## 更新记录
+
+### 2026-08-18 - 看板公网数据同步收尾编排（KA-155）
+- 承接 DevOps自动化工程师 KA-155 公网部署交接：核验部署包 `dashboard-data.js` SHA256 `aaa85e0b…`（generatedAt 2026-08-18T06:14:48Z、前端 10 + 开发者工具 30 = 季度累计 40）与公网现状（仍 KA-153 旧代 `91198eaf…`、季度累计 20，verify FAIL 为预期待部署状态）
+- 数据入仓：`dashboard/dashboard-data.js` 更新提交 `48070a7`（分支 `agent/agent/14c43c51`），按「GitHub 仓库管理员唯一提交通道」交接其快进 main
+- 服务器侧：`/opt/dashboard` 覆盖交接 owner Workbench 执行（curl raw URL 或 tarball 一键部署，期望 SHA256 `aaa85e0b…`）
+- 持续学习新增「数据变更交付链收尾编排 + 公网 verify 双因判别 + 仓库提交通道归属」能力
 
 ### 2026-08-18 - 待办批次推进：中断批次恢复 + 8 档案补齐 + 白名单补录（KA-138/142~150）
 - 待办 11 个入档任务推进收口：上一轮因 API 402 中断，本次按缺口补齐——8 份缺失能力档案建档（系统架构师 KA-138 / IT服务经理 KA-142 / 最小变更专家 KA-143 / OrgScript工程师 KA-144 / 实时协作工程师 KA-147 / FinOps工程师 KA-148 / 数据库可靠性工程师 KA-149 / 数据可视化专家 KA-150），3 份既有档案（站点可靠性 KA-139 / Drupal KA-145 / WordPress KA-146）补齐结论文档
