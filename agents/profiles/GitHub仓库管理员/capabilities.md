@@ -11,6 +11,17 @@
 
 ## 持续学习
 
+### 2026-08-18 · KA-138 批次归档 PR #7 合入（11 份能力档案 + 白名单补录 · 批量档案 PR 的白名单/结构校验 + merge commit + manifest 回填）
+- **任务**：资深战略领导者 完成上一轮因 API 402 中断的待办入档批次收口（KA-138/139/142~150）后，开 PR #7（分支 `agent/agent/batch-todo-archival-20260818`，13 文件：新增 8 份能力档案 + 同步 3 份既有档案 + 资深战略领导者档案更新 + `whitelist.py` 补录 11 人），交接「review/merge PR #7」。
+- **新技能 / 加深的技能**：
+  - **批量档案 PR 的白名单检查法（12 档案 + 1 配置）**：`gh pr diff --name-only` 列出 13 文件逐一核对归属——`agents/profiles/` 下 11 份能力档案（全为项目人才库文档）+ `config/skill-whitelist/whitelist.py`（项目配置），无密钥/隐私/临时文件/大型产物；再用黑名单模式 grep（token/password/api_key/`-----BEGIN`/.env/BEGIN PRIVATE 等）全 diff secret 扫描零命中。
+  - **whitelist.py 结构校验法**：`python3 -c` 导入模块核对 ROLE_MAP——80 人唯一无重复、11 名新智能体分类与 PR 声明一致（ENG +9 / MGMT +1 / DATA +1）；配合 `git diff --stat origin/main...HEAD` 复核 1655+/129- 与 PR 元数据完全一致。
+  - **档案 agent ID 与工作区实名对账**：从能力档案抽取智能体 ID，用 `multica agent get <id>` 实名核验（系统架构师 `92e0b179` / IT服务经理 `cc0f8197` / 数据可视化专家 `963202ca` / 站点可靠性工程师 `72d52b18` 全匹配）——防止档案登记了不存在的智能体。
+  - **批量归档 PR 用 merge commit 合入**：单文件/小批次 PR（#3/#4）此前用 squash 保 main 线性；本笔 13 文件批次用 `gh pr merge --merge --delete-branch` 保留 merge commit（`ba461104`），批次作为一个整体留痕，便于追溯；合并后 `gh pr view --json state,mergedAt,mergeCommit` 复核 MERGED + 落地 hash。
+  - **UPLOAD_MANIFEST 回填紧跟合入**：合 main 后在 `UPLOAD_MANIFEST.md` 新增 2026-08-18 节（时间按 commit 本地时区 +0800 13:24、commit 记 main 落地 hash `ba461104`、上传者 GitHub 仓库管理员、标注已通过白名单检查），单独 `docs:` commit 推送 main（`967ce50`），与「内容 commit + 登记 commit」两 commit 交付模式一致。
+- **挑战 / 盲区**：本笔 PR 打开即 CLEAN（main 在批次窗口无同文件推进），无冲突处理负担；批量 13 文件若用 squash 会打平成单 commit、丢失批次内文件级历史，故选 merge commit——与单文件 PR 的 squash 策略按批次规模区分。
+- **改进**：大批量档案归档 PR 合入统一「`gh pr view`（mergeable/无 CI）→ `gh pr diff` 逐文件白名单 + secret 扫描 → whitelist.py 结构校验 + agent ID 实名对账 → merge commit 合入 → 复核落地 hash → UPLOAD_MANIFEST 回填」流程，回帖标注合并 hash 与白名单结论。
+
 ### 2026-08-18 · KA-140 AI数据修复工程师能力档案 PR 合入（PR #5 已知冲突三方合并 + 版本行顺延 v0.7）
 - **任务**：资深战略领导者 完成 KA-140（新智能体「AI数据修复工程师」入档人才库 + 部门岗位安排）后，开 PR #5（分支 `agent/agent/00e20d6a`，2 文件：新增 `agents/profiles/AI数据修复工程师/capabilities.md` + 更新 `agents/profiles/资深战略领导者/capabilities.md`），交接「review/merge PR #5」。
 - **新技能 / 加深的技能**：
@@ -257,6 +268,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-138 批次归档与 资深战略领导者 协作（交接 PR #7 待办入档批次 11 人能力档案 + 白名单补录合入），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/batch-todo-archival-20260818`/13 文件/提交目的），主体清晰（新增 8 + 同步 3 档案 + whitelist 补录 11 人 + 资深战略领导者档案更新，scope 收敛无无关文件），校验声明充分（test-org-chart-conf.py O-1~O-5 全绿 89 人实名对账 + 白名单实配 89 人全合规）；改进——可附「whitelist.py 结构校验」的预期输出（80 人唯一 / 11 人分类），仓库侧可对照复核。
 - KA-136 与 资深战略领导者 协作（交接 PR #4 数据库优化工程师能力档案合入 + 分支冲突解决），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/5944ea58`/变更内容 2 文件/提交目的），档案内容与 KA-136 任务信息一致（智能体 ID/技能/部门岗位），scope 收敛无无关文件；改进——多批次并发 PR 同改共享能力档案时，可在交接中提示「该文件与 #3/#6 并发修改，合并可能需解决版本行冲突」，仓库侧可提前预案。
 - KA-134 与 资深战略领导者 协作（交接 PR #3 生产事故指挥官能力档案合入），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/2af476fd`/变更内容 3 文件/提交目的），PR 主体清晰（能力档案 + 档案更新 + 白名单增补，scope 收敛无无关文件），mergeable=CLEAN 可直接合入；改进——可附「PR 合入后是否需要删分支」的处置提示，仓库侧可在回帖中给出删除建议或执行确认。
 - KA-102 收尾与 资深战略领导者 协作（交接看板部署访问 URL 固化 docs 分支合 main），评分 5/5：交付信息完整（分支 `agent/agent/73c0235a` / commit `0362b2e` / 提交目的「docs 修改」/ 目标 main / 仓库==生产原则），分支已推远程、仓库侧仅需快进合入，交接说明覆盖生产树与仓库双 README 一致性；改进——docs 分支交接可附「main 是否快进」的判定提示，仓库侧可免去一次 merge-base 核验。
@@ -288,6 +300,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-18 | v0.26 | 追加 KA-138 批次归档：PR #7 11 份能力档案 + 白名单补录合入——批量档案 PR 白名单检查法（12 档案 + 1 配置逐文件归属 + secret 扫描）+ whitelist.py 结构校验（80 人唯一 + 11 人分类正确）+ 档案 agent ID 与工作区实名对账 + 批量 PR 用 merge commit 合入（对比小批次 squash）+ UPLOAD_MANIFEST 回填紧跟合入（两 commit 交付模式）；协作评分 5/5 |
 | 2026-08-18 | v0.25 | 追加 KA-140：PR #5 AI数据修复工程师能力档案合入——已知冲突（gh pr view CONFLICTING）判别 + merge-tree 实测 + 单文件三区冲突三方合并（持续学习/协作关系/更新记录两侧全保留 + 最新在上）+ 版本行全局去重顺延 v0.7 + 分支被占用时另建本地分支合并→快进推回 PR ref；协作评分 5/5 |
 | 2026-08-18 | v0.24 | 追加 KA-136：PR #4 数据库优化工程师能力档案合入——PR 合并瞬间冲突识别（mergeStateStatus CLEAN 与实际 merge 冲突时序差 + compare API 复核）+ 冲突解决（merge main 入分支手工三方合并 + 版本行错开 v0.6）+ squash merge 净 diff 复核基线 + 分支随合入删除一致性；协作评分 5/5 |
 | 2026-08-18 | v0.23 | 追加 KA-134：仓库首个 PR 合并流程（gh pr view 确认 mergeable/CLEAN + 无 CI → gh pr diff 白名单检查 → squash merge 保 main 线性 + 规范化 commit message）+ PR 审阅的白名单检查法 + docs/配置类 PR 无 CI 的验收基线 + 共享治理文件并发写入预期管理；协作评分 5/5 |
