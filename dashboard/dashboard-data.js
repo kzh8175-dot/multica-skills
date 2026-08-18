@@ -17,7 +17,7 @@ window.DASHBOARD_DATA = {
     "month": "2026-08",
     "monthLabel": "08月",
     "year": "2026",
-    "generatedAt": "2026-08-18T05:22:48Z",
+    "generatedAt": "2026-08-18T06:14:48Z",
     "schemaVersion": "1.0",
     "agentCount": 89,
     "agentsWithData": 23,
@@ -337,7 +337,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -537,7 +537,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -882,7 +882,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -1634,20 +1634,20 @@ window.DASHBOARD_DATA = {
       "category": "technical",
       "categoryLabel": "技术",
       "benchmark": 300,
-      "monthTotal": 0,
-      "monthPct": 0,
+      "monthTotal": 10,
+      "monthPct": 3,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        0,
+        10,
         0
       ],
       "quarterPcts": [
         0,
-        0,
+        3,
         0
       ],
-      "objective": 0.0,
+      "objective": 1.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -1655,10 +1655,10 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 0.0,
+        "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:43:08Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -2341,20 +2341,20 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 20,
-      "monthPct": 5,
+      "monthTotal": 30,
+      "monthPct": 7,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        20,
+        30,
         0
       ],
       "quarterPcts": [
         0,
-        5,
+        7,
         0
       ],
-      "objective": 1.0,
+      "objective": 2.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -2362,10 +2362,10 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 1.0,
+        "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T16:56:33Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -2681,7 +2681,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -2821,7 +2821,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -3085,7 +3085,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -4313,7 +4313,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -4386,7 +4386,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -4938,7 +4938,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-17T14:38:09Z"
+        "asOf": "2026-08-18T06:14:09Z"
       },
       "flags": [],
       "events": [
@@ -5848,9 +5848,9 @@ window.DASHBOARD_DATA = {
       "status": "active",
       "source": "both",
       "hasData": true,
-      "monthTotal": 0,
-      "monthPct": 0,
-      "objective": 0.0,
+      "monthTotal": 10,
+      "monthPct": 3,
+      "objective": 1.0,
       "grade": null,
       "estimatedGrade": "D",
       "reviewState": "pending"
@@ -5905,9 +5905,9 @@ window.DASHBOARD_DATA = {
       "status": "active",
       "source": "both",
       "hasData": true,
-      "monthTotal": 20,
-      "monthPct": 5,
-      "objective": 1.0,
+      "monthTotal": 30,
+      "monthPct": 7,
+      "objective": 2.0,
       "grade": null,
       "estimatedGrade": "D",
       "reviewState": "pending"
@@ -8286,8 +8286,8 @@ window.DASHBOARD_DATA = {
   "budget": {
     "points": {
       "ceiling": 89700,
-      "spent": 20,
-      "variance": 89680,
+      "spent": 40,
+      "variance": 89660,
       "utilization": 0.0,
       "categories": [
         {
@@ -8296,8 +8296,8 @@ window.DASHBOARD_DATA = {
           "agents": 17,
           "benchmark": 400,
           "ceiling": 20400,
-          "spent": 20,
-          "variance": 20380,
+          "spent": 30,
+          "variance": 20370,
           "utilization": 0.1,
           "status": "正常"
         },
@@ -8307,8 +8307,8 @@ window.DASHBOARD_DATA = {
           "agents": 28,
           "benchmark": 300,
           "ceiling": 25200,
-          "spent": 0,
-          "variance": 25200,
+          "spent": 10,
+          "variance": 25190,
           "utilization": 0.0,
           "status": "正常"
         },
@@ -8349,15 +8349,6 @@ window.DASHBOARD_DATA = {
     },
     "sop": [
       {
-        "identifier": "KA-18",
-        "title": "P0-3 定时任务部署 cron",
-        "status": "done",
-        "tier": "",
-        "ceiling": 100,
-        "spent": 95.7,
-        "variance": -0.043
-      },
-      {
         "identifier": "KA-19",
         "title": "P0-4 重试注入测试（E_API/E_WRITE 指数退避）",
         "status": "done",
@@ -8388,10 +8379,10 @@ window.DASHBOARD_DATA = {
   },
   "runtime": {
     "settlement": "2026-08-17T16:56:00Z",
-    "aggregation": "2026-08-18T05:19:55Z",
-    "review": "2026-08-18T05:19:57Z",
+    "aggregation": "2026-08-18T06:14:09Z",
+    "review": "2026-08-18T06:14:09Z",
     "ratingStatus": {
-      "pending": 15,
+      "pending": 17,
       "escalated": 0,
       "credited": 45
     },
