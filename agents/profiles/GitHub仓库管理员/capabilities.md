@@ -11,6 +11,17 @@
 
 ## 持续学习
 
+### 2026-08-18 · KA-140 AI数据修复工程师能力档案 PR 合入（PR #5 已知冲突三方合并 + 版本行顺延 v0.7）
+- **任务**：资深战略领导者 完成 KA-140（新智能体「AI数据修复工程师」入档人才库 + 部门岗位安排）后，开 PR #5（分支 `agent/agent/00e20d6a`，2 文件：新增 `agents/profiles/AI数据修复工程师/capabilities.md` + 更新 `agents/profiles/资深战略领导者/capabilities.md`），交接「review/merge PR #5」。
+- **新技能 / 加深的技能**：
+  - **已知冲突 vs 合入瞬间冲突的判别**：PR #5 打开时 `gh pr view --json mergeable` 即显示 `CONFLICTING`（区别于 PR #4 的「mergeStateStatus CLEAN 但 merge 实测冲突」）——因 main 已先行合入同批次 PR #3/#6（KA-134/KA-135/KA-136）对 `资深战略领导者/capabilities.md` 的并发学习记录。判定流程：先看 `gh pr view` 的 mergeable 预判，再用 `git merge-tree --write-tree origin/main <head>` 实测确认冲突点，避免盲等。
+  - **单文件三区冲突的三方合并**：本次冲突集中在 `资深战略领导者/capabilities.md` 的 3 个区域（持续学习 / 协作关系 / 更新记录），且两边都是「各加一条同日 2026-08-18 记录」——正确解不是取一边，而是两侧记录全保留并按「最新在上」拼接（KA-140 + main 带入的 KA-136 + KA-134），协作关系同理补 KA-140/KA-136 两条，仅版本行做全局去重。
+  - **版本行全局唯一不变量的执行**：main 已用 v0.5（KA-134）、v0.6（KA-136），本 PR 自带的 v0.5（KA-140）必须顺延为 v0.7——同一能力档案的更新记录版本行不允许撞车，这是治理文件的硬约束（与 PR #4 的 v0.6 顺延同族，本次为第二次执行）。
+  - **push 前 merge-tree 实测 + 快进推送**：`git merge-tree --write-tree origin/main HEAD`（退出码 0 / 返回 clean tree）确认可合并后再 `git push origin <本地分支>:<pr-branch>`——因为本地分支以 PR head 为基 merge main 产生 merge commit，push 是快进（`281f538..251b6b0`），非强推、无破坏性操作；push 后 `gh pr view` 复核 headRefOid 已更新 + mergeStateStatus CLEAN。
+  - **合并后净 diff 复核基线**：merge commit 合入后 `gh pr diff` 复核 PR 相对 main 的净增量恰为意图的 2 文件（新增 AI数据修复工程师档案 + KA-140 学习记录/协作/版本行），未把 merge 带入的 main 已合内容（KA-134/KA-136 记录）重复写回；再 `git show origin/main:<path>` 双文件落地复核。
+- **挑战 / 盲区**：PR 分支 `agent/agent/00e20d6a` 已被发起方 worktree 检出，本地不能直接 checkout 该分支做 merge——需以 PR head 另建本地分支（`git branch -f <local> origin/agent/agent/00e20d6a`）完成合并与冲突解决后再推回原 PR ref，push 为快进不受「分支被占用」影响。
+- **改进**：并发治理文件（`资深战略领导者/capabilities.md`）的多 PR 冲突已成常态（PR #3/#4/#5 三连），合并前统一先 `gh pr view --json mergeable` + `git merge-tree` 实测；冲突解一律「两侧记录全保留 + 版本行全局去重」；分支被占用的 PR 用「另建本地分支合并→快进推回」模式，全程无强推。
+
 ### 2026-08-18 · KA-136 数据库优化工程师能力档案 PR 合入（PR #4 合并冲突解决：merge main 入分支 → squash merge 净 diff 复核）
 - **任务**：资深战略领导者 完成 KA-136（新智能体「数据库优化工程师」入档人才库 + 部门岗位安排）后，开 PR #4（分支 `agent/agent/5944ea58`，2 文件：新增 `agents/profiles/数据库优化工程师/capabilities.md` + 更新 `agents/profiles/资深战略领导者/capabilities.md`），交接「review/merge PR #4」。
 - **新技能 / 加深的技能**：
@@ -277,6 +288,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-18 | v0.25 | 追加 KA-140：PR #5 AI数据修复工程师能力档案合入——已知冲突（gh pr view CONFLICTING）判别 + merge-tree 实测 + 单文件三区冲突三方合并（持续学习/协作关系/更新记录两侧全保留 + 最新在上）+ 版本行全局去重顺延 v0.7 + 分支被占用时另建本地分支合并→快进推回 PR ref；协作评分 5/5 |
 | 2026-08-18 | v0.24 | 追加 KA-136：PR #4 数据库优化工程师能力档案合入——PR 合并瞬间冲突识别（mergeStateStatus CLEAN 与实际 merge 冲突时序差 + compare API 复核）+ 冲突解决（merge main 入分支手工三方合并 + 版本行错开 v0.6）+ squash merge 净 diff 复核基线 + 分支随合入删除一致性；协作评分 5/5 |
 | 2026-08-18 | v0.23 | 追加 KA-134：仓库首个 PR 合并流程（gh pr view 确认 mergeable/CLEAN + 无 CI → gh pr diff 白名单检查 → squash merge 保 main 线性 + 规范化 commit message）+ PR 审阅的白名单检查法 + docs/配置类 PR 无 CI 的验收基线 + 共享治理文件并发写入预期管理；协作评分 5/5 |
 | 2026-08-17 | v0.22 | 追加 KA-102 收尾：领导已推分支的 docs 快进合入 main（增量 + merge-base 双查判纯快进）+ main 被其他 worktree 占用时 `git push origin <branch>:main` 远程快进（对比 v0.16 update-ref 方案）+ docs 交付验收基线（白名单逐文件 + 全 diff 审阅 + push 后线上复核）+ manifest 登记紧跟合入；协作评分 5/5 |
