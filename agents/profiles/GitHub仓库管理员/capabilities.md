@@ -11,6 +11,15 @@
 
 ## 持续学习
 
+### 2026-08-18 · KA-155 看板数据公网同步入库（领导已推分支干净快进 main + SHA256 交付物核验 + manifest 登记）
+- **任务**：资深战略领导者 完成 KA-155 公网部署承接（核验 DevOps 部署包 `dashboard-sync-ka155.tar.gz` → 数据入仓 `dashboard/dashboard-data.js` → 推分支 `agent/agent/14c43c51`），交接「将分支 `48070a7`（看板数据）+ `bfb7c89`（领导能力档案），基 `cc70b5e` 干净快进 `main`，按 UPLOAD_MANIFEST §四登记本笔」；服务器 `/opt/dashboard` 覆盖已交接 owner Workbench 执行（curl raw URL 或 tarball 一键部署），不属仓库侧。
+- **新技能 / 加深的技能**：
+  - **「领导已推分支 + 干净快进」交付形态的快速落地**：`git fetch origin` 后增量/merge-base 双查——`git log origin/main..origin/agent/agent/14c43c51` 恰 2 commit、merge-base = origin/main HEAD（`cc70b5e`）→ 纯快进，`git merge --ff-only` + `git push origin HEAD:main` 落地，原 commit hash 原样保留（与 KA-102 v0.22、KA-154 v0.27 同族模式）。
+  - **数据变更类交付的 SHA256 交付物核验**：对交付分支 `dashboard/dashboard-data.js` 做 `git show <tip>:<path> | shasum -a 256`，与交接声明 `aaa85e0b…` 逐位一致；用 `git diff --stat cc70b5e bfb7c89 -- dashboard/index.html dashboard/src` 空输出确认 index.html / src/ 未动（只覆盖生成数据），符合「仅覆盖生成数据、勿把 src/ 源码版当生成数据」的白名单口径。
+  - **manifest 登记的「提交需求方 = 领导、上传者 = 仓库管理员」角色记录**：本笔数据由领导入仓提交（非仓库侧代写），manifest 行按 §三字段口径——开发/提交上传需求填 资深战略领导者、上传者填 GitHub 仓库管理员、commit 填落地 hash（`48070a7` + `bfb7c89`）、标注「已通过白名单检查」；与「内容 commit + 登记 commit」两 commit 交付模式一致（登记 commit 为 `docs+档案:` 单笔）。
+- **挑战 / 盲区**：公网部署第二跳（服务器 curl raw URL 覆盖）依赖 main 落地 + owner Workbench，属仓库侧不可控的外部通道——本次只负责「数据入仓落地 main」环节，服务器覆盖待 owner 执行后回传，仓库侧不阻塞等待。
+- **改进**：数据变更类「已推分支」交接统一「fetch → 增量/merge-base 双查判 FF → 分支 SHA256 核验 → 白名单（index.html/src 未动）→ FF push main → manifest 登记」流程；回帖附「服务器侧待 owner 执行」的下一步提示与期望 SHA256，使执行方无需回查。
+
 ### 2026-08-18 · KA-154 双仓库代码交付入库（聚合器单行多事件拆分 + 看板 feed 生产同步版 · 逐仓库 FF + 交付点快照复跑 + 双端口径一致性核验）
 - **任务**：代 DevOps自动化工程师 推送 KA-154 修复至两个仓库 `main`——`multica-rating-system`（聚合器单行多事件拆分，commit `c810890`）+ `multica-skills`（`src/dashboard-data-feed.py` 自生产同步 KA-114 已部署未入库口径 + `parse_events_file` 单行多事件 `;` 拆分、R-21/R-22 子事件排除、R-23 等计入 `events.total`，+ `src/test-dashboard-data-feed.py` 35/35，commit `a8fa3ed`），白名单检查 + 双仓库 UPLOAD_MANIFEST 登记。
 - **新技能 / 加深的技能**：
@@ -277,6 +286,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-155 与 资深战略领导者 协作（交接看板数据公网同步分支 `agent/agent/14c43c51` 快进 main + manifest 登记），评分 5/5：分支基 = origin/main HEAD 可直接快进、两 commit（数据 `48070a7` + 能力档案 `bfb7c89`）增量清晰、SHA256 `aaa85e0b…` 与本地 prod 一致已声明、index.html/src 未动范围收敛、交接附服务器覆盖命令与期望 SHA256；仓库侧核验（分支 SHA256 逐位一致 + diff 范围复核）与交接声明完全吻合；改进——可附「main 落地后方式 A curl 命令可用」的时序提示（仓库侧已在回帖中同步 owner 部署下一步）。
 - KA-138 批次归档与 资深战略领导者 协作（交接 PR #7 待办入档批次 11 人能力档案 + 白名单补录合入），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/batch-todo-archival-20260818`/13 文件/提交目的），主体清晰（新增 8 + 同步 3 档案 + whitelist 补录 11 人 + 资深战略领导者档案更新，scope 收敛无无关文件），校验声明充分（test-org-chart-conf.py O-1~O-5 全绿 89 人实名对账 + 白名单实配 89 人全合规）；改进——可附「whitelist.py 结构校验」的预期输出（80 人唯一 / 11 人分类），仓库侧可对照复核。
 - KA-136 与 资深战略领导者 协作（交接 PR #4 数据库优化工程师能力档案合入 + 分支冲突解决），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/5944ea58`/变更内容 2 文件/提交目的），档案内容与 KA-136 任务信息一致（智能体 ID/技能/部门岗位），scope 收敛无无关文件；改进——多批次并发 PR 同改共享能力档案时，可在交接中提示「该文件与 #3/#6 并发修改，合并可能需解决版本行冲突」，仓库侧可提前预案。
 - KA-134 与 资深战略领导者 协作（交接 PR #3 生产事故指挥官能力档案合入），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/2af476fd`/变更内容 3 文件/提交目的），PR 主体清晰（能力档案 + 档案更新 + 白名单增补，scope 收敛无无关文件），mergeable=CLEAN 可直接合入；改进——可附「PR 合入后是否需要删分支」的处置提示，仓库侧可在回帖中给出删除建议或执行确认。
@@ -309,6 +319,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-18 | v0.28 | 追加 KA-155：看板数据公网同步分支干净快进 main（领导已推分支增量/merge-base 双查判 FF + 分支 SHA256 `aaa85e0b…` 逐位核验 + index.html/src 未动白名单核对 + UPLOAD_MANIFEST §四登记）；协作评分 5/5 |
 | 2026-08-18 | v0.27 | 追加 KA-154：双仓库代码交付入库（聚合器单行多事件拆分 + 看板 feed 生产同步版）——逐仓库 fetch + 分支基判定 + 干净 fast-forward 双推保原 hash、交付点快照复跑（feed 35/35 + 聚合器 25/25）、生产同步版 feed 白名单核对（不越界同步 dashboard/ 目录）、双端口径一致性核验 + 双仓库 manifest 登记；协作评分 5/5 |
 | 2026-08-18 | v0.26 | 追加 KA-138 批次归档：PR #7 11 份能力档案 + 白名单补录合入——批量档案 PR 白名单检查法（12 档案 + 1 配置逐文件归属 + secret 扫描）+ whitelist.py 结构校验（80 人唯一 + 11 人分类正确）+ 档案 agent ID 与工作区实名对账 + 批量 PR 用 merge commit 合入（对比小批次 squash）+ UPLOAD_MANIFEST 回填紧跟合入（两 commit 交付模式）；协作评分 5/5 |
 | 2026-08-18 | v0.25 | 追加 KA-140：PR #5 AI数据修复工程师能力档案合入——已知冲突（gh pr view CONFLICTING）判别 + merge-tree 实测 + 单文件三区冲突三方合并（持续学习/协作关系/更新记录两侧全保留 + 最新在上）+ 版本行全局去重顺延 v0.7 + 分支被占用时另建本地分支合并→快进推回 PR ref；协作评分 5/5 |
