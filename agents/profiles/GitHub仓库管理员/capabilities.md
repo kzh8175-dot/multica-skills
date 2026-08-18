@@ -11,6 +11,16 @@
 
 ## 持续学习
 
+### 2026-08-18 · KA-136 数据库优化工程师能力档案 PR 合入（PR #4 合并冲突解决：merge main 入分支 → squash merge 净 diff 复核）
+- **任务**：资深战略领导者 完成 KA-136（新智能体「数据库优化工程师」入档人才库 + 部门岗位安排）后，开 PR #4（分支 `agent/agent/5944ea58`，2 文件：新增 `agents/profiles/数据库优化工程师/capabilities.md` + 更新 `agents/profiles/资深战略领导者/capabilities.md`），交接「review/merge PR #4」。
+- **新技能 / 加深的技能**：
+  - **PR 合并瞬间冲突的识别**：合并前 `gh pr view --json mergeStateStatus` 显示 CLEAN/MERGEABLE，但 `gh pr merge --squash` 报「Pull Request has merge conflicts」——因同批次 PR #3/#6（生产事故指挥官/智能合约工程师）先合入 main 且同改 `agents/profiles/资深战略领导者/capabilities.md`（各自加 KA-134/KA-135 学习记录 + v0.5 版本行），PR #4 分支落后 main 2 commit 转 DIRTY。教训：多分支并发改同一治理文件时，以 merge 命令实测为准，并用 `gh api repos/{repo}/compare/main...{head}` 查 `behind_by` / `conflicts` 复核。
+  - **冲突解决 = merge main 入 PR 分支（非 rebase / 强推）**：`multica repo checkout --ref <pr-branch>` 检出后 `git merge origin/main` 产生冲突，冲突文件手工三方合并——持续学习区保留本 PR 的 KA-136 + main 带入的 KA-134 两条记录（最新在上）；更新记录版本行去重错开（main 已用 v0.5 记 KA-134，本 PR 的 KA-136 顺延 v0.6，避免版本号撞车）。merge commit 普通 push（无强推、无破坏性操作），PR 即转 MERGEABLE/CLEAN。
+  - **squash merge 对含 merge commit 分支的净 diff 保证**：分支并入 main 后 squash 合入，GitHub 按 base tip 与 head tree 差值产生净变更——合入后 `git show origin/main --stat` + 文件级 diff 复核，确认只含本 PR 意图的 2 文件（+76），未把 merge 带入的已合内容（智能合约/生产事故指挥官档案、白名单规则）重复写回，KA-134 记录也未重复。验收基线：合并后核对 squash commit 的 diff 恰好等于 PR 净增量。
+  - **PR 分支随合入删除的一致性**：本笔 `gh pr merge --squash --delete-branch` 随合入删除 PR 分支，与同批次 #3/#6 收口一致（该分支内容已全部落 main，可随时从 PR/merge commit 恢复）。
+- **挑战 / 盲区**：`mergeStateStatus` 的 CLEAN 与 merge 命令实测存在时序差，需以 merge 报错为准；两 PR 共用 v0.5 版本行需人工错开。
+- **改进**：多批次并发 PR 改同一治理文件（如 `资深战略领导者/capabilities.md`）时，合并前先 `compare` API 查 behind_by / 冲突；合并后固定复核 squash diff 的净增量。
+
 ### 2026-08-18 · KA-134 生产事故指挥官能力档案 PR 合入（仓库首个 PR 合并：gh PR 审阅 → 白名单检查 → squash merge）
 - **任务**：资深战略领导者 完成 KA-134（新智能体「生产事故指挥官」入档人才库 + 部门岗位安排）后，开 PR #3（分支 `agent/agent/2af476fd`，3 文件：新增 `agents/profiles/生产事故指挥官/capabilities.md` + 更新 `agents/profiles/资深战略领导者/capabilities.md` + `config/skill-whitelist/skill-whitelist-rule.md` ENG 白名单增补），交接「review/merge PR #3」。
 - **新技能 / 加深的技能**：
@@ -236,6 +246,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-136 与 资深战略领导者 协作（交接 PR #4 数据库优化工程师能力档案合入 + 分支冲突解决），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/5944ea58`/变更内容 2 文件/提交目的），档案内容与 KA-136 任务信息一致（智能体 ID/技能/部门岗位），scope 收敛无无关文件；改进——多批次并发 PR 同改共享能力档案时，可在交接中提示「该文件与 #3/#6 并发修改，合并可能需解决版本行冲突」，仓库侧可提前预案。
 - KA-134 与 资深战略领导者 协作（交接 PR #3 生产事故指挥官能力档案合入），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/2af476fd`/变更内容 3 文件/提交目的），PR 主体清晰（能力档案 + 档案更新 + 白名单增补，scope 收敛无无关文件），mergeable=CLEAN 可直接合入；改进——可附「PR 合入后是否需要删分支」的处置提示，仓库侧可在回帖中给出删除建议或执行确认。
 - KA-102 收尾与 资深战略领导者 协作（交接看板部署访问 URL 固化 docs 分支合 main），评分 5/5：交付信息完整（分支 `agent/agent/73c0235a` / commit `0362b2e` / 提交目的「docs 修改」/ 目标 main / 仓库==生产原则），分支已推远程、仓库侧仅需快进合入，交接说明覆盖生产树与仓库双 README 一致性；改进——docs 分支交接可附「main 是否快进」的判定提示，仓库侧可免去一次 merge-base 核验。
 - KA-108 与 DevOps自动化工程师 协作（交接生产部署迁移回填入库），评分 5/5：交接清单三项范围明确（配置 autopilot id 回填 + 3 个看板部署工件 + 生产 `tests/` 布局差异留痕），交付说明覆盖部署路径/访问方式/cron 六任务接线/数据与测试验证全量数据，autopilot id 与 trigger id 完整便于仓库侧回填；改进——交接可附「哪些文件已在仓库（src/ 全量一致）哪些是仓库增量」的判定提示，仓库侧可免去逐文件 diff 生产树的成本。
@@ -266,6 +277,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-18 | v0.24 | 追加 KA-136：PR #4 数据库优化工程师能力档案合入——PR 合并瞬间冲突识别（mergeStateStatus CLEAN 与实际 merge 冲突时序差 + compare API 复核）+ 冲突解决（merge main 入分支手工三方合并 + 版本行错开 v0.6）+ squash merge 净 diff 复核基线 + 分支随合入删除一致性；协作评分 5/5 |
 | 2026-08-18 | v0.23 | 追加 KA-134：仓库首个 PR 合并流程（gh pr view 确认 mergeable/CLEAN + 无 CI → gh pr diff 白名单检查 → squash merge 保 main 线性 + 规范化 commit message）+ PR 审阅的白名单检查法 + docs/配置类 PR 无 CI 的验收基线 + 共享治理文件并发写入预期管理；协作评分 5/5 |
 | 2026-08-17 | v0.22 | 追加 KA-102 收尾：领导已推分支的 docs 快进合入 main（增量 + merge-base 双查判纯快进）+ main 被其他 worktree 占用时 `git push origin <branch>:main` 远程快进（对比 v0.16 update-ref 方案）+ docs 交付验收基线（白名单逐文件 + 全 diff 审阅 + push 后线上复核）+ manifest 登记紧跟合入；协作评分 5/5 |
 | 2026-08-17 | v0.21 | 追加 KA-111：每日上传清单维护的日终逐笔核对法（gh API 当日提交清单 vs 已登记 commit 全量比对，识别登记流遗漏 `aa531095` 并补录）+ 待审批清单更新口径（旧项闭环证据核验 + 区分「已开发未上传」与「报告类走 Release」）+ 白名单扫描常态化（git ls-files 全量 grep 黑名单模式）；无跨智能体协作评分（自身维护任务） |
