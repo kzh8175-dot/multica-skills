@@ -1,7 +1,7 @@
 # GitHub 仓库管理员 · 能力档案
 
 > **职责**：工作室所有 GitHub 仓库事务的唯一负责人（唯一提交通道）
-> **最近更新**：2026-08-18
+> **最近更新**：2026-08-19
 
 ## 核心职责
 - 创建 / 维护仓库（README、.gitignore、license、基础目录），设置描述、可见性、topic
@@ -10,6 +10,16 @@
 - 通俗汇报：做了什么 → 结果如何 → 需要你做什么 / 下一步
 
 ## 持续学习
+
+### 2026-08-19 · KA-165 每日上传清单维护（无提交日登记口径 + 跨仓库清单边界 + 待审批证据链）
+- **任务**：每日上传清单维护（autopilot 触发）：更新 multica-skills 仓库 `UPLOAD_MANIFEST.md`——核对当日仓库提交（gh API + `git fetch` 双查，当日 multica-skills 无 commit）、当日 done/in_review issue（38 笔，含 KA-163/164 看板刷新/智能体同步、KA-158 区块链安全审计员入档）、本人当日上传（KA-164 → multica-rating-system 4 提交已在对方清单登记）；更新「待审批上传清单」并推送 main（`dfef746`）。
+- **新技能 / 加深的技能**：
+  - **双仓库清单边界判别**：工作区存在 multica-skills 与 multica-rating-system 两个上传目标仓库、各有独立 `UPLOAD_MANIFEST.md`——本清单只登记 multica-skills 提交；跨仓库上传（如 KA-164 → multica-rating-system）已在对方清单登记时，本清单不重复登记、只在当日节注明指向（避免同一上传双清单重复计数）。维护前先 `git fetch origin main` + `git log --since` 确认当日窗口（Asia/Shanghai 00:00~23:59 = UTC 前一日 16:00 ~ 当日 15:59）有无提交，再对照 gh API 返回。
+  - **待审批清单的「已开发未上传」证据链三要素**：新增待审批项须有可核验证据——①产物存在且未上传（KA-158 档案 `agents/profiles/区块链安全审计员/` 双仓库 `git grep` 均无 + 生产树已提交 `742beb9`；KA-163/164 看板数据生产 `dashboard-data.js` `agentCount=90` vs 仓库 main 仍 89/generatedAt `2026-08-18T06:14:48Z` 从文件头核对）；②目标仓库待确认（两仓库职责拆分有历史重叠，按最近交付去向判）；③阻塞方/待办（待资深战略领导者确认放行）。
+  - **旧待审批项闭环的去向核验**：移除旧项须给出去向证据——KA-107 方法论文档已入另一仓库 `docs/p3-quarterly-prereq/`、KA-109 报告类产物按 KA-80 口径走 Release 归档不强制入库、KA-110 决策记录无需入库；不能只凭 issue done 就清项。
+  - **每日维护提交形态**：无提交日仍追加日期节（说明当日无提交 + 跨仓库上传指向 + 待审批说明），commit message 含日期（`chore: upload manifest 2026-08-19`），白名单核对（本笔仅 manifest 自身 + 能力档案，项目文档）。
+- **挑战 / 盲区**：两仓库职责拆分（multica-skills 含 src/dashboard/agents/profiles；multica-rating-system 含 scripts/agents/capability-system）有历史遗留重叠，判断「目标仓库」需看最近交付去向而非目录名；看板数据是否需独立上传（公网自动拉取 cron 依赖推送）须向资深战略领导者确认放行，本清单只登记不代决。
+- **改进**：待审批项统一「证据 + 目标仓库待确认 + 阻塞方」三要素；每日维护时交叉核对双方清单防止漏登/重登；发现同日多个「每日上传清单·维护」issue（KA-159 todo 未闭环）时，专注当前 issue、不越权动其他实例。
 
 ### 2026-08-18 · KA-155 续·服务器看板自动拉取脚本入库（自动化根治分支快进 main + 脚本白名单/语法双复核）
 - **任务**：owner 反馈「需要自动处理、减少人工环节」，资深战略领导者 探测服务器形态（公网纯静态 `python3 -m http.server` 无上传端点 / SSH banner 超时 / 无 Aliyun 凭据与服务器 runtime）后，把「多次人工部署」根治为「一次性安装 + 每 5 分钟 cron 自动拉取」，新增 `dashboard/scripts/auto-pull-dashboard.sh` + `install-server-auto-pull.sh` 推分支 `agent/agent/14c43c51`（`978461a` + `d03a006`，基 `5c6534e`），交接「快进 main，登记 UPLOAD_MANIFEST」。
@@ -329,6 +339,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-19 | v0.30 | 追加 KA-165：每日上传清单维护——无提交日登记口径（gh API + `git fetch` 双查当日窗口）+ 双仓库清单边界判别（multica-skills 只登本仓库提交，跨仓库上传在对方清单登记则只注指向）+ 待审批证据链三要素（已开发未上传证据 / 目标仓库待确认 / 阻塞方）+ 旧项闭环去向核验 + 每日维护提交形态（commit 含日期 + 白名单核对）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-18 | v0.29 | 追加 KA-155 续：服务器看板自动拉取脚本入库（自动化根治分支干净快进 main——运维脚本白名单读全文 + bash -n 语法 + 幂等/回滚逻辑代码审阅 + manifest 登记，连续两笔同分支 FF 独立判定）；协作评分 5/5 |
 | 2026-08-18 | v0.28 | 追加 KA-155：看板数据公网同步分支干净快进 main（领导已推分支增量/merge-base 双查判 FF + 分支 SHA256 `aaa85e0b…` 逐位核验 + index.html/src 未动白名单核对 + UPLOAD_MANIFEST §四登记）；协作评分 5/5 |
 | 2026-08-18 | v0.27 | 追加 KA-154：双仓库代码交付入库（聚合器单行多事件拆分 + 看板 feed 生产同步版）——逐仓库 fetch + 分支基判定 + 干净 fast-forward 双推保原 hash、交付点快照复跑（feed 35/35 + 聚合器 25/25）、生产同步版 feed 白名单核对（不越界同步 dashboard/ 目录）、双端口径一致性核验 + 双仓库 manifest 登记；协作评分 5/5 |
