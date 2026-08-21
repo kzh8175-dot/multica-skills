@@ -3,7 +3,7 @@
 > **项目名称**：P0 智能评分系统（方案 C）· 上传目标仓库：`kzh8175-dot/multica-skills`
 > **用途**：记录每日上传到 GitHub 的事项、职责归属与待审批上传
 > **更新周期**：每日维护（由 GitHub 仓库管理员执行，见文末「维护机制」）
-> **最近更新**：2026-08-21
+> **最近更新**：2026-08-22
 
 ---
 
@@ -103,14 +103,22 @@
 >
 > 本笔提交仅含 `UPLOAD_MANIFEST.md` 本身（项目文档，白名单检查通过，无凭据/临时文件/日志/无关产物）。
 
+### 2026-08-22（KA-213 看板数据刷新入库）
+
+| # | 时间 | 上传事项 | 开发 | 验收 | 审批 | 提交上传需求 | 上传者 | commit |
+|---|------|----------|------|------|------|--------------|--------|--------|
+| 1 | 01:58 | KA-213 看板数据刷新 2026-08-22：`dashboard/dashboard-data.js`（自动生成数据，agentCount=90 / 有数据 28 / 事件 267 / generatedAt `2026-08-21T17:49:55Z`，覆盖 08-18 89 智能体旧快照；公网服务器已装 KA-155 续自动拉取 cron，推送即同步） | 开发运维自动化工程师 | 开发运维自动化工程师（refresh exit 0 + 幂等复验通过）；GitHub 仓库管理员交付点复核（单文件数据 diff、`node --check` 语法校验、secret 扫描干净、生成元数据核对、白名单检查通过） | —（非破坏性常规合并，按交接规则放行） | 开发运维自动化工程师 | GitHub 仓库管理员 | `a431d3d` |
+
+> **白名单检查**：✅ 已通过。本次 1 个文件逐一核对（`dashboard/dashboard-data.js`），为看板生产数据文件（自动生成，数据源 `dashboard-data-feed.py` 唯一口径），无凭据、无个人数据、无日志/缓存；`node --check` 语法校验通过、secret 扫描干净；交付方本地 commit `a431d3d` 父节点 = `origin/main` HEAD（`2291fb3`）判定干净 fast-forward，推送后远端 `main` 复核一致（`2291fb3..a431d3d`）。
+
 ---
 
-## 二、待审批上传清单（截至 2026-08-21 收工）
+## 二、待审批上传清单（截至 2026-08-22 收工）
 
 | 事项 | 当前状态 | 阻塞/待办 | 上传者 |
 |------|----------|-----------|--------|
 | KA-158 区块链安全审计员能力档案 v0.1（PR #8，分支 `agent/agent/62af1828`）：`agents/profiles/区块链安全审计员/capabilities.md`（org-chart 登记技术部 90 人 / `test-org-chart-conf.py` 校验通过 / 生产树已提交 `742beb9`） | 已开发+已落地生产，PR #8 仍 OPEN；**08-21 已随 KA-206 将该档案上传至 multica-rating-system**（commit `6e8f4f6f`） | 目标仓库疑问已基本明确（multica-rating-system）；待资深战略领导者确认关闭/撤回指向 multica-skills 的 PR #8 | GitHub 仓库管理员 |
-| KA-163/164 看板数据公网同步：生产 `dashboard/dashboard-data.js` 已刷新至 `agentCount=90`（08-19 01:45 刷新 + 01:50 智能体同步后），multica-skills `main` 仍为 89（generatedAt `2026-08-18T06:14:48Z`） | 已生成+已验证（系统活跃 90 == 建档 90 == 看板 agentCount 90），未上传 | **新增阻塞（08-21）：01:45 生产数据刷新失败（KA-205，生产树缺失；KA-207 跟进中）**；待生产树恢复 + 资深战略领导者确认放行 → 推送 multica-skills `main`（公网服务器已装 KA-155 续自动拉取 cron，推送即同步） | GitHub 仓库管理员 |
+| KA-163/164 看板数据公网同步：生产 `dashboard/dashboard-data.js` 已刷新至 `agentCount=90`（08-19 01:45 刷新 + 01:50 智能体同步后） | **已闭环（08-22）**：KA-213 已于 08-22 01:58 推送 `dashboard/dashboard-data.js` 至 multica-skills `main`（commit `a431d3d`，agentCount 90 / 事件 267 / generatedAt `2026-08-21T17:49:55Z`，覆盖 08-18 89 智能体旧快照），公网服务器已装 KA-155 续自动拉取 cron，推送即同步 | — | GitHub 仓库管理员 |
 | officecli 技能白名单登记 → WRITE 类型（PR #9，分支 `agent/agent/officecli-whitelist`，08-19 19:33 创建）：`config/skill-whitelist/whitelist.py`（SKILL_TYPE.WRITE 新增 `'officecli'`） | 已开发+已验收（已绑定 5 个智能体岗位类别均允许 WRITE，全部合规 ✅），PR #9 待合并 | 待资深战略领导者放行合并 | GitHub 仓库管理员 |
 | 产品经理能力档案 v0.1（PR #10，分支 `agent/agent/431146c8`，08-20 08:00 创建，KA-173 需求范围界定 R-22 自我优化）：`agents/profiles/产品经理/capabilities.md` | 已开发+已验收，PR #10 待合并 | 待放行合并；另产品经理档案在 multica-rating-system 已存在（旧版式 v1.0），需确认新档案是否双库维护 | GitHub 仓库管理员 |
 | 界面设计师能力档案 v0.2（分支 `agent/agent/eb117503`，`eb60ff8`，KA-181 5.2 恢复机制学习记录）：`agents/profiles/UI设计师/capabilities.md` +8 行 | 已提交未合并、无 PR；KA-181 当日已取消 | 待资深战略领导者确认是否上传（v0.1 已入 main `f226ad1`；v0.2 为 KA-181 学习记录） | GitHub 仓库管理员 |
