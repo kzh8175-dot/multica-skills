@@ -17,7 +17,7 @@ window.DASHBOARD_DATA = {
     "month": "2026-08",
     "monthLabel": "08月",
     "year": "2026",
-    "generatedAt": "2026-08-21T17:49:55Z",
+    "generatedAt": "2026-08-23T17:55:35Z",
     "schemaVersion": "1.0",
     "agentCount": 90,
     "agentsWithData": 28,
@@ -70,7 +70,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -123,7 +123,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -176,7 +176,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -229,7 +229,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -282,7 +282,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -335,7 +335,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -387,7 +387,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -440,7 +440,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -493,10 +493,38 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-23 10:49",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-23 10:49",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 12:19",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 12:19",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-20 12:28",
           "code": "R-21",
@@ -601,7 +629,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -667,7 +695,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -720,7 +748,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -773,7 +801,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -818,7 +846,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -871,7 +899,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -916,7 +944,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -969,7 +997,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1022,7 +1050,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -1095,7 +1123,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1148,7 +1176,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1201,7 +1229,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -1316,7 +1344,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1369,7 +1397,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1422,7 +1450,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1475,7 +1503,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1528,7 +1556,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1581,7 +1609,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1634,7 +1662,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1687,7 +1715,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1740,7 +1768,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -1769,12 +1797,12 @@ window.DASHBOARD_DATA = {
       "category": "execution",
       "categoryLabel": "执行",
       "benchmark": 400,
-      "monthTotal": 40,
+      "monthTotal": 60,
       "monthPct": 10,
       "monthHasData": true,
       "quarterTotals": [
         0,
-        40,
+        60,
         0
       ],
       "quarterPcts": [
@@ -1793,10 +1821,24 @@ window.DASHBOARD_DATA = {
         "comprehensive": 3.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-23 13:01",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-23 13:00",
+          "code": "R-01",
+          "desc": "任务按时完成",
+          "points": 20,
+          "month": "2026-08"
+        },
         {
           "ts": "08-20 12:29",
           "code": "R-21",
@@ -1894,7 +1936,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -1953,7 +1995,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2006,7 +2048,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -2163,7 +2205,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2216,10 +2258,52 @@ window.DASHBOARD_DATA = {
         "comprehensive": 8.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-21 17:55",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 17:55",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 17:54",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 17:54",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 16:34",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-21 16:34",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-20 17:58",
           "code": "R-21",
@@ -2443,7 +2527,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2496,7 +2580,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2549,7 +2633,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2602,7 +2686,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2655,7 +2739,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -2742,7 +2826,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2795,7 +2879,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -2847,7 +2931,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2900,7 +2984,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -2953,7 +3037,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3006,7 +3090,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3059,7 +3143,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:41Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -3111,7 +3195,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -3212,7 +3296,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3265,7 +3349,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3318,10 +3402,17 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-21 07:33",
+          "code": "R-22",
+          "desc": "能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-19 17:34",
           "code": "R-22",
@@ -3363,7 +3454,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3416,7 +3507,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3469,7 +3560,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -3528,7 +3619,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3581,7 +3672,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3634,7 +3725,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3687,7 +3778,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:41Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3740,7 +3831,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -3793,7 +3884,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -3838,7 +3929,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -4037,7 +4128,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4090,7 +4181,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4143,7 +4234,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4196,7 +4287,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4249,7 +4340,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4302,7 +4393,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4355,10 +4446,24 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
+        {
+          "ts": "08-20 18:12",
+          "code": "R-21",
+          "desc": "自评",
+          "points": 5,
+          "month": "2026-08"
+        },
+        {
+          "ts": "08-20 18:12",
+          "code": "R-22",
+          "desc": "更新能力档案",
+          "points": 5,
+          "month": "2026-08"
+        },
         {
           "ts": "08-17 16:40",
           "code": "R-21",
@@ -4428,7 +4533,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4481,7 +4586,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4534,7 +4639,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4587,7 +4692,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -4632,7 +4737,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4685,7 +4790,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -4738,7 +4843,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -4783,7 +4888,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -4842,7 +4947,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -4915,7 +5020,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -5226,7 +5331,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5279,7 +5384,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5332,7 +5437,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5385,7 +5490,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -5430,7 +5535,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5483,7 +5588,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5536,7 +5641,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5589,7 +5694,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5642,7 +5747,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -5729,7 +5834,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [
         {
@@ -5782,7 +5887,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-21T17:49:40Z"
+        "asOf": "2026-08-23T17:52:49Z"
       },
       "flags": [],
       "events": [
@@ -5825,13 +5930,148 @@ window.DASHBOARD_DATA = {
       "status": "排队中"
     },
     {
-      "ts": "08-21 00:11",
+      "ts": "08-23 13:01",
+      "agentId": "agt-1f3d07b41f",
+      "agentName": "工作室运营",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-23 13:00",
+      "agentId": "agt-1f3d07b41f",
+      "agentName": "工作室运营",
+      "code": "R-01",
+      "desc": "任务按时完成",
+      "points": 20,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-23 10:49",
+      "agentId": "agt-76563bfbe8",
+      "agentName": "代码仓库管理员",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-23 10:49",
+      "agentId": "agt-76563bfbe8",
+      "agentName": "代码仓库管理员",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-23 00:11",
       "agentId": null,
       "agentName": "结算引擎",
       "code": "R-41",
       "desc": "8月每日结算已生成（每日 00:30 · 月末 08-31 聚合为月度百分制）",
       "points": null,
       "status": "已完成"
+    },
+    {
+      "ts": "08-21 17:55",
+      "agentId": "agt-68bc729725",
+      "agentName": "开发运维自动化工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 17:55",
+      "agentId": "agt-68bc729725",
+      "agentName": "开发运维自动化工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 17:54",
+      "agentId": "agt-68bc729725",
+      "agentName": "开发运维自动化工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 17:54",
+      "agentId": "agt-68bc729725",
+      "agentName": "开发运维自动化工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 16:34",
+      "agentId": "agt-68bc729725",
+      "agentName": "开发运维自动化工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 16:34",
+      "agentId": "agt-68bc729725",
+      "agentName": "开发运维自动化工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 12:19",
+      "agentId": "agt-76563bfbe8",
+      "agentName": "代码仓库管理员",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 12:19",
+      "agentId": "agt-76563bfbe8",
+      "agentName": "代码仓库管理员",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-21 07:33",
+      "agentId": "agt-42d0c10096",
+      "agentName": "文档生成专家",
+      "code": "R-22",
+      "desc": "能力档案",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-20 18:12",
+      "agentId": "agt-a96c08f3b7",
+      "agentName": "系统稳定性工程师",
+      "code": "R-21",
+      "desc": "自评",
+      "points": 5,
+      "status": "已入账"
+    },
+    {
+      "ts": "08-20 18:12",
+      "agentId": "agt-a96c08f3b7",
+      "agentName": "系统稳定性工程师",
+      "code": "R-22",
+      "desc": "更新能力档案",
+      "points": 5,
+      "status": "已入账"
     },
     {
       "ts": "08-20 17:58",
@@ -8213,8 +8453,8 @@ window.DASHBOARD_DATA = {
   "budget": {
     "points": {
       "ceiling": 94500,
-      "spent": 255,
-      "variance": 94245,
+      "spent": 275,
+      "variance": 94225,
       "utilization": 0.3,
       "categories": [
         {
@@ -8223,9 +8463,9 @@ window.DASHBOARD_DATA = {
           "agents": 29,
           "benchmark": 400,
           "ceiling": 34800,
-          "spent": 215,
-          "variance": 34585,
-          "utilization": 0.6,
+          "spent": 235,
+          "variance": 34565,
+          "utilization": 0.7,
           "status": "正常"
         },
         {
@@ -8277,9 +8517,9 @@ window.DASHBOARD_DATA = {
     "sop": []
   },
   "runtime": {
-    "settlement": "2026-08-21T17:49:40Z",
-    "aggregation": "2026-08-21T17:49:40Z",
-    "review": "2026-08-21T17:49:41Z",
+    "settlement": "2026-08-23T17:53:06Z",
+    "aggregation": "2026-08-23T17:52:49Z",
+    "review": "2026-08-23T17:52:49Z",
     "ratingStatus": {
       "pending": 0,
       "escalated": 0,
