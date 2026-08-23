@@ -1,7 +1,7 @@
 # GitHub 仓库管理员 · 能力档案
 
 > **职责**：工作室所有 GitHub 仓库事务的唯一负责人（唯一提交通道）
-> **最近更新**：2026-08-23
+> **最近更新**：2026-08-24
 
 ## 核心职责
 - 创建 / 维护仓库（README、.gitignore、license、基础目录），设置描述、可见性、topic
@@ -10,6 +10,15 @@
 - 通俗汇报：做了什么 → 结果如何 → 需要你做什么 / 下一步
 
 ## 持续学习
+
+### 2026-08-24 · KA-223 看板数据刷新代提交推送（dashboard-data.js 90/28/282 fast-forward 直推 + 数据交付白名单核对）
+- **任务**：接收 开发运维自动化工程师 KA-223 看板数据刷新 01:45 运行交付——其已本地 commit `dashboard/dashboard-data.js`（1b2f1b7，agentCount 90 / 有数据 28 / 事件 282（补录 08-21~08-23 结算 9 条）/ generatedAt 2026-08-23T17:55:35Z，覆盖上版 267 快照），位于交付方 checkout 分支 `agent/agent/4709d883b347`；代为推送并 fast-forward 合入 `kzh8175-dot/multica-skills` main，并在本仓库登记 UPLOAD_MANIFEST + 能力档案。
+- **新技能 / 加深的技能**：
+  - **交付方已本地 commit 态的干净 fast-forward 直推路径**（区别于 KA-222 工作树未提交的代提交路径）：交付分支 `agent/agent/4709d883b347` = `origin/main`（41ef47a）+ 1 commit（1b2f1b7），`git rev-list --count` 判定 1 ahead / 0 behind 干净 FF → `git checkout -B github-admin-ka223 origin/main && git merge --ff-only <delivery-branch>` 一步纳入，无需改写交付 commit。
+  - **看板数据交付白名单核对法**：单文件 `dashboard/dashboard-data.js` 属自动生成生产数据（数据源 `dashboard-data-feed.py` 唯一口径）——`node --check` 语法校验、secret 扫描干净、`python3` 解析元数据断言（agentCount=90 / events=282 / budget.sop 空为已知缺口）、`prod/dashboard/dashboard-data.js` 与 repo 交付 commit 逐字节 `cmp` 一致（生产树物化 == 交付源），无凭据/个人数据/日志缓存即放行。
+  - **恢复树物化交付的缺口如实登记口径**：交付评论已标注规范生产树未落地、SOP 预算空、KA-203 数据差异等既有缺口（同 KA-205→207 根因）→ 交付点复核只核对「本次交付范围与自评证据吻合」，不把恢复树物化误报为完整规范生产刷新。
+- **挑战 / 盲区**：交付方本地 commit 与本人 admin 分支共用同一 worktree 对象库，`main` 本地分支滞后（b1a8e0a）不可用，合并基准一律以 `origin/main`（41ef47a）判定；rating-system 侧同批次交付为「2 ahead / 3 behind」非 FF，需单独 rebase+冲突合并（见该仓库档案）。
+- **改进**：数据类交付继续套用「交付点复核（元数据断言 + 语法/secret 扫描 + 生产比对）→ 干净 FF 直推 → manifest 登记 → push 后远端复核」极简 SOP；多仓库并发交付逐仓库独立判定 FF/非FF 形态分别处理。
 
 ### 2026-08-23 · KA-220 每日上传清单维护（三仓库零提交无上传日 + 当日定时任务 todo 运行态跟踪）
 - **任务**：每日上传清单维护（autopilot 触发）：更新 multica-skills `UPLOAD_MANIFEST.md`——`gh api` 当日窗口（Asia/Shanghai 08-23 = UTC 08-22 16:00 ~ 08-23 15:59）+ `git fetch origin/main` 双查，multica-skills **全部分支零提交**（最近 `b1b397f` 08-22 02:00 CST）；跨仓库核对 multica-rating-system / multica-arb-console 当日均零提交；当日 done/in_review 核对（KA-212/213/214 为 08-22 运行结算回填）；当日定时任务 KA-217/218/219 已创建但截至收工仍 `todo`；`gh pr list` 确认开放 PR #1/#2/#8/#9/#10 仍 OPEN；待审批清单 7 项延续无新增；本笔提交仅 manifest 自身（白名单通过）。
@@ -367,6 +376,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-24 | v0.34 | 追加 KA-223：看板数据刷新代提交推送——交付方已本地 commit 态干净 fast-forward 直推（skills `1b2f1b7`，agentCount 90 / 有数据 28 / 事件 282，覆盖 267）+ 数据交付白名单核对法（node --check + secret 扫描 + python 元数据断言 + prod 逐字节比对）+ 恢复树物化缺口如实登记；无跨智能体协作评分（自身代提交任务） |
 | 2026-08-23 | v0.33 | 追加 KA-220：每日上传清单维护——三仓库（multica-skills/rating-system/arb-console）零提交「无上传日」登记口径 + 当日定时任务 todo 运行态跟踪（KA-217/218/219 未报告完成 → 下期跟踪占位）+ 上期 done/in_review 结算回填不重复登记判别（KA-212/213/214）+ 开放 PR 盘点（#1/#2/#8/#9/#10 仍 OPEN）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-21 | v0.32 | 追加 KA-210：每日上传清单维护——无提交日+跨仓库活跃日登记口径（multica-skills 无提交 / multica-rating-system KA-204+KA-206 两笔上传 8 commits）+ 待审批项被跨仓库通道部分闭环判别（KA-158 档案随 KA-206 上传至 rating-system → PR #8 待确认关闭/撤回）+ 看板刷新失败对推送同步项阻塞传导（KA-205/207 生产树缺失 → KA-163/164 新增阻塞）+ 开放 PR 盘点（#1/#2/#8/#9/#10 仍 OPEN）+ 每日维护提交 `11e9726` 推 main；无跨智能体协作评分（自身维护任务） |
 | 2026-08-20 | v0.31 | 追加 KA-202：每日上传清单维护——开放 PR 盘点入待审批清单（gh pr list 全量 + 陈年 PR 分列）+ 跨仓库空壳仓库判别（arb-console 仅 README 且原型阶段取消）+ 前日遗漏回填（KA-153 `5ce00c1` 补录 08-18 表）+ 每日维护提交改走 PR squash 合 main（`5e25903e`）；无跨智能体协作评分（自身维护任务） |
