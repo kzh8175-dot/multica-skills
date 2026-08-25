@@ -21,3 +21,6 @@ reports/
 
 # 日志
 *.log
+
+# CodeGraph 本地索引（codegraph init 生成，不入库）
+.codegraph/
