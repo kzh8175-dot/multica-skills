@@ -11,6 +11,16 @@
 
 ## 持续学习
 
+### 2026-08-25 · KA-232 新智能体「游戏经济设计师」入档的 GitHub 合入（multica-skills #13 + multica-rating-system #2 双 PR squash 合 main）
+- **任务**：接收 资深战略领导者 KA-232 交接——合入两个 PR 到各自仓库 main：multica-skills #13（`agents/profiles/游戏经济设计师/capabilities.md` 建档 + 资深战略领导者档案 R-22 持续学习更新）与 multica-rating-system #2（`org-chart.conf` 新增 游戏经济设计师→产品部 68→69 + `test-org-chart-conf.py` 期望计数同步）。
+- **新技能 / 加深的技能**：
+  - **组织数据多仓合入的一致性复核**：同一组织变更横跨能力档案（multica-skills）/ org-chart + 校验测试（multica-rating-system）两仓，合入前逐一审全 diff 确认计数口径自洽（org-chart 产品部 4→5、全量 68→69、测试 EXPECTED_COUNTS/TOTAL_MEMBERS 同步），白名单逐文件归属（纯项目文档/配置，无凭据、无无关文件）。
+  - **`gh pr merge` 瞬时 GraphQL 错误的判别与重试**：rating-system #2 首次 merge 返回 GraphQL 错误（`C384:457B1:...`），用 `gh pr view --json state,mergeable,mergeStateStatus` 核实远端真实状态（仍 OPEN/MERGEABLE/CLEAN、test 通过）后直接重试成功——合并判定以 PR 远端状态为准，不以单次命令 exit code 为准。
+  - **仓库合并风格判定法**：`gh api .../commits?sha=main` 看 main 历史 commit message 形态（PR 标题式 vs "Merge pull request #X" 式）判定 squash/merge 约定；本两仓均 squash，用 `gh pr merge --squash` 保持 main 线性。
+  - **合并后 main 内容级复核**：合入后不只看 mergedAt，按 main 实际内容复核落地（skills 用 blob sha `553937f` 与 PR diff 逐位一致；rating-system `grep '游戏经济设计师' org-chart.conf` 命中产品部行 + 69 智能体头注释）。
+- **挑战 / 盲区**：rating-system 仓库此前无已合 PR（本单为该仓首个合入），合并风格只能从 multica-skills 仓 main 历史推断；一次 GraphQL 瞬时错误须先核远端再重试，不能简单以失败定论。
+- **改进**：跨仓批量合入按「CI 状态 + 全 diff 白名单 → squash → main 内容复核」固定流程；瞬时错误统一「先 `gh pr view` 核态再重试」。
+
 ### 2026-08-25 · KA-231 每日上传清单维护（无提交日 + 跨仓库 KA-228 入库日登记 + 幂等刷新「无需上传」判别 + 聚合报告待同步项跟踪）
 - **任务**：每日上传清单维护（autopilot 触发，08-25 18:45 CST）：更新 multica-skills `UPLOAD_MANIFEST.md`——`gh api` 当日窗口（Asia/Shanghai 08-25 = UTC 08-24 16:00 ~ 08-25 15:59）+ `git fetch origin/main` 双查，multica-skills **main 零提交**（最近 `4a2ba66` 08-24 02:02 CST，无需过滤 probe）；跨仓库核对 multica-rating-system 当日 3 提交（00:42~00:43 CST，KA-228 开发运维自动化工程师能力档案更新 + 代码仓库管理员 v0.20 + 该仓 manifest 登记，已在他仓清单登记不重复登记）、multica-arb-console main 零提交但发现 OPEN PR #1 原型实现（`4a1030d1`）；当日定时任务核对（KA-228 钩子 exit 0 幂等重跑 / KA-229 看板刷新幂等刷新 90/28/282 数据零变化 → 无需上传 / KA-230 智能体同步 90==90==90 零建档但聚合月度季度各实际写入 5）；新增待审批项（KA-230 聚合报告 5+5 与 rating-system 仓库存在 diff 待确认同步）；arb-console 待审批状态更新（空壳 → OPEN PR #1）；本笔提交仅 manifest 自身（白名单通过）。
 - **新技能 / 加深的技能**：
@@ -351,6 +361,7 @@
 - **改进**：README 类文档变更可按任务描述直接落盘，无需额外设计流程；引用外部链接先验证可用性。
 
 ## 协作关系
+- KA-232 与 资深战略领导者 协作（交接新智能体「游戏经济设计师」入档双 PR 合 main），评分 5/5：交接即 PR 形态完整（multica-skills #13 能力档案 + 领导档案 R-22 更新；multica-rating-system #2 org-chart 68→69 + 测试计数同步），PR 主体说明变更内容/部门归属/验证结果（test-org-chart-conf.py O-1~O-4 全绿、O-5 差异为既有未登记缺口已显式声明），rating-system CI test 通过，分支推好可直接合入；改进——可附「org-chart.conf 与名册 KA-124 的既有 O-5 缺口清单」，仓库侧合入时心里有数。
 - KA-155 续 与 资深战略领导者 协作（交接服务器看板自动拉取脚本 `978461a` + `d03a006` 快进 main + manifest 登记），评分 5/5：owner 指令「减少人工环节」后领导完成服务器形态探测（HTTP 501 / SSH banner 超时 / 无凭据三通道实测）并根治为「一次性安装 + cron 自动拉取」，脚本双文件用途清晰（幂等拉取 + 安装器）、附本地端到端实测（旧 `91198eaf` → 新 `aaa85e0b`、重跑幂等）+ 回滚说明，分支基 = origin/main HEAD 可直接快进；仓库侧复核（白名单逐文件 + secret 扫描 + bash -n 语法）与交接声明吻合；改进——可附「脚本在服务器实跑的完整输出样例」，仓库侧可对照验收。
 - KA-155 与 资深战略领导者 协作（交接看板数据公网同步分支 `agent/agent/14c43c51` 快进 main + manifest 登记），评分 5/5：分支基 = origin/main HEAD 可直接快进、两 commit（数据 `48070a7` + 能力档案 `bfb7c89`）增量清晰、SHA256 `aaa85e0b…` 与本地 prod 一致已声明、index.html/src 未动范围收敛、交接附服务器覆盖命令与期望 SHA256；仓库侧核验（分支 SHA256 逐位一致 + diff 范围复核）与交接声明完全吻合；改进——可附「main 落地后方式 A curl 命令可用」的时序提示（仓库侧已在回帖中同步 owner 部署下一步）。
 - KA-138 批次归档与 资深战略领导者 协作（交接 PR #7 待办入档批次 11 人能力档案 + 白名单补录合入），评分 5/5：PR 信息完整（仓库/分支 `agent/agent/batch-todo-archival-20260818`/13 文件/提交目的），主体清晰（新增 8 + 同步 3 档案 + whitelist 补录 11 人 + 资深战略领导者档案更新，scope 收敛无无关文件），校验声明充分（test-org-chart-conf.py O-1~O-5 全绿 89 人实名对账 + 白名单实配 89 人全合规）；改进——可附「whitelist.py 结构校验」的预期输出（80 人唯一 / 11 人分类），仓库侧可对照复核。
@@ -385,6 +396,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-25 | v0.36 | 追加 KA-232：新智能体「游戏经济设计师」入档双 PR 合 main——multica-skills #13（能力档案 `c628f20`）+ multica-rating-system #2（org-chart 68→69 `3417957`，该仓首个合入 PR，CI test 通过）+ 组织数据多仓一致性复核 + `gh pr merge` 瞬时 GraphQL 错误先核态再重试 + 仓库合并风格判定（squash）+ 合入后 main 内容级复核（blob sha / grep 命中）；协作评分 5/5 |
 | 2026-08-25 | v0.35 | 追加 KA-231：每日上传清单维护——无提交日+跨仓库活跃日登记（multica-skills 零提交 / rating-system KA-228 3 commits 已在他仓清单登记不重复登记）+ 幂等刷新「无需上传」判别（KA-229 数据零变化仅时基刷新 vs KA-213/223 数据变化触发入库）+ 零建档≠无上传（KA-230 聚合实际写入 5 → 5+5 报告与仓库 diff 新增待审批）+ arb-console 空壳→PR #1 状态更新；无跨智能体协作评分（自身维护任务） |
 | 2026-08-24 | v0.34 | 追加 KA-223：看板数据刷新代提交推送——交付方已本地 commit 态干净 fast-forward 直推（skills `1b2f1b7`，agentCount 90 / 有数据 28 / 事件 282，覆盖 267）+ 数据交付白名单核对法（node --check + secret 扫描 + python 元数据断言 + prod 逐字节比对）+ 恢复树物化缺口如实登记；无跨智能体协作评分（自身代提交任务） |
 | 2026-08-23 | v0.33 | 追加 KA-220：每日上传清单维护——三仓库（multica-skills/rating-system/arb-console）零提交「无上传日」登记口径 + 当日定时任务 todo 运行态跟踪（KA-217/218/219 未报告完成 → 下期跟踪占位）+ 上期 done/in_review 结算回填不重复登记判别（KA-212/213/214）+ 开放 PR 盘点（#1/#2/#8/#9/#10 仍 OPEN）；无跨智能体协作评分（自身维护任务） |
