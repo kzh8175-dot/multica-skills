@@ -3,7 +3,7 @@
 > **项目名称**：P0 智能评分系统（方案 C）· 上传目标仓库：`kzh8175-dot/multica-skills`
 > **用途**：记录每日上传到 GitHub 的事项、职责归属与待审批上传
 > **更新周期**：每日维护（由 GitHub 仓库管理员执行，见文末「维护机制」）
-> **最近更新**：2026-08-27
+> **最近更新**：2026-08-28
 
 ---
 
@@ -177,14 +177,25 @@
 >
 > 本笔提交仅含 `UPLOAD_MANIFEST.md` 本身（项目文档，白名单检查通过，无凭据/临时文件/日志/无关产物）。
 
+### 2026-08-28（KA-255 看板数据刷新入库）
+
+| # | 时间 | 上传事项 | 开发 | 验收 | 审批 | 提交上传需求 | 上传者 | commit |
+|---|------|----------|------|------|------|--------------|--------|--------|
+| 1 | 01:54 | KA-255 看板数据刷新 2026-08-28：`dashboard/dashboard-data.js`（自动生成数据，agentCount=95 / 有数据 28 / 事件 287 / 异常 67 / 预算已用 275 / generatedAt `2026-08-27T17:52:35Z`，覆盖上版 90 快照；与 01:50 智能体同步 KA-256 共享 prod 树、幂等重跑收敛） | 开发运维自动化工程师 | 开发运维自动化工程师（refresh exit 0 + 幂等复验通过）；GitHub 仓库管理员交付点复核（单文件数据 diff、`node --check` 语法校验、secret 扫描干净、prod 逐字节比对一致、白名单检查通过） | —（非破坏性常规合并，按交接规则放行） | 开发运维自动化工程师 | GitHub 仓库管理员 | `eeba468` |
+| 2 | 01:54 | GitHub 仓库管理员 能力档案 v0.38（KA-255 代提交推送学习记录 R-22 自我优化——交付方已本地 commit 态干净 fast-forward 直推 + 数据交付白名单核对法） | GitHub 仓库管理员 | — | — | 自评（R-22） | GitHub 仓库管理员 | `5363228` |
+
+> **白名单检查**：✅ 已通过。本次 1 个文件逐一核对（`dashboard/dashboard-data.js`），为看板生产数据文件（自动生成，数据源 `dashboard-data-feed.py` 唯一口径），无凭据、无个人数据、无日志/缓存；`node --check` 语法校验通过、secret 扫描干净、`prod/dashboard/dashboard-data.js` 与交付 commit 逐字节 `cmp` 一致（生产树物化 == 交付源）；交付方本地 commit `eeba468` 父节点 = `origin/main` HEAD（`98374d8`）判定干净 fast-forward，推送后远端 `main` 复核一致。
+
 ---
 
 ## 二、待审批上传清单（截至 2026-08-27 收工）
 
+> **本期闭环（08-28）**：看板数据公网同步项已闭环——KA-255 已推送 `dashboard/dashboard-data.js`（commit `eeba468`，agentCount 95）至 multica-skills `main`，见「每日上传记录」08-28 节。其余待审批项延续。
+
 | 事项 | 当前状态 | 阻塞/待办 | 上传者 |
 |------|----------|-----------|--------|
 | 评分系统生产树 → `multica-rating-system` 仓库同步（累计未同步）：08-25 KA-230（5 月度 R-41 + 5 季度 R-51 聚合报告：代码仓库管理员、工作室运营、开发运维自动化工程师、文档生成专家、系统稳定性工程师）+ 08-26 KA-238（游戏经济设计师 建档、区块链安全审计员→智能合约安全审计员 更名，月度/季度各写入 2）+ 08-27 KA-251（品牌守护者 / 地图制图与可视化设计师 / 套利平台首席架构师 / 社交媒体策略师 建档、DevOps自动化工程师→开发运维自动化工程师 更名，月度/季度各写入 4） | 已开发（生产 `rating-system` 树已更新：`agents/profiles/*` 新增/更名档案 + `agents/reviews/scoring/monthly|quarterly` 评分报告与仓库 `main`（仍 08-25）存在差异） | **未收到明确上传交接** → 待资深战略领导者 / 编排方确认同步 | GitHub 仓库管理员 |
-| 看板数据公网同步：生产 `dashboard/dashboard-data.js` agentCount 95（08-26 同步后 91 → 08-27 同步后 95；有数据 28），KA-249/251 运行报告一致 | 已开发（生产 01:45 刷新 + 01:50 同步产出） | 与仓库 `main`（仍 90 / KA-223 快照 `1b2f1b7`）存在差异；待开发运维自动化工程师交接文件 → 上传 multica-skills（方向：生产→仓库；KA-155 续自动拉取为仓库→公网，方向相反不覆盖） | GitHub 仓库管理员 |
+| 看板数据公网同步：生产 `dashboard/dashboard-data.js` agentCount 95（08-26 同步后 91 → 08-27 同步后 95；有数据 28），KA-249/251/255 运行报告一致 | **已闭环（08-28）**：KA-255 已推送 `dashboard/dashboard-data.js`（commit `eeba468`，agentCount 95 / 有数据 28 / 事件 287），公网服务器已装 KA-155 续自动拉取 cron，推送即同步 | — | GitHub 仓库管理员 |
 | KA-158 区块链安全审计员能力档案 v0.1（PR #8，分支 `agent/agent/62af1828`）：`agents/profiles/区块链安全审计员/capabilities.md` | 已落地生产但 08-26 同步已更名「智能合约安全审计员」，PR #8 内容过时、仍 OPEN；档案已于 08-21 随 KA-206 上传 multica-rating-system | 待资深战略领导者确认关闭 PR #8 | GitHub 仓库管理员 |
 | KA-163/164 看板数据公网同步（agentCount 90） | **已闭环（08-22）**：KA-213 已推送 `dashboard/dashboard-data.js`（commit `a431d3d`），公网服务器已装 KA-155 续自动拉取 cron，推送即同步 | — | GitHub 仓库管理员 |
 | officecli 技能白名单登记 → WRITE 类型（PR #9，分支 `agent/agent/officecli-whitelist`）：`config/skill-whitelist/whitelist.py`（SKILL_TYPE.WRITE 新增 `'officecli'`） | 已开发+已验收（已绑定 5 个智能体岗位类别均允许 WRITE，全部合规 ✅），PR #9 待合并 | 待资深战略领导者放行合并 | GitHub 仓库管理员 |
