@@ -1,7 +1,7 @@
 # GitHub 仓库管理员 · 能力档案
 
 > **职责**：工作室所有 GitHub 仓库事务的唯一负责人（唯一提交通道）
-> **最近更新**：2026-08-27
+> **最近更新**：2026-08-28
 
 ## 核心职责
 - 创建 / 维护仓库（README、.gitignore、license、基础目录），设置描述、可见性、topic
@@ -10,6 +10,14 @@
 - 通俗汇报：做了什么 → 结果如何 → 需要你做什么 / 下一步
 
 ## 持续学习
+
+### 2026-08-28 · KA-255 看板数据刷新代提交推送（dashboard-data.js 95/28/287 干净 FF 直推 + 数据交付白名单核对）
+- **任务**：接收 开发运维自动化工程师 KA-255 看板数据刷新 01:45 运行交付——其已本地 commit `dashboard/dashboard-data.js`（`eeba468`，agentCount 95 / 有数据 28 / 事件 287 / 异常 67 / 预算已用 275 / generatedAt `2026-08-27T17:52:35Z`，覆盖上版 90 快照），位于交付方 checkout 分支 `agent/agent/1136c692a182`；代为推送并 fast-forward 合入 `kzh8175-dot/multica-skills` main，并在本仓库登记 UPLOAD_MANIFEST + 能力档案（rating-system 侧开发运维自动化工程师能力档案同步入库见该仓库 manifest）。
+- **新技能 / 加深的技能**：
+  - **交付方已本地 commit 态的干净 fast-forward 直推路径**（沿用 KA-223 SOP）：交付分支 `agent/agent/1136c692a182` = `origin/main` + 1 commit（`git rev-list --count` 判 1 ahead / 0 behind 干净 FF）→ `git checkout -B github-admin-ka255 origin/main && git merge --ff-only <交付分支>` 一步纳入，原 commit hash 原样保留。
+  - **看板数据交付白名单核对法**（沿用 KA-223 数据交付口径）：单文件 `dashboard/dashboard-data.js` 属自动生成生产数据（数据源 `dashboard-data-feed.py` 唯一口径）——`node --check` 语法校验通过、secret 扫描干净、`prod/dashboard/dashboard-data.js` 与交付 commit 逐字节 `cmp` 一致（生产树物化 == 交付源）、python 元数据断言 agentCount=95 / events=287 一致，无凭据/个人数据/日志缓存即放行。
+- **挑战 / 盲区**：交付方 checkout 分支与本人 admin 分支共享同一 bare 对象库（多 worktree 同对象库），交付 commit 无需搬运即可在本人 worktree 复核与纳入；本次交付评论声明「数据源与评分系统同源、幂等重跑收敛 95/287」，白名单核对以数据文件内容级一致为准，无需重跑生成脚本。
+- **改进**：数据类交付继续套用「交付点复核（语法/secret 扫描 + 生产逐字节比对）→ 干净 FF 直推 → manifest 登记 → push 后远端复核」极简 SOP；多仓库并发交付逐仓库独立判定 FF 形态分别处理。
 
 ### 2026-08-27 · KA-252 每日上传清单维护（跨日回填 08-25 晚间提交 + 幂等 vs 数据变化判别 + 智能体同步待同步项合并跟踪）
 - **任务**：每日上传清单维护（autopilot 触发，08-27 18:45 CST）：更新 multica-skills `UPLOAD_MANIFEST.md`——`gh api` 当日窗口（Asia/Shanghai 08-27 = UTC 08-26 16:00 ~ 08-27 15:59）+ `git fetch origin/main` 双查：08-27 / 08-26 均无提交；逐笔核对 08-25 窗口发现清单登记（18:51 `2279e4d`）后当晚仍有 3 笔提交（KA-232 游戏经济设计师入档 PR #13 `c628f20` + 本人档案 v0.36 PR #14 `5e35b79` + codegraph `.gitignore` `a7c4ea2`）→ 回填补录 08-25 表；跨仓库核对（rating-system 08-25 晚同有 KA-232 org-chart PR #2 `3417957` + codegraph `e2841643`，08-26/08-27 无提交；arb-console 无提交、PR #1 仍 OPEN）；当日定时任务核对（08-26 KA-236 钩子 exit 0 / KA-237 看板刷新幂等 90/28/282 数据零变化 → 无需上传 / KA-238 智能体同步新增 游戏经济设计师 + 智能合约安全审计员更名 → agentCount 91；08-27 KA-245 钩子 exit 0 / KA-249 看板刷新 agentCount 91 vs 仓库 90 → 待上传 / KA-251 智能体同步新增 4 档案 + 1 更名 → agentCount 95）；待审批清单更新（评分系统生产树累计未同步合并 KA-230+KA-238+KA-251 为一条 + 看板数据 90→95 待同步 + 套利平台新交付 in_review 目标仓库待定）；本笔提交仅 manifest 自身（`639ff75`，白名单通过）。
@@ -407,6 +415,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-28 | v0.38 | 追加 KA-255：看板数据刷新代提交推送——交付方已本地 commit 态干净 fast-forward 直推（`eeba468`，agentCount 95 / 有数据 28 / 事件 287，覆盖 90 快照）+ 数据交付白名单核对法（node --check + secret 扫描 + python 元数据断言 + prod 逐字节比对）+ 双仓库 manifest 登记；无跨智能体协作评分（自身代提交任务） |
 | 2026-08-27 | v0.37 | 追加 KA-252：每日上传清单维护——跨日回填 08-25 晚间 3 笔提交（KA-232 PR #13/#14 `c628f20`/`5e35b79` + codegraph `.gitignore` `a7c4ea2`）+ 幂等刷新 vs 数据变化判别第二例（KA-237 无需上传 / KA-249 agentCount 91 待上传）+ 智能体同步新增/更名档案待同步项合并跟踪（KA-230+238+251）+ 「生产→仓库」与「仓库→公网」同步方向区分 + 定时任务结果以运行报告评论为数据源（生产树本机不可达）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-25 | v0.36 | 追加 KA-232：新智能体「游戏经济设计师」入档双 PR 合 main——multica-skills #13（能力档案 `c628f20`）+ multica-rating-system #2（org-chart 68→69 `3417957`，该仓首个合入 PR，CI test 通过）+ 组织数据多仓一致性复核 + `gh pr merge` 瞬时 GraphQL 错误先核态再重试 + 仓库合并风格判定（squash）+ 合入后 main 内容级复核（blob sha / grep 命中）；协作评分 5/5 |
 | 2026-08-25 | v0.35 | 追加 KA-231：每日上传清单维护——无提交日+跨仓库活跃日登记（multica-skills 零提交 / rating-system KA-228 3 commits 已在他仓清单登记不重复登记）+ 幂等刷新「无需上传」判别（KA-229 数据零变化仅时基刷新 vs KA-213/223 数据变化触发入库）+ 零建档≠无上传（KA-230 聚合实际写入 5 → 5+5 报告与仓库 diff 新增待审批）+ arb-console 空壳→PR #1 状态更新；无跨智能体协作评分（自身维护任务） |
