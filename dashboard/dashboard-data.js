@@ -17,9 +17,9 @@ window.DASHBOARD_DATA = {
     "month": "2026-08",
     "monthLabel": "08月",
     "year": "2026",
-    "generatedAt": "2026-08-23T17:55:35Z",
+    "generatedAt": "2026-08-27T17:52:35Z",
     "schemaVersion": "1.0",
-    "agentCount": 90,
+    "agentCount": 95,
     "agentsWithData": 28,
     "humanReview": "pending",
     "humanReviewWindow": "09-28 ~ 09-30",
@@ -37,7 +37,7 @@ window.DASHBOARD_DATA = {
       "creative": "创意",
       "technical": "技术"
     },
-    "note": "试点初期·数据样本不足：90 个智能体中仅 28 个有 8月 事件流水；2026 Q3 人评待运行（09-28 ~ 09-30），综合分/等级按系统当前状态显示「待运行」，参考等级（预估）由客观分映射，随季度人评转正式。"
+    "note": "试点初期·数据样本不足：95 个智能体中仅 28 个有 8月 事件流水；2026 Q3 人评待运行（09-28 ~ 09-30），综合分/等级按系统当前状态显示「待运行」，参考等级（预估）由客观分映射，随季度人评转正式。"
   },
   "agents": [
     {
@@ -70,7 +70,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -123,7 +123,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -176,7 +176,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -229,7 +229,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -282,7 +282,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -335,7 +335,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -387,7 +387,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -440,7 +440,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:35Z"
       },
       "flags": [
         {
@@ -493,7 +493,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:51:08Z"
       },
       "flags": [],
       "events": [
@@ -629,7 +629,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -695,7 +695,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -748,7 +748,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -801,7 +801,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -846,7 +846,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -899,7 +899,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -944,7 +944,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -997,7 +997,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1050,7 +1050,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -1123,7 +1123,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1140,59 +1140,6 @@ window.DASHBOARD_DATA = {
           "code": "E_MISS",
           "month": null,
           "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/包容性视觉专家/2026-09.md"
-        }
-      ],
-      "events": [],
-      "q2": null,
-      "q2g": null
-    },
-    {
-      "id": "agt-c4443da2d0",
-      "name": "区块链安全审计员",
-      "category": "execution",
-      "categoryLabel": "执行",
-      "benchmark": 400,
-      "monthTotal": 0,
-      "monthPct": 0,
-      "monthHasData": false,
-      "quarterTotals": [
-        0,
-        0,
-        0
-      ],
-      "quarterPcts": [
-        0,
-        0,
-        0
-      ],
-      "objective": 0.0,
-      "hasData": false,
-      "human": null,
-      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
-      "composite": null,
-      "grade": null,
-      "reviewState": "pending",
-      "estimated": {
-        "comprehensive": 0.0,
-        "grade": "D",
-        "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
-      },
-      "flags": [
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/区块链安全审计员/2026-07.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/区块链安全审计员/2026-08.md"
-        },
-        {
-          "code": "E_MISS",
-          "month": null,
-          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/区块链安全审计员/2026-09.md"
         }
       ],
       "events": [],
@@ -1229,7 +1176,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -1315,6 +1262,59 @@ window.DASHBOARD_DATA = {
       "q2g": null
     },
     {
+      "id": "agt-f4badd6dbc",
+      "name": "品牌守护者",
+      "category": "creative",
+      "categoryLabel": "创意",
+      "benchmark": 300,
+      "monthTotal": 0,
+      "monthPct": 0,
+      "monthHasData": false,
+      "quarterTotals": [
+        0,
+        0,
+        0
+      ],
+      "quarterPcts": [
+        0,
+        0,
+        0
+      ],
+      "objective": 0.0,
+      "hasData": false,
+      "human": null,
+      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
+      "composite": null,
+      "grade": null,
+      "reviewState": "pending",
+      "estimated": {
+        "comprehensive": 0.0,
+        "grade": "D",
+        "basis": "objective_only",
+        "asOf": "2026-08-27T17:51:08Z"
+      },
+      "flags": [
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/品牌守护者/2026-07.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/品牌守护者/2026-08.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/品牌守护者/2026-09.md"
+        }
+      ],
+      "events": [],
+      "q2": null,
+      "q2g": null
+    },
+    {
       "id": "agt-0106ac0609",
       "name": "品牌战略家",
       "category": "creative",
@@ -1344,7 +1344,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1397,7 +1397,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1414,6 +1414,59 @@ window.DASHBOARD_DATA = {
           "code": "E_MISS",
           "month": null,
           "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/哔哩哔哩内容战略师/2026-09.md"
+        }
+      ],
+      "events": [],
+      "q2": null,
+      "q2g": null
+    },
+    {
+      "id": "agt-2c75a54118",
+      "name": "地图制图与可视化设计师",
+      "category": "creative",
+      "categoryLabel": "创意",
+      "benchmark": 300,
+      "monthTotal": 0,
+      "monthPct": 0,
+      "monthHasData": false,
+      "quarterTotals": [
+        0,
+        0,
+        0
+      ],
+      "quarterPcts": [
+        0,
+        0,
+        0
+      ],
+      "objective": 0.0,
+      "hasData": false,
+      "human": null,
+      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
+      "composite": null,
+      "grade": null,
+      "reviewState": "pending",
+      "estimated": {
+        "comprehensive": 0.0,
+        "grade": "D",
+        "basis": "objective_only",
+        "asOf": "2026-08-27T17:51:08Z"
+      },
+      "flags": [
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/地图制图与可视化设计师/2026-07.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/地图制图与可视化设计师/2026-08.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/地图制图与可视化设计师/2026-09.md"
         }
       ],
       "events": [],
@@ -1450,7 +1503,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1503,7 +1556,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1556,7 +1609,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1573,6 +1626,59 @@ window.DASHBOARD_DATA = {
           "code": "E_MISS",
           "month": null,
           "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/多智能体系统架构师/2026-09.md"
+        }
+      ],
+      "events": [],
+      "q2": null,
+      "q2g": null
+    },
+    {
+      "id": "agt-4143d2725d",
+      "name": "套利平台首席架构师",
+      "category": "technical",
+      "categoryLabel": "技术",
+      "benchmark": 300,
+      "monthTotal": 0,
+      "monthPct": 0,
+      "monthHasData": false,
+      "quarterTotals": [
+        0,
+        0,
+        0
+      ],
+      "quarterPcts": [
+        0,
+        0,
+        0
+      ],
+      "objective": 0.0,
+      "hasData": false,
+      "human": null,
+      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
+      "composite": null,
+      "grade": null,
+      "reviewState": "pending",
+      "estimated": {
+        "comprehensive": 0.0,
+        "grade": "D",
+        "basis": "objective_only",
+        "asOf": "2026-08-27T17:51:08Z"
+      },
+      "flags": [
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/套利平台首席架构师/2026-07.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/套利平台首席架构师/2026-08.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/套利平台首席架构师/2026-09.md"
         }
       ],
       "events": [],
@@ -1609,7 +1715,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1662,7 +1768,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1715,7 +1821,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:35Z"
       },
       "flags": [
         {
@@ -1768,7 +1874,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -1798,7 +1904,7 @@ window.DASHBOARD_DATA = {
       "categoryLabel": "执行",
       "benchmark": 400,
       "monthTotal": 60,
-      "monthPct": 10,
+      "monthPct": 15,
       "monthHasData": true,
       "quarterTotals": [
         0,
@@ -1807,10 +1913,10 @@ window.DASHBOARD_DATA = {
       ],
       "quarterPcts": [
         0,
-        10,
+        15,
         0
       ],
-      "objective": 3.0,
+      "objective": 5.0,
       "hasData": true,
       "human": null,
       "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
@@ -1818,10 +1924,10 @@ window.DASHBOARD_DATA = {
       "grade": null,
       "reviewState": "pending",
       "estimated": {
-        "comprehensive": 3.0,
+        "comprehensive": 5.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:51:08Z"
       },
       "flags": [],
       "events": [
@@ -1936,7 +2042,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -1995,7 +2101,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2048,7 +2154,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -2205,7 +2311,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2258,7 +2364,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 8.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:51:08Z"
       },
       "flags": [],
       "events": [
@@ -2527,7 +2633,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2580,7 +2686,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2633,7 +2739,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2686,7 +2792,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2739,7 +2845,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -2826,7 +2932,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2879,7 +2985,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -2931,7 +3037,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -2984,7 +3090,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3037,7 +3143,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3090,7 +3196,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3143,7 +3249,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -3195,7 +3301,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -3296,7 +3402,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3349,7 +3455,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3402,7 +3508,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:51:08Z"
       },
       "flags": [],
       "events": [
@@ -3421,6 +3527,59 @@ window.DASHBOARD_DATA = {
           "month": "2026-08"
         }
       ],
+      "q2": null,
+      "q2g": null
+    },
+    {
+      "id": "agt-d44ed6b08b",
+      "name": "智能合约安全审计员",
+      "category": "execution",
+      "categoryLabel": "执行",
+      "benchmark": 400,
+      "monthTotal": 0,
+      "monthPct": 0,
+      "monthHasData": false,
+      "quarterTotals": [
+        0,
+        0,
+        0
+      ],
+      "quarterPcts": [
+        0,
+        0,
+        0
+      ],
+      "objective": 0.0,
+      "hasData": false,
+      "human": null,
+      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
+      "composite": null,
+      "grade": null,
+      "reviewState": "pending",
+      "estimated": {
+        "comprehensive": 0.0,
+        "grade": "D",
+        "basis": "objective_only",
+        "asOf": "2026-08-27T17:51:08Z"
+      },
+      "flags": [
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/智能合约安全审计员/2026-07.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/智能合约安全审计员/2026-08.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/智能合约安全审计员/2026-09.md"
+        }
+      ],
+      "events": [],
       "q2": null,
       "q2g": null
     },
@@ -3454,7 +3613,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3507,7 +3666,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3560,7 +3719,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -3586,6 +3745,59 @@ window.DASHBOARD_DATA = {
           "month": "2026-08"
         }
       ],
+      "q2": null,
+      "q2g": null
+    },
+    {
+      "id": "agt-d26d9053fa",
+      "name": "游戏经济设计师",
+      "category": "creative",
+      "categoryLabel": "创意",
+      "benchmark": 300,
+      "monthTotal": 0,
+      "monthPct": 0,
+      "monthHasData": false,
+      "quarterTotals": [
+        0,
+        0,
+        0
+      ],
+      "quarterPcts": [
+        0,
+        0,
+        0
+      ],
+      "objective": 0.0,
+      "hasData": false,
+      "human": null,
+      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
+      "composite": null,
+      "grade": null,
+      "reviewState": "pending",
+      "estimated": {
+        "comprehensive": 0.0,
+        "grade": "D",
+        "basis": "objective_only",
+        "asOf": "2026-08-27T17:51:08Z"
+      },
+      "flags": [
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/游戏经济设计师/2026-07.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/游戏经济设计师/2026-08.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/游戏经济设计师/2026-09.md"
+        }
+      ],
+      "events": [],
       "q2": null,
       "q2g": null
     },
@@ -3619,7 +3831,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3672,7 +3884,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3725,7 +3937,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3778,7 +3990,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3831,7 +4043,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -3884,7 +4096,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -3929,7 +4141,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:35Z"
       },
       "flags": [],
       "events": [
@@ -4128,7 +4340,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4181,7 +4393,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4234,7 +4446,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4287,7 +4499,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4304,6 +4516,59 @@ window.DASHBOARD_DATA = {
           "code": "E_MISS",
           "month": null,
           "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/社交媒体师/2026-09.md"
+        }
+      ],
+      "events": [],
+      "q2": null,
+      "q2g": null
+    },
+    {
+      "id": "agt-5feb0c1165",
+      "name": "社交媒体策略师",
+      "category": "execution",
+      "categoryLabel": "执行",
+      "benchmark": 400,
+      "monthTotal": 0,
+      "monthPct": 0,
+      "monthHasData": false,
+      "quarterTotals": [
+        0,
+        0,
+        0
+      ],
+      "quarterPcts": [
+        0,
+        0,
+        0
+      ],
+      "objective": 0.0,
+      "hasData": false,
+      "human": null,
+      "humanNote": "2026 Q3 人评待运行（窗口 09-28 ~ 09-30）",
+      "composite": null,
+      "grade": null,
+      "reviewState": "pending",
+      "estimated": {
+        "comprehensive": 0.0,
+        "grade": "D",
+        "basis": "objective_only",
+        "asOf": "2026-08-27T17:51:08Z"
+      },
+      "flags": [
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/社交媒体策略师/2026-07.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-08: 缺少事件流水 reviews/scoring/events/社交媒体策略师/2026-08.md"
+        },
+        {
+          "code": "E_MISS",
+          "month": null,
+          "msg": "E_MISS: 2026-09: 缺少事件流水 reviews/scoring/events/社交媒体策略师/2026-09.md"
         }
       ],
       "events": [],
@@ -4340,7 +4605,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4393,7 +4658,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4446,7 +4711,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:51:08Z"
       },
       "flags": [],
       "events": [
@@ -4533,7 +4798,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4586,7 +4851,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:35Z"
       },
       "flags": [
         {
@@ -4639,7 +4904,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4692,7 +4957,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -4737,7 +5002,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4790,7 +5055,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -4843,7 +5108,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -4888,7 +5153,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -4947,7 +5212,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -5020,7 +5285,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 2.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -5331,7 +5596,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5384,7 +5649,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5437,7 +5702,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5490,7 +5755,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:35Z"
       },
       "flags": [],
       "events": [
@@ -5535,7 +5800,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5588,7 +5853,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5641,7 +5906,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5694,7 +5959,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5747,7 +6012,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 1.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [],
       "events": [
@@ -5834,7 +6099,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:36Z"
       },
       "flags": [
         {
@@ -5887,7 +6152,7 @@ window.DASHBOARD_DATA = {
         "comprehensive": 0.0,
         "grade": "D",
         "basis": "objective_only",
-        "asOf": "2026-08-23T17:52:49Z"
+        "asOf": "2026-08-27T17:47:35Z"
       },
       "flags": [],
       "events": [
@@ -5930,6 +6195,15 @@ window.DASHBOARD_DATA = {
       "status": "排队中"
     },
     {
+      "ts": "08-27 00:11",
+      "agentId": null,
+      "agentName": "结算引擎",
+      "code": "R-41",
+      "desc": "8月每日结算已生成（每日 00:30 · 月末 08-31 聚合为月度百分制）",
+      "points": null,
+      "status": "已完成"
+    },
+    {
       "ts": "08-23 13:01",
       "agentId": "agt-1f3d07b41f",
       "agentName": "工作室运营",
@@ -5964,15 +6238,6 @@ window.DASHBOARD_DATA = {
       "desc": "更新能力档案",
       "points": 5,
       "status": "已入账"
-    },
-    {
-      "ts": "08-23 00:11",
-      "agentId": null,
-      "agentName": "结算引擎",
-      "code": "R-41",
-      "desc": "8月每日结算已生成（每日 00:30 · 月末 08-31 聚合为月度百分制）",
-      "points": null,
-      "status": "已完成"
     },
     {
       "ts": "08-21 17:55",
@@ -8010,8 +8275,8 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
-      "agentId": "agt-c4443da2d0",
-      "agentName": "区块链安全审计员",
+      "agentId": "agt-f4badd6dbc",
+      "agentName": "品牌守护者",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -8030,6 +8295,15 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-c31148698a",
       "agentName": "哔哩哔哩内容战略师",
+      "code": "E_MISS",
+      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
+      "points": null,
+      "status": "已标记"
+    },
+    {
+      "ts": "07-01 00:00",
+      "agentId": "agt-2c75a54118",
+      "agentName": "地图制图与可视化设计师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -8057,6 +8331,15 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-5e31de9759",
       "agentName": "多智能体系统架构师",
+      "code": "E_MISS",
+      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
+      "points": null,
+      "status": "已标记"
+    },
+    {
+      "ts": "07-01 00:00",
+      "agentId": "agt-4143d2725d",
+      "agentName": "套利平台首席架构师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -8217,6 +8500,15 @@ window.DASHBOARD_DATA = {
     },
     {
       "ts": "07-01 00:00",
+      "agentId": "agt-d44ed6b08b",
+      "agentName": "智能合约安全审计员",
+      "code": "E_MISS",
+      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
+      "points": null,
+      "status": "已标记"
+    },
+    {
+      "ts": "07-01 00:00",
       "agentId": "agt-09697de4e2",
       "agentName": "智能合约工程师",
       "code": "E_MISS",
@@ -8228,6 +8520,15 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-c8aa8a16a5",
       "agentName": "最小变更专家",
+      "code": "E_MISS",
+      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
+      "points": null,
+      "status": "已标记"
+    },
+    {
+      "ts": "07-01 00:00",
+      "agentId": "agt-d26d9053fa",
+      "agentName": "游戏经济设计师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -8309,6 +8610,15 @@ window.DASHBOARD_DATA = {
       "ts": "07-01 00:00",
       "agentId": "agt-93b8d15a0c",
       "agentName": "社交媒体师",
+      "code": "E_MISS",
+      "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
+      "points": null,
+      "status": "已标记"
+    },
+    {
+      "ts": "07-01 00:00",
+      "agentId": "agt-5feb0c1165",
+      "agentName": "社交媒体策略师",
       "code": "E_MISS",
       "desc": "本季事件流水缺失，按 0 计并标记（待补记）",
       "points": null,
@@ -8452,41 +8762,41 @@ window.DASHBOARD_DATA = {
   ],
   "budget": {
     "points": {
-      "ceiling": 94500,
+      "ceiling": 99300,
       "spent": 275,
-      "variance": 94225,
+      "variance": 99025,
       "utilization": 0.3,
       "categories": [
         {
           "category": "execution",
           "label": "执行",
-          "agents": 29,
+          "agents": 30,
           "benchmark": 400,
-          "ceiling": 34800,
+          "ceiling": 36000,
           "spent": 235,
-          "variance": 34565,
+          "variance": 35765,
           "utilization": 0.7,
           "status": "正常"
         },
         {
           "category": "creative",
           "label": "创意",
-          "agents": 11,
+          "agents": 14,
           "benchmark": 300,
-          "ceiling": 9900,
+          "ceiling": 12600,
           "spent": 20,
-          "variance": 9880,
+          "variance": 12580,
           "utilization": 0.2,
           "status": "正常"
         },
         {
           "category": "technical",
           "label": "技术",
-          "agents": 18,
+          "agents": 19,
           "benchmark": 300,
-          "ceiling": 16200,
+          "ceiling": 17100,
           "spent": 10,
-          "variance": 16190,
+          "variance": 17090,
           "utilization": 0.1,
           "status": "正常"
         },
@@ -8517,13 +8827,13 @@ window.DASHBOARD_DATA = {
     "sop": []
   },
   "runtime": {
-    "settlement": "2026-08-23T17:53:06Z",
-    "aggregation": "2026-08-23T17:52:49Z",
-    "review": "2026-08-23T17:52:49Z",
+    "settlement": "2026-08-27T17:47:35Z",
+    "aggregation": "2026-08-27T17:51:05Z",
+    "review": "2026-08-27T17:51:08Z",
     "ratingStatus": {
-      "pending": 0,
+      "pending": 2,
       "escalated": 0,
-      "credited": 66
+      "credited": 65
     },
     "settlementSchedule": "每日 00:30",
     "aggregationSchedule": "月末最后一日 01:15（R-41/R-51）",
@@ -8599,6 +8909,15 @@ window.DASHBOARD_DATA = {
       "agentName": "趋势研究员",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/趋势研究员/2026-07.md",
+      "ts": "本季",
+      "status": "待处理",
+      "kind": "数据缺失"
+    },
+    {
+      "agentId": "agt-2c75a54118",
+      "agentName": "地图制图与可视化设计师",
+      "code": "E-01",
+      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/地图制图与可视化设计师/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -8685,6 +9004,15 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
+      "agentId": "agt-4143d2725d",
+      "agentName": "套利平台首席架构师",
+      "code": "E-01",
+      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/套利平台首席架构师/2026-07.md",
+      "ts": "本季",
+      "status": "待处理",
+      "kind": "数据缺失"
+    },
+    {
       "agentId": "agt-4d0451cf2b",
       "agentName": "视频优化专家",
       "code": "E-01",
@@ -8716,6 +9044,15 @@ window.DASHBOARD_DATA = {
       "agentName": "多智能体系统架构师",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/多智能体系统架构师/2026-07.md",
+      "ts": "本季",
+      "status": "待处理",
+      "kind": "数据缺失"
+    },
+    {
+      "agentId": "agt-5feb0c1165",
+      "agentName": "社交媒体策略师",
+      "code": "E-01",
+      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/社交媒体策略师/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -8955,15 +9292,6 @@ window.DASHBOARD_DATA = {
       "kind": "数据缺失"
     },
     {
-      "agentId": "agt-c4443da2d0",
-      "agentName": "区块链安全审计员",
-      "code": "E-01",
-      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/区块链安全审计员/2026-07.md",
-      "ts": "本季",
-      "status": "待处理",
-      "kind": "数据缺失"
-    },
-    {
       "agentId": "agt-c8648f80c3",
       "agentName": "需求分析师",
       "code": "E-01",
@@ -8986,6 +9314,24 @@ window.DASHBOARD_DATA = {
       "agentName": "用户体验架构师",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/用户体验架构师/2026-07.md",
+      "ts": "本季",
+      "status": "待处理",
+      "kind": "数据缺失"
+    },
+    {
+      "agentId": "agt-d26d9053fa",
+      "agentName": "游戏经济设计师",
+      "code": "E-01",
+      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/游戏经济设计师/2026-07.md",
+      "ts": "本季",
+      "status": "待处理",
+      "kind": "数据缺失"
+    },
+    {
+      "agentId": "agt-d44ed6b08b",
+      "agentName": "智能合约安全审计员",
+      "code": "E-01",
+      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/智能合约安全审计员/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
@@ -9040,6 +9386,15 @@ window.DASHBOARD_DATA = {
       "agentName": "包容性视觉专家",
       "code": "E-01",
       "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/包容性视觉专家/2026-07.md",
+      "ts": "本季",
+      "status": "待处理",
+      "kind": "数据缺失"
+    },
+    {
+      "agentId": "agt-f4badd6dbc",
+      "agentName": "品牌守护者",
+      "code": "E-01",
+      "desc": "E_MISS: 2026-07: 缺少事件流水 reviews/scoring/events/品牌守护者/2026-07.md",
       "ts": "本季",
       "status": "待处理",
       "kind": "数据缺失"
