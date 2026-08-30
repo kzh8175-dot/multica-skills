@@ -1,7 +1,7 @@
 # GitHub 仓库管理员 · 能力档案
 
 > **职责**：工作室所有 GitHub 仓库事务的唯一负责人（唯一提交通道）
-> **最近更新**：2026-08-28
+> **最近更新**：2026-08-30
 
 ## 核心职责
 - 创建 / 维护仓库（README、.gitignore、license、基础目录），设置描述、可见性、topic
@@ -10,6 +10,16 @@
 - 通俗汇报：做了什么 → 结果如何 → 需要你做什么 / 下一步
 
 ## 持续学习
+
+### 2026-08-30 · KA-268 每日上传清单维护（三仓库全无上传日 + `multica issue list` offset 翻页修正 + 定时任务 todo 跟踪 + 待审批全延续）
+- **任务**：每日上传清单维护（autopilot 触发，08-30 18:45 CST）：更新 multica-skills `UPLOAD_MANIFEST.md`——`gh api` 当日窗口（Asia/Shanghai 08-30 = UTC 08-29 16:00 ~ 08-30 15:59）三仓库均查询为空 + `git fetch origin/main` 核对一致（multica-skills 最近提交 `6972949` 08-28、rating-system `60f0193` 08-27、arb-console 仍 Initial `cbd5272c`），无任何 GitHub 上传活动；当日 done/in_review 核对（`multica issue list` offset 全量分页 263 条 → updated_at 当日窗口过滤仅命中定时任务 KA-265/266/267 创建，均仍 `todo` 未报告完成，无其它上传相关 done/in_review）；待审批清单全延续（套利平台 KA-246/247/248/250 仍 in_review；跨仓库 OPEN PR 盘点 #1/#2/#8/#9/#10 + arb-console #1 均不变）；本笔提交仅 manifest 自身（`a56759e1`，白名单通过）。
+- **新技能 / 加深的技能**：
+  - **`multica issue list` 全量分页的正确姿势**（修正 KA-252 记录的 `--limit 500` 直觉）：实测 `--limit` 单次返回上限 100、`has_more` 为真 → 需按 `--offset` 递增循环至 `has_more=false` 才拉全量（本工作区 263 条）；`--limit 200` 仍只回 100，漏翻页会漏掉当日任务、误判「当日无任务」。
+  - **无上传日登记口径第三例固化**：三仓库当日窗口 gh API 全空 + fetch 双查一致 → 登记「无任何 GitHub 上传活动」，无需过滤 probe；done/in_review 过滤用 updated_at 当日窗口（UTC 换算 Asia/Shanghai），区分「定时任务创建即 updated」与「真正报告完成」。
+  - **定时任务 todo 运行态跟踪的「未报告完成」措辞**：状态仍 `todo` 即按「已创建，截至收工（18:45）仍为 todo（未报告完成）」登记，并附「若产出新 `dashboard/dashboard-data.js` / 新建档将在下期登记跟踪」占位钩子。
+  - **待审批清单延续需证据盘点**：「其余待审批项均延续」不是默认值——需 `gh pr list` 三仓库全量盘点 OPEN PR + 套利平台 in_review 项逐个核对（KA-246/247/248/250 updated_at 均在 08-27 未变）确认无漂移。
+- **挑战 / 盲区**：`multica issue list` 单次返回上限 100 且 `has_more` 分页语义不直观，首次 `--limit 200` 仅命中本任务自身，若不翻页会把「无 done/in_review」判错。
+- **改进**：每日维护 issue 拉取固定「offset 循环至 `has_more=false` + updated_at 当日窗口过滤」两段式；定时任务状态与 OPEN PR 盘点同笔完成，待审批延续判定基于全量证据而非记忆。
 
 ### 2026-08-28 · KA-255 看板数据刷新代提交推送（dashboard-data.js 95/28/287 干净 FF 直推 + 数据交付白名单核对）
 - **任务**：接收 开发运维自动化工程师 KA-255 看板数据刷新 01:45 运行交付——其已本地 commit `dashboard/dashboard-data.js`（`eeba468`，agentCount 95 / 有数据 28 / 事件 287 / 异常 67 / 预算已用 275 / generatedAt `2026-08-27T17:52:35Z`，覆盖上版 90 快照），位于交付方 checkout 分支 `agent/agent/1136c692a182`；代为推送并 fast-forward 合入 `kzh8175-dot/multica-skills` main，并在本仓库登记 UPLOAD_MANIFEST + 能力档案（rating-system 侧开发运维自动化工程师能力档案同步入库见该仓库 manifest）。
@@ -415,6 +425,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-08-30 | v0.39 | 追加 KA-268：每日上传清单维护——三仓库全无上传日登记口径第三例（gh API 当日窗口全空 + fetch 双查 + done/in_review 按 updated_at 窗口过滤）+ `multica issue list` offset 翻页全量（单次上限 100 + has_more，修正 v0.37 的 `--limit 500` 直觉）+ 定时任务 todo「未报告完成」跟踪占位 + 待审批清单全延续盘点（套利平台 KA-246/247/248/250 in_review 未变 + OPEN PR 三仓全量核验）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-28 | v0.38 | 追加 KA-255：看板数据刷新代提交推送——交付方已本地 commit 态干净 fast-forward 直推（`eeba468`，agentCount 95 / 有数据 28 / 事件 287，覆盖 90 快照）+ 数据交付白名单核对法（node --check + secret 扫描 + python 元数据断言 + prod 逐字节比对）+ 双仓库 manifest 登记；无跨智能体协作评分（自身代提交任务） |
 | 2026-08-27 | v0.37 | 追加 KA-252：每日上传清单维护——跨日回填 08-25 晚间 3 笔提交（KA-232 PR #13/#14 `c628f20`/`5e35b79` + codegraph `.gitignore` `a7c4ea2`）+ 幂等刷新 vs 数据变化判别第二例（KA-237 无需上传 / KA-249 agentCount 91 待上传）+ 智能体同步新增/更名档案待同步项合并跟踪（KA-230+238+251）+ 「生产→仓库」与「仓库→公网」同步方向区分 + 定时任务结果以运行报告评论为数据源（生产树本机不可达）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-25 | v0.36 | 追加 KA-232：新智能体「游戏经济设计师」入档双 PR 合 main——multica-skills #13（能力档案 `c628f20`）+ multica-rating-system #2（org-chart 68→69 `3417957`，该仓首个合入 PR，CI test 通过）+ 组织数据多仓一致性复核 + `gh pr merge` 瞬时 GraphQL 错误先核态再重试 + 仓库合并风格判定（squash）+ 合入后 main 内容级复核（blob sha / grep 命中）；协作评分 5/5 |
