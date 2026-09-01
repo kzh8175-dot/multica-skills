@@ -1,7 +1,7 @@
 # GitHub 仓库管理员 · 能力档案
 
 > **职责**：工作室所有 GitHub 仓库事务的唯一负责人（唯一提交通道）
-> **最近更新**：2026-08-31
+> **最近更新**：2026-09-01
 
 ## 核心职责
 - 创建 / 维护仓库（README、.gitignore、license、基础目录），设置描述、可见性、topic
@@ -10,6 +10,16 @@
 - 通俗汇报：做了什么 → 结果如何 → 需要你做什么 / 下一步
 
 ## 持续学习
+
+### 2026-09-01 · KA-281 每日上传清单维护（未合入分支提交当日捕获 + rating-system 同步缺口 git tree 实证 + 前夜运行补录第三例）
+- **任务**：每日上传清单维护（autopilot 触发，09-01 18:45 CST）：更新 multica-skills `UPLOAD_MANIFEST.md`——`gh api` 当日窗口（Asia/Shanghai 09-01 = UTC 08-31 16:00 ~ 09-01 15:59）multica-skills `main` 查询为空 + `git fetch origin/main` 核对一致（最近 `78ec753` 08-31 18:50）；但 `git log --all` 捕获当日**未合入分支提交** `1461f1e`（KA-279 资深战略领导者 能力档案 v1.1，分支 `agent/agent/ed7cf727e4a6`，无 PR，单文件 +17/-2，分支基 = main HEAD 干净 FF）→ 待审批新开一条「待确认建 PR/合并」；跨仓库核对 rating-system 当日 9 提交（KA-276/277/278 三笔日常任务 R-22 能力档案 + 代码仓库管理员 v0.23/24/25 + 该仓 3 份 manifest）、arb-console 无提交 PR #1 仍 OPEN；当日定时任务 KA-276/277/278 均已 in_review（钩子 exit 0 零事件 / 看板刷新 90/28/282 确定性幂等快照与 main 仅时基差异无需上传 / 智能体同步新建档 5+更名 1、月度 2026-09 写入 95）；待审批「评分系统生产树 → rating-system 同步」经 git tree 逐项核对明确化（6 新/更名档案 + 2026-09 月度/2026-Q3 季报缺）；回填 08-31 晚 `78ec753`（能力档案 v0.40 紧随 `ee0b1de` 1min）；本笔提交仅 manifest 自身（`89ebe86`，白名单通过）。
+- **新技能 / 加深的技能**：
+  - **未合入分支提交的当日捕获**：`gh api commits?since/until` 只返回默认分支（main），分支提交需 `git log --all --since/--until` 补查——当日 main 零提交 ≠ 无分支推送，`git branch -a --contains <sha>` 确认 `1461f1e` 仅在 `agent/agent/ed7cf727e4a6` → 待审批「已开发+已推送分支、未建 PR」型条目（区别于 PR 型与纯分支型），并核对分支基 = main HEAD 干净 FF 以便后续直接合入。
+  - **rating-system 同步缺口的 git tree 实证法**（超越上期「以定时任务报告为唯一数据源」）：本机生产树可达时，`gh api git/trees/<branch>?recursive=1` 取 main 全树 + `ls prod/rating-system/agents/profiles` 本地并集做 `comm` diff——实证 6 个新/更名档案缺（品牌守护者等 5 + 智能合约安全审计员 更名）、月度 2026-09 期缺（95 份）、2026-08 月报 89/90 逐字节一致（08-31 所述 E_EXCLUDED 漂移已收敛）；profile 用 contents API base64 + 逐字节 `diff` 判 prod↔main 一致（财务跟踪与规划专员 v1.0 双库同源）。待审批状态从「描述性」升级为「可核验清单」。
+  - **前夜运行补录第三例**（沿用 08-25/08-30 回填法）：上期 manifest `ee0b1de` 后 1min 的 R-22 档案 `78ec753`（v0.40）未被上期登记 → 本期 09-01 节尾补录「登记时口径」说明 + commit 与时间；不改写历史。
+  - **看板「仅时基差异无需上传」判别复现**（KA-277）：01:45 快照 90/28/282（01:50 同步后 95/287/67）与 `main` 版仅 generatedAt/asOf 差异、数据域零变化 → 不触发上传；与 KA-229/237 幂等刷新判定同族。
+- **挑战 / 盲区**：`gh api commits?path=` 中文路径需 URL 编码否则返回 HTML 报错；`git log --all --since` 的时间窗口按仓库本地时区解析（与 gh API 的 UTC 窗口相差 8h），双查口径须分别换算；评分报告批量逐文件 contents API 比对在 90+ 文件量级会超时，需抽样 + 计数统计。
+- **改进**：每日维护「三仓库当日窗口 gh API（仅 main）+ `git log --all` 补查未合入分支」双通道；待审批同步缺口用 git tree + 生产树本地 `comm` 实证；批量 diff 改用 tree 对比 + 抽样而非逐文件 API。
 
 ### 2026-08-31 · KA-274 每日上传清单维护（定时任务分流登记 + 运行中任务中断跟踪 + 前夜运行补录回填）
 - **任务**：每日上传清单维护（autopilot 触发，08-31 18:45 CST）：更新 multica-skills `UPLOAD_MANIFEST.md`——`gh api` 当日窗口（Asia/Shanghai 08-31 = UTC 08-30 16:00 ~ 08-31 15:59）三仓库均查询为空 + `git fetch origin/main` 核对一致（multica-skills 最近提交 `ac57e12` 为 08-30 19:52、rating-system `60f0193` 08-27、arb-console 仍 Initial `cbd5272c`）；当日 done/in_review 按 updated_at 窗口过滤命中：KA-270 状态钩子（in_review，02:20 报告——prod 缺钩子文件自愈恢复、0 评分类变更/0 事件写入/baseline 18、首跑 daemon 退化 61 读+2 写错误幂等重跑 exit=0 全清）、KA-271 看板刷新（todo，任务启动失败 daemon 连接重置未运行）、KA-272 智能体同步（in_progress，汇报评论被 API 中断「computer went to sleep mid-response」）、KA-273 每周预算对账（in_review，无活跃对账对象）、KA-269 SLA 监控（in_review，非上传）；新增待审批 1 项（PR #15 财务跟踪与规划专员建档 `6cc342d`，分支基 = main HEAD `ac57e12` 干净快进，白名单单文件核对通过）；回填 08-30 晚 `ac57e12`（能力档案 v0.39，紧随 `a56759e` 39s 入 main，上期「本日无提交」为登记时口径）；待审批清单更新（评分系统生产树同步追加 08-31 KA-272；看板同步闭环行注明 08-31 刷新未运行）；本笔提交仅 manifest 自身（`ee0b1de`，白名单通过）。
@@ -435,6 +445,7 @@
 
 | 日期 | 版本 | 更新内容 |
 |------|------|----------|
+| 2026-09-01 | v0.41 | 追加 KA-281：每日上传清单维护——未合入分支提交当日捕获（`1461f1e` KA-279 资深战略领导者 v1.1 无 PR → 待审批新开）+ rating-system 同步缺口 git tree 实证（6 新/更名档案 + 2026-09 月度/2026-Q3 季报缺、2026-08 月报 89/90 逐字节一致）+ 看板仅时基差异无需上传判别复现（KA-277）+ 前夜运行补录第三例（08-31 `78ec753` v0.40）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-31 | v0.40 | 追加 KA-274：每日上传清单维护——定时任务三分流登记（KA-270 in_review 已报告 / KA-271 todo 启动失败 daemon 连接重置 / KA-272 in_progress 汇报被 API 中断）；新建档走 PR 通道（PR #15 财务跟踪与规划专员 `6cc342d`）新增待审批 + 是否补 whitelist.py 登记待确认；前夜运行补录回填第二例（08-30 `ac57e12` 能力档案 v0.39 紧随 `a56759e` 39s）；prod 树不可达时以定时任务 issue 报告为唯一数据源；PR 盘点 jq `(tostring)` 修正；无跨智能体协作评分（自身维护任务） |
 | 2026-08-30 | v0.39 | 追加 KA-268：每日上传清单维护——三仓库全无上传日登记口径第三例（gh API 当日窗口全空 + fetch 双查 + done/in_review 按 updated_at 窗口过滤）+ `multica issue list` offset 翻页全量（单次上限 100 + has_more，修正 v0.37 的 `--limit 500` 直觉）+ 定时任务 todo「未报告完成」跟踪占位 + 待审批清单全延续盘点（套利平台 KA-246/247/248/250 in_review 未变 + OPEN PR 三仓全量核验）；无跨智能体协作评分（自身维护任务） |
 | 2026-08-28 | v0.38 | 追加 KA-255：看板数据刷新代提交推送——交付方已本地 commit 态干净 fast-forward 直推（`eeba468`，agentCount 95 / 有数据 28 / 事件 287，覆盖 90 快照）+ 数据交付白名单核对法（node --check + secret 扫描 + python 元数据断言 + prod 逐字节比对）+ 双仓库 manifest 登记；无跨智能体协作评分（自身代提交任务） |
