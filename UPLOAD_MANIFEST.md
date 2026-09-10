@@ -3,7 +3,7 @@
 > **项目名称**：P0 智能评分系统（方案 C）· 上传目标仓库：`kzh8175-dot/multica-skills`
 > **用途**：记录每日上传到 GitHub 的事项、职责归属与待审批上传
 > **更新周期**：每日维护（由 GitHub 仓库管理员执行，见文末「维护机制」）
-> **最近更新**：2026-09-10
+> **最近更新**：2026-09-11
 
 ---
 
@@ -336,6 +336,21 @@
 > 其余当日 done/in_review 核对：`multica issue list` 全量 326 项按 `updated_at ≥ 2026-09-09T16:00Z` 过滤，仅命中 KA-322/325（结算窗口批量转 in_review 的迟转）/ KA-326/328/329/330 与本 issue KA-331——除上述外**当日无其它新建或更新的 issue、无其它上传申请**。跨仓库 OPEN PR 状态延续：multica-skills PR #1/#2/#8/#9/#10/#15（最近更新 #15 = 08-31）、multica-rating-system PR #1、multica-arb-console PR #1 均仍 OPEN（见「待审批上传清单」）。
 >
 > 本笔提交仅含 `UPLOAD_MANIFEST.md` 本身（项目文档，白名单检查通过，无凭据/临时文件/日志/无关产物）。
+
+---
+
+### 2026-09-11
+
+| # | 时间 | 上传事项 | 开发 | 验收 | 审批 | 提交上传需求 | 上传者 | commit |
+|---|------|----------|------|------|------|--------------|--------|--------|
+| 1 | 01:49 | KA-334 看板生产树自愈脚本：新增 `dashboard/scripts/ensure-prod-tree.sh`（检查 → 缺什么补什么 → 复验，健康时 no-op，重建不动 `logs/`，只从 git 远端拉取）+ `dashboard/crontab-dashboard.conf`（01:45 任务前置接线）+ `dashboard/docs/DEPLOY.md`（故障处置章节 + 上游缺档不自愈的边界声明） | 开发运维自动化工程师 | GitHub 仓库管理员（交付点复核：3 文件 diff +149/-1、`bash -n` 语法检查通过、无凭据/日志/缓存、白名单检查通过） | —（非破坏性常规合并，按交接规则放行） | 开发运维自动化工程师 | GitHub 仓库管理员 | `ffb5fd9` |
+| 2 | 01:49 | 登记本清单（KA-334 上传记录） | GitHub 仓库管理员 | — | — | 自评（R-22） | GitHub 仓库管理员 | 本次 manifest 提交 |
+
+> **白名单检查**：✅ 已通过。本次 3 个文件逐一核对——`dashboard/scripts/ensure-prod-tree.sh`（新增，115 行，项目运维脚本）、`dashboard/crontab-dashboard.conf`（+5/-1，部署配置）、`dashboard/docs/DEPLOY.md`（+30，项目文档），全部落在白名单「源代码/脚本/配置/部署运维配置/项目文档」范围内；新增行 secret 关键词扫描（`ghp_`/`github_pat_`/`AKIA`/`BEGIN * PRIVATE KEY`/`password=`/`secret=`/`token=`/`api_key=`）零命中，无凭据、无日志、无缓存、无生成产物（3 文件共 +149/-1，无大文件）。脚本内仅出现两个公开仓库 URL，不含任何凭据。交付方本地 commit 存于其 workdir checkout（分支 `agent/agent/f2c37dfbc021`），经 `git fetch origin main` 判定其父节点 `a1695ac` == 远端 `main` 干净 fast-forward（`rev-list --left-right --count origin/main...HEAD` = `0 1`），直接 `git push origin HEAD:main` 纳入（`a1695ac..ffb5fd9`）；推送后 `git fetch` 复核双侧一致（`0 0`）+ `gh api repos/.../contents/dashboard/scripts/ensure-prod-tree.sh` 回读确认（size 5265，与交付附件一致）。
+>
+> 跨仓库核对：`multica-rating-system` 当日（CST 09-11 窗口）3 commits，均已登记于该仓库 `UPLOAD_MANIFEST` 2026-09-11 节，本清单不重复登记——KA-333（开发运维自动化工程师 档案 `fb3386a` + 该仓库 manifest 登记 `7dd58e9`）、KA-334（开发运维自动化工程师 档案 `072f5eb`）。本笔（manifest 登记）为 multica-skills `main` 09-11 窗口内继 `ffb5fd9` 之后第二笔提交。
+>
+> 与看板数据的关系（KA-334 报告口径）：本次上传为**运维脚本/配置/文档**，不含 `dashboard/dashboard-data.js`；看板数据公网同步项维持「暂不单独上传」观察（KA-334 刷新快照 90/0/93，agentCount -5 系 git main 缺 5 档口径而非数据回退），上传时机待资深战略领导者确认（详见「待审批上传清单」）。
 
 ---
 
