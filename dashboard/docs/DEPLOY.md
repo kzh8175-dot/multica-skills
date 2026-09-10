@@ -75,3 +75,33 @@
   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.multica.dashboard.http.plist
   ```
 - **数据刷新 autopilot**: `7151602b-0778-4d7b-bc65-1008a8bfaafa`（每日 01:45 Asia/Shanghai，schedule trigger `1f06c1ab-8eb4-4ccb-a98f-b30ca0e8f225`）→ 运行 `scripts/refresh-dashboard.sh`
+
+## 生产树自愈（KA-334 · 2026-09-11）
+
+workspace 级 `<WORKSPACE>/prod/` **整体缺失已是复现 6 次的常态故障**
+（KA-213 / KA-223 / KA-254 / KA-277 / KA-318 / KA-334）。缺失时
+`prod/dashboard/scripts/refresh-dashboard.sh` 不存在 → 每日 01:45 刷新任务
+直接失败；同时 launchd `com.multica.dashboard.http` 仍在跑，`http://localhost:8080/`
+回落为目录列表（首页 404）——**静默降级，无报文**。
+
+自愈脚本 `scripts/ensure-prod-tree.sh` 把「重建」从人工步骤变成确定性步骤：
+
+```bash
+PROD_ROOT=<WORKSPACE>/prod bash scripts/ensure-prod-tree.sh   # exit 0=健康（含刚重建）
+```
+
+- **判据**：`dashboard/{index.html, generate-dashboard-data.py, dashboard-data-feed.py, scripts/refresh-dashboard.sh}` 齐备 且 `rating-system/agents/` 存在；
+- **幂等**：健康时 no-op（只打印，不写文件），复跑无需清理；
+- **保留日志**：重建 dashboard 不触碰 `logs/`，历史刷新日志与 bootstrap 日志不丢；
+- **只读平台**：只从 git 远端拉取，不读写 Multica 平台数据；
+- **失败显式**：任一环节失败退出码非 0，由调度 agent 按 runbook 告警。
+
+调度接线（runbook 口径）：每日 01:45 任务**先** `ensure-prod-tree.sh`，**再** `refresh-dashboard.sh`；
+两者都幂等，串行执行安全。
+
+### 已知边界
+
+- 自愈从 **git main** 物化，roster 以上游 main 为准。若 main 落后于平台活跃智能体
+  （如 KA-325 的 5 建档 + 1 更名合并尚未入库），自愈后看板智能体数会低于昨日常态
+  ——这是**上游缺档**，需由「智能体同步」任务 + GitHub 仓库管理员入库闭合，本脚本不代偿。
+- 自愈不覆盖 `rating-system` 的本地增量（自愈只在缺失时触发；已存在的树不会被覆盖或重置）。
