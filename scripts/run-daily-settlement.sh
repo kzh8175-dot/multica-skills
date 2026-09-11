@@ -5,6 +5,11 @@
 #   - 失败：退出码非 0，由调度 agent 按 runbook 告警
 set -uo pipefail
 
+# 运行侧超时前置（KA-333 经验固化，KA-338 / A-3）:
+#   把 metadata 读写与 CLI 调用的超时容忍度从"事后定向重跑补救"前移为运行侧默认项。
+#   09-09 状态钩子曾因瞬时超时 exit=1（KA-322）；预设 60s 后 310 次读取 + 11 次写入零超时。
+export MULTICA_HTTP_TIMEOUT="${MULTICA_HTTP_TIMEOUT:-60}"
+
 PROD_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 JOB="settlement"
 LOG_DIR="$PROD_ROOT/logs/$JOB"
