@@ -173,11 +173,17 @@ sudo pmset -b standby 0 hibernatemode 0
 
 ### 6.2 启用常驻调度（需 owner 确认）
 
+launchd 的脚本落点**必须指向持久路径**——仓库 checkout 位于一次性 workdir
+（`<workspace>/<run-id>/workdir/...`），回收后任务即失效（KA-333 已有同类教训）。
+本次已部署到 `<WORKSPACE>/prod/ops/` 并从该处生成 plist：
+
 ```bash
-cd <repo>
-bash scripts/install-autopilot-slo-guard.sh            # 已生成，未加载
-bash scripts/install-autopilot-slo-guard.sh --load     # 加载（会改变本机电源行为）
-bash scripts/install-autopilot-slo-guard.sh --unload   # 回滚
+W=/Users/kzh/multica_workspaces_desktop-api.multica.ai/e3ad92f3-ad8e-4eba-bce9-3e670bc345a3
+cd $W/prod/ops
+bash scripts/install-autopilot-slo-guard.sh --status          # 查看加载状态（当前均未加载）
+SLO_GUARD_ROOT=$W/prod/ops bash scripts/install-autopilot-slo-guard.sh   # 已生成，未加载
+SLO_GUARD_ROOT=$W/prod/ops bash scripts/install-autopilot-slo-guard.sh --load     # 加载
+SLO_GUARD_ROOT=$W/prod/ops bash scripts/install-autopilot-slo-guard.sh --unload   # 回滚
 ```
 
 ## 7. 日常操作

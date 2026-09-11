@@ -20,9 +20,13 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 部署根：launchd 任务的脚本落点。**必须指向持久路径**——仓库 checkout 位于
+# 一次性 workdir（<workspace>/<run-id>/workdir/...），回收后 launchd 任务即失效。
+# 推荐：SLO_GUARD_ROOT=<WORKSPACE>/prod/ops bash install-autopilot-slo-guard.sh
+DEPLOY_ROOT="${SLO_GUARD_ROOT:-$REPO_ROOT}"
 AGENT_DIR="$HOME/Library/LaunchAgents"
-GUARD="$REPO_ROOT/scripts/autopilot-slo-guard.py"
-KEEPAWAKE="$REPO_ROOT/scripts/schedule-keepawake.sh"
+GUARD="$DEPLOY_ROOT/scripts/autopilot-slo-guard.py"
+KEEPAWAKE="$DEPLOY_ROOT/scripts/schedule-keepawake.sh"
 STATE_DIR="${MULTICA_SLO_GUARD_STATE_DIR:-$HOME/.multica}"
 LOG_DIR="$STATE_DIR/logs"
 PY="$(command -v python3 || echo /usr/bin/python3)"
@@ -73,7 +77,7 @@ _write_plist() {  # $1=label  $2=ProgramArguments 的 XML 片段  $3=StartCalend
   <array>
 $args
   </array>
-  <key>WorkingDirectory</key><string>$REPO_ROOT</string>
+  <key>WorkingDirectory</key><string>$DEPLOY_ROOT</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>$PATH_ENV</string>
