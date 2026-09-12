@@ -105,3 +105,31 @@ PROD_ROOT=<WORKSPACE>/prod bash scripts/ensure-prod-tree.sh   # exit 0=健康（
   （如 KA-325 的 5 建档 + 1 更名合并尚未入库），自愈后看板智能体数会低于昨日常态
   ——这是**上游缺档**，需由「智能体同步」任务 + GitHub 仓库管理员入库闭合，本脚本不代偿。
 - 自愈不覆盖 `rating-system` 的本地增量（自愈只在缺失时触发；已存在的树不会被覆盖或重置）。
+
+## 失败即告警 · 数据新鲜度（KA-355 · 2026-09-13）
+
+**故障**：`refresh-dashboard.sh` exit=0，但发布的是非确定性降级数据 —— CLI 抖动时
+类别回退到档案/关键词推断，实测 95 个智能体里 11 个换类别，总预算上限在
+**99300 / 100350** 之间随运行跳变，`ratingStatus` 在「有值 / 空 `{}`」之间跳变。
+告警链路因此完全失效（退出码始终 0）。
+
+**修复后退出码约定**：
+
+| rc | 含义 | 产物 | 处置 |
+|:--:|---|---|---|
+| 0 | 正常（含「快照未超龄」的降级） | 落盘，`meta.dataFreshness` 标注来源与时基 | 无 |
+| 2 | 参数/依赖缺失（feed 脚本不存在等） | 不落盘 | 检查部署完整性 |
+| 3 | CLI 数据源不可用或快照超龄 | **不落盘**，保留上一次正确产物 | 平台抖动重试；持续失败查 `multica agent list` / `MULTICA_HTTP_TIMEOUT` |
+
+- 快照：`cache/cli-snapshot.json`（`categories` / `issue_scan` 两段，各带 `as_of`）；
+  容忍上限 `--max-stale-hours`，默认 **26h** = 一个刷新周期 + 2h 余量 ——
+  单日抖动不停更，连续两日读不到 live 才告警（那已是持续降级而非抖动）。
+- `MULTICA_HTTP_TIMEOUT=60` 已按 KA-333 约定前置进 `refresh-dashboard.sh`
+  （此前是 4 个 `rating-system/scripts/run-*.sh` 里唯一遗漏的包装脚本）。
+  **注意其失效条件**：该措施只在平台健康时有效，平台整体降级下仍会失败 ——
+  这正是本 issue 的场景，故必须靠快照 + 退出码兜底，不能只靠超时前移。
+- 验证（本机实跑）：
+  - live CLI：rc=0，ceiling **99300**；
+  - CLI 全失败 + 快照：rc=0，**归一化哈希与 live 逐字节一致**，页面 note 出现
+    「⚠️ 数据新鲜度降级」；
+  - CLI 全失败 + 无快照：rc=**3**，`dashboard-data.js` SHA256 未变（未覆盖）。

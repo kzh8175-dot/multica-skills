@@ -17,10 +17,21 @@ kzh8175-dot/multica-skills commit 0093c62），调用其 `build_feed()` 一次�
     数据契约中供「参考等级（预估）」等标注场景使用，不冒充正式等级；
   - 试点期防误读：无事件智能体标 E_MISS 且不参与排名，避免「无数据 = D 级」。
 
+CLI 数据源与失败即告警（KA-355）:
+  类别（R-42）/ 预算 / rating.status 来自 `multica` CLI，平台侧会随机超时。
+  feed 以「live → 本地快照 → missing」解析，本脚本对结果做发布判定：
+    - 任一源 missing，或快照年龄 > --max-stale-hours（默认 26h）→ **退出码 3 且不落盘**，
+      保留上一次正确产物，由 refresh-dashboard.sh 透出 → 调度 agent 按 runbook 建单；
+    - 快照可用且未超龄 → 正常发布，但 meta.dataFreshness 标注降级来源与时基，
+      人读 note 前置「⚠️ 数据新鲜度降级」，看板页脚可见。
+  绝不再出现「exit=0 + 静默发布降级数据」。
+
 用法:
   python3 generate-dashboard-data.py \
       --prod-root <prod/rating-system> \
       [--feed-script <dashboard-data-feed.py>] \
+      [--cli-snapshot <cache/cli-snapshot.json>] \
+      [--max-stale-hours 26] \
       --out dashboard-data.js
 """
 
@@ -136,10 +147,27 @@ def load_feed_module(feed_script):
     return mod
 
 
+# ---------------------------------------------------------------- 失败即告警（KA-355）
+
+# 退出码约定（与 rating-aggregator.py KA-356 对齐，便于告警分轨）:
+#   0 = 正常   1 = 无智能体数据   2 = 参数/依赖缺失   3 = CLI 数据源不可用（不可发布）
+EXIT_DATA_SOURCE = 3
+
+# 快照容忍上限：24h（一个完整刷新周期）+ 2h 余量。单日平台抖动不至于让看板停更，
+# 连续两天读不到 live 数据才失败告警 —— 那已是「持续降级」而非「抖动」。
+DEFAULT_MAX_STALE_HOURS = 26
+
+
 # ---------------------------------------------------------------- 映射
 
 
-def build_dashboard(prod_root, feed_mod, use_cli=True):
+def build_dashboard(prod_root, feed_mod, use_cli=True, cli_snapshot_path=None,
+                    max_stale_hours=DEFAULT_MAX_STALE_HOURS):
+    """→ (data, source_report)。
+
+    source_report = {"ok", "failures", "degraded", "sources"}：CLI 数据源判定结果。
+    ok=False 时调用方必须非 0 退出且不落盘（KA-355）。
+    """
     agents_root = os.path.join(prod_root, "agents")
     dirs = feed_mod.scoring_dirs(agents_root)
     # 周期：复用 feed 动态取当前月份/季度（重生成自动跟随），不硬编码
@@ -150,7 +178,13 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
     months = [month]
     quarters = [quarter]
     agents = feed_mod.discover_agents(agents_root, dirs)
-    feed = feed_mod.build_feed(agents_root, months, quarters, agents, use_cli=use_cli)
+    feed = feed_mod.build_feed(agents_root, months, quarters, agents, use_cli=use_cli,
+                               cli_snapshot_path=cli_snapshot_path)
+
+    sources = (feed.get("meta") or {}).get("cli_sources") or {}
+    ok, failures, degraded = feed_mod.evaluate_cli_sources(sources, max_stale_hours)
+    source_report = {"ok": ok, "failures": failures, "degraded": degraded,
+                     "sources": sources}
 
     month_short = month_label(month)
     quarter_lbl = quarter_label(quarter)
@@ -373,6 +407,25 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
     deduped.sort(key=lambda x: (0 if x["status"] == "待处理" else 1, x["agentId"]))
 
     with_data = [a for a in agents_out if a["hasData"]]
+    note = f"试点初期·数据样本不足：{len(agents_out)} 个智能体中仅 {len(with_data)} 个有 {month_short} 事件流水；" \
+           f"{quarter_lbl} 人评待运行（{window}），综合分/等级按系统当前状态显示「待运行」，" \
+           "参考等级（预估）由客观分映射，随季度人评转正式。"
+    # 数据新鲜度（KA-355）：CLI 来源的类别/预算/运行态一旦取自本地快照，
+    # 必须在**看板可见处**标注 —— 否则「降级但不静默」只做了一半。
+    freshness = {
+        "degraded": bool(degraded),
+        "degradedSources": degraded,
+        "sources": {
+            name: {"source": (st or {}).get("source"),
+                   "asOf": (st or {}).get("as_of"),
+                   "ageHours": (st or {}).get("age_hours")}
+            for name, st in sources.items()
+        },
+        "maxStaleHours": max_stale_hours,
+    }
+    if degraded:
+        note = "⚠️ 数据新鲜度降级：" + "；".join(degraded) + "。" + note
+
     return {
         "meta": {
             "project": "评分方案 C · 智能评分系统",
@@ -392,9 +445,8 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
             "gradeThresholds": {"S": "≥95", "A": "85-94", "B": "70-84",
                                 "C": "60-69", "D": "<60"},
             "categoryLabels": CATEGORY_LABELS,
-            "note": f"试点初期·数据样本不足：{len(agents_out)} 个智能体中仅 {len(with_data)} 个有 {month_short} 事件流水；"
-                    f"{quarter_lbl} 人评待运行（{window}），综合分/等级按系统当前状态显示「待运行」，"
-                    "参考等级（预估）由客观分映射，随季度人评转正式。",
+            "dataFreshness": freshness,
+            "note": note,
         },
         "agents": agents_out,
         "events": event_rows,
@@ -410,7 +462,7 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
         },
         "runtime": runtime,
         "anomalies": deduped,
-    }
+    }, source_report
 
 
 # ---------------------------------------------------------------- 输出
@@ -428,6 +480,12 @@ def main():
         help="输出 JS 数据文件路径")
     parser.add_argument("--no-cli", action="store_true",
                         help="离线：不调用 multica（预算/运行态计数缺省）")
+    parser.add_argument("--cli-snapshot", default=None,
+                        help="CLI 本地快照路径（KA-355）：CLI 成功时刷新、失败时取用。"
+                             "缺省为 <out 同目录>/cache/cli-snapshot.json")
+    parser.add_argument("--max-stale-hours", type=float, default=DEFAULT_MAX_STALE_HOURS,
+                        help=f"快照容忍上限（小时，默认 {DEFAULT_MAX_STALE_HOURS}）："
+                             "超龄即视为数据源不可用 → 非 0 退出且不落盘")
     args = parser.parse_args()
 
     prod_root = os.path.abspath(args.prod_root)
@@ -436,14 +494,38 @@ def main():
         sys.exit(2)
     feed_mod = load_feed_module(args.feed_script)
 
-    data = build_dashboard(prod_root, feed_mod, use_cli=not args.no_cli)
+    out_path = os.path.abspath(args.out)
+    snapshot_path = args.cli_snapshot or os.path.join(
+        os.path.dirname(out_path), "cache", "cli-snapshot.json")
+    snapshot_path = os.path.abspath(snapshot_path) if not args.no_cli else None
 
-    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+    data, report = build_dashboard(
+        prod_root, feed_mod, use_cli=not args.no_cli,
+        cli_snapshot_path=snapshot_path, max_stale_hours=args.max_stale_hours)
+
+    # 失败即告警（KA-355）：CLI 数据源不可用时**拒绝落盘**，保留上一次正确产物，
+    # 由 refresh-dashboard.sh 透出退出码 → 调度 agent 按 runbook 建单。
+    # 落盘一份降级产物才是本 issue 的原始故障（exit=0 + 静默发布非确定性数据）。
+    if not report["ok"]:
+        print("❌ CLI 数据源不可用，本次不生成看板数据（保留上一次已发布产物）:",
+              file=sys.stderr)
+        for line in report["failures"]:
+            print(f"   - {line}", file=sys.stderr)
+        print("   拒绝回退到语义不同的兜底源（档案 category / 关键词推断会让类别、"
+              "基准分、预算上限与 agent 深链一起漂移）。", file=sys.stderr)
+        print("   处理: 平台抖动请重试；持续失败检查 `multica agent list` / "
+              "MULTICA_HTTP_TIMEOUT；本地离线请显式加 --no-cli（会标注为 offline）。",
+              file=sys.stderr)
+        sys.exit(EXIT_DATA_SOURCE)
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
     body = "/* 自动生成 · 请勿手改 · 数据源 dashboard-data-feed.py（KA-96 里程碑 1，Schema v1.0） */\n" \
            "window.DASHBOARD_DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";\n"
-    with open(args.out, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(body)
 
+    for line in report["degraded"]:
+        print(f"⚠ 数据新鲜度降级: {line}")
     with_data = [a for a in data["agents"] if a["hasData"]]
     print(f"✓ 智能体: {len(data['agents'])}（有数据 {len(with_data)}）")
     print(f"✓ 事件: {len(data['events'])} 条（含系统运行态）")
@@ -452,7 +534,10 @@ def main():
     print(f"✓ 异常: {len(data['anomalies'])} 条")
     print(f"✓ 运行态: 结算 {data['runtime']['settlement']} / 聚合 {data['runtime']['aggregation']} / "
           f"人评 {data['runtime']['review']}")
-    print(f"✓ 输出: {os.path.abspath(args.out)}")
+    print(f"✓ 数据源: " + "；".join(
+        f"{name}={(st or {}).get('source')}"
+        for name, st in (report["sources"] or {}).items()))
+    print(f"✓ 输出: {out_path}")
     print(f"注意: {data['meta']['note']}")
 
 

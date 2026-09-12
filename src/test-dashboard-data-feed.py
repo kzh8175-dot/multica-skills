@@ -722,5 +722,186 @@ class TestCliPagination(unittest.TestCase):
         self.assertIn("不可用", note)
 
 
+class TestCliSourceSnapshot(unittest.TestCase):
+    """KA-355：CLI 数据源「live → 本地快照 → missing」与失败判定。
+
+    回归的是本 issue 的故障本体：CLI 抖动时 feed 不得回退到语义不同的兜底源
+    （档案 category / 关键词推断），否则输出在两次运行之间跳变（实测总预算
+    上限在 99300/100350 之间翻转、11 个智能体换类别），而退出码仍为 0。
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="ka355-")
+        self.snap = os.path.join(self.tmp, "cache", "cli-snapshot.json")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_missing_returns_none_distinct_from_empty(self):
+        """fetch 返回 {} = 成功但无数据；返回 None = 没读到 —— 必须可区分。"""
+        val, st = feed.resolve_cli_source("categories", lambda: None, self.snap)
+        self.assertIsNone(val)
+        self.assertEqual(st["source"], "missing")
+        self.assertFalse(st["ok"])
+
+        val, st = feed.resolve_cli_source("categories", lambda: {}, self.snap)
+        self.assertEqual(val, {})
+        self.assertEqual(st["source"], "cli")
+        self.assertTrue(st["ok"])
+
+    def test_live_success_is_snapshotted_and_reused_on_failure(self):
+        val, st = feed.resolve_cli_source(
+            "categories", lambda: {"中国市场本地化策略师": "marketing"}, self.snap)
+        self.assertEqual(st["source"], "cli")
+        self.assertEqual(val, {"中国市场本地化策略师": "marketing"})
+
+        def boom():
+            return None
+        val2, st2 = feed.resolve_cli_source("categories", boom, self.snap)
+        self.assertEqual(st2["source"], "snapshot")
+        self.assertEqual(val2, val)                  # 抖动不改变产出
+        self.assertIsNotNone(st2["as_of"])
+        self.assertLess(st2["age_hours"], 1.0)
+
+    def test_snapshot_survives_other_section_writes(self):
+        feed.resolve_cli_source("categories", lambda: {"a": "data"}, self.snap)
+        feed.resolve_cli_source("issue_scan", lambda: {"budget": []}, self.snap)
+        snap = feed.read_cli_snapshot(self.snap)
+        self.assertEqual(set(snap), {"categories", "issue_scan"})
+        self.assertEqual(snap["categories"]["value"], {"a": "data"})
+
+    def test_corrupt_snapshot_treated_as_absent(self):
+        os.makedirs(os.path.dirname(self.snap), exist_ok=True)
+        with open(self.snap, "w", encoding="utf-8") as f:
+            f.write("{ not json")
+        val, st = feed.resolve_cli_source("categories", lambda: None, self.snap)
+        self.assertIsNone(val)
+        self.assertEqual(st["source"], "missing")
+
+    def test_fetch_exception_treated_as_unavailable(self):
+        def boom():
+            raise RuntimeError("kaboom")
+        val, st = feed.resolve_cli_source("categories", boom, self.snap)
+        self.assertIsNone(val)
+        self.assertEqual(st["source"], "missing")
+        self.assertIn("kaboom", st["note"])
+
+    def test_no_cli_is_offline_not_failure(self):
+        val, st = feed.resolve_cli_source("categories", lambda: {"a": "data"},
+                                          self.snap, use_cli=False)
+        self.assertIsNone(val)
+        self.assertEqual(st["source"], "offline")
+        self.assertTrue(st["ok"])
+
+    def test_fetch_cli_categories_none_on_unavailable(self):
+        with mock.patch.object(feed, "run_cli", return_value=None):
+            self.assertIsNone(feed.fetch_cli_categories())
+            self.assertEqual(feed.load_cli_categories(), {})   # 兼容旧契约
+
+    def test_fetch_cli_categories_maps_platform_categories(self):
+        payload = json.dumps([
+            {"name": "前端工程师", "description": "x [category=engineering]"},
+            {"name": "需求分析师", "description": "x [category=management]"},
+            {"name": "无标签", "description": "没有标签"},
+        ], ensure_ascii=False)
+        with mock.patch.object(feed, "run_cli", return_value=payload):
+            cats = feed.fetch_cli_categories()
+        self.assertEqual(cats["前端工程师"], "technical")     # CAT_MAP，与聚合器同源
+        self.assertEqual(cats["需求分析师"], "execution")
+        self.assertNotIn("无标签", cats)
+
+
+class TestEvaluateCliSources(unittest.TestCase):
+    """KA-355：发布判定 —— 决定「生成 or 失败告警」。"""
+
+    def status(self, source, age=None, ok=True, note=None):
+        return {"name": "x", "source": source, "ok": ok,
+                "as_of": "2026-09-13T00:00:00Z", "age_hours": age, "note": note}
+
+    def test_all_live_is_ok(self):
+        ok, failures, degraded = feed.evaluate_cli_sources(
+            {"categories": self.status("cli", 0.0)})
+        self.assertTrue(ok)
+        self.assertEqual(failures, [])
+        self.assertEqual(degraded, [])
+
+    def test_missing_fails(self):
+        ok, failures, _ = feed.evaluate_cli_sources(
+            {"categories": self.status("missing", None, ok=False, note="读不到")})
+        self.assertFalse(ok)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("读不到", failures[0])
+
+    def test_fresh_snapshot_degrades_but_publishes(self):
+        ok, failures, degraded = feed.evaluate_cli_sources(
+            {"categories": self.status("snapshot", 3.0)}, max_stale_hours=26)
+        self.assertTrue(ok)
+        self.assertEqual(failures, [])
+        self.assertEqual(len(degraded), 1)
+        self.assertIn("3.0h", degraded[0])
+
+    def test_stale_snapshot_fails(self):
+        ok, failures, _ = feed.evaluate_cli_sources(
+            {"categories": self.status("snapshot", 27.5)}, max_stale_hours=26)
+        self.assertFalse(ok)
+        self.assertIn("超龄", failures[0])
+
+    def test_snapshot_without_parsable_as_of_fails(self):
+        st = self.status("snapshot", None)
+        st["as_of"] = "not-a-time"
+        ok, failures, _ = feed.evaluate_cli_sources({"categories": st})
+        self.assertFalse(ok)
+        self.assertIn("时基", failures[0])
+
+    def test_offline_skipped(self):
+        ok, failures, degraded = feed.evaluate_cli_sources(
+            {"categories": self.status("offline", None)})
+        self.assertTrue(ok)
+        self.assertEqual((failures, degraded), ([], []))
+
+    def test_max_stale_none_disables_age_gate(self):
+        ok, _, degraded = feed.evaluate_cli_sources(
+            {"categories": self.status("snapshot", 999.0)}, max_stale_hours=None)
+        self.assertTrue(ok)
+        self.assertEqual(len(degraded), 1)
+
+
+class TestRunCliRetry(unittest.TestCase):
+    """KA-355：run_cli 退避重试 —— 平台健康时的瞬时超时应被吃掉。"""
+
+    def setUp(self):
+        self.slept = []
+        self._sleep = feed.time.sleep
+        feed.time.sleep = self.slept.append
+
+    def tearDown(self):
+        feed.time.sleep = self._sleep
+
+    def _completed(self, rc, out=""):
+        m = mock.Mock()
+        m.returncode, m.stdout = rc, out
+        return m
+
+    def test_retries_then_succeeds(self):
+        seq = [self._completed(2), self._completed(0, "[]")]
+        with mock.patch.object(feed.subprocess, "run", side_effect=seq) as run:
+            self.assertEqual(feed.run_cli(["agent", "list"]), "[]")
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(self.slept, [feed.CLI_RETRY_BASE_DELAY])
+
+    def test_gives_up_after_attempts(self):
+        with mock.patch.object(feed.subprocess, "run",
+                               side_effect=Exception("timed out")) as run:
+            self.assertIsNone(feed.run_cli(["agent", "list"]))
+        self.assertEqual(run.call_count, feed.CLI_ATTEMPTS)
+        # 指数退避：2s / 4s（最后一次不再等待）
+        self.assertEqual(self.slept, [2.0, 4.0])
+
+    def test_empty_stdout_counts_as_failure(self):
+        with mock.patch.object(feed.subprocess, "run",
+                               return_value=self._completed(0, "   ")):
+            self.assertIsNone(feed.run_cli(["agent", "list"]))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

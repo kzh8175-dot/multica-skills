@@ -33,8 +33,23 @@ dashboard-data-feed.py — 智能看板只读数据接口（KA-96）
   comprehensive_estimate / grade_estimate 供 UI 以「预估值」标注呈现，
   并附 as_of 时基（聚合器最后一次写报告的时间）。
 
-幂等/只读: 本脚本不写任何文件；同输入必得同输出（预算/运行态依赖 multica
-  CLI 时以 --no-cli 关闭可保完全确定性）。
+幂等/只读: 本脚本不写评分数据；唯一写入是 CLI 本地快照（见下），
+  路径由调用方用 --cli-snapshot 指定；同输入必得同输出。
+
+CLI 数据源与本地快照（KA-355 · 对治「exit=0 但静默发布非确定性降级数据」）:
+  类别（R-42）/ 预算 / rating.status 三个数据源来自 `multica` CLI，而平台侧
+  会出现与响应体大小无关的随机超时（实测失败固定发生在 CLI 默认 HTTP 超时
+  10.0s，连续 6 次 `agent list` 失败 2/6）。CLI 失败时**不得**回退到语义不同的
+  兜底源 —— `resolve_category()` 回退到档案 category / 关键词推断会让 11 个
+  智能体（实测 95 中 11）换类别，基准分、预算上限、agent 深链 slug 一起漂移
+  （实测总预算上限在 99300/100350 之间跳变）。故：
+    ① CLI 成功 → 结果写入本地快照（原子写）并作为本次取值；
+    ② CLI 失败 → 取**同一来源的上一次成功快照**，输出与上次一致（同输入同输出），
+       并带 as_of 时基；
+    ③ 无快照 / 快照过期 → source="missing"（或由调用方按 age 判定超龄），
+       调用方据此**非 0 退出**并拒绝覆盖已发布产物（恢复「失败即告警」）。
+  快照是「同来源的旧值」，与「换一个来源的兜底值」性质不同：前者只是陈旧，
+  后者是错误 —— 后者会被下游（结算/聚合/看板）当成真实口径。
 
 用法:
   python3 dashboard-data-feed.py                          # 当前月+当前季度，全部智能体
@@ -43,6 +58,7 @@ dashboard-data-feed.py — 智能看板只读数据接口（KA-96）
   python3 dashboard-data-feed.py --agent "开发者工具工程师"  # 仅单智能体
   python3 dashboard-data-feed.py --pretty                   # 缩进 JSON
   python3 dashboard-data-feed.py --no-cli                   # 离线：跳过 multica（预算/运行态缺省）
+  python3 dashboard-data-feed.py --cli-snapshot <路径>      # CLI 本地快照落点（默认不写）
 """
 
 import argparse
@@ -51,6 +67,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -78,6 +95,12 @@ FALLBACK_BENCHMARKS = {
     "creative": 300, "technical": 300, "default": 300,
 }
 VALID_CATEGORIES = ("execution", "data", "marketing", "creative", "technical")
+
+# 平台侧类别 → 评分系统类别（与 rating-aggregator.py KA-356 / sync-agents-to-rating.py
+# 的 CAT_MAP 同源）。不做映射时 `engineering`/`management` 会被判为非法类别而丢弃，
+# 看板回退到档案/关键词推断 —— 而聚合器把它们映射为 technical/execution，
+# 同一智能体在 R-41 报告与看板上的类别/基准分就此分叉（KA-355 口径对齐）。
+CAT_MAP = {"engineering": "technical", "management": "execution"}
 
 KEYWORD_CATEGORIES = [
     (("运营", "客服", "零售", "Jira", "会议"), "execution"),
@@ -458,15 +481,252 @@ def parse_pending_escalated(issues):
 
 # ---------------------------------------------------------------- CLI 读取（best-effort）
 
+# CLI 侧参数（KA-355）。HTTP 超时由 `MULTICA_HTTP_TIMEOUT` 环境变量控制，
+# 默认 10s；调用方（包装脚本）应按 KA-333 约定前置 export MULTICA_HTTP_TIMEOUT=60。
+CLI_TIMEOUT_SECONDS = 60      # subprocess 级兜底，防 CLI 自身卡死
+CLI_ATTEMPTS = 3              # 平台健康时的瞬时超时可被重试吃掉
+CLI_RETRY_BASE_DELAY = 2.0    # 指数退避 2s / 4s
+
+CLI_SNAPSHOT_SCHEMA = 1
+CLI_SNAPSHOT_SECTIONS = ("categories", "issue_scan")
+
+
+def _utcnow(now=None):
+    return now or datetime.now(timezone.utc)
+
+
+def _iso(now=None):
+    return _utcnow(now).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def run_cli(args):
+    """执行 `multica <args>` → stdout 字符串；失败（含超时）退避重试后返回 None。
+
+    KA-355: 单次调用失败是常态（实测 `agent list` 连续 6 次失败 2/6，
+    失败固定发生在 CLI 默认 HTTP 超时 10.0s）。退避重试能把**平台健康时的
+    瞬时抖动**吃掉；平台整体降级时重试救不回来 —— 那种场景由调用方按
+    resolve_cli_source() 的 source/age 走快照或失败路径，不再静默降级。
+    """
+    delay = CLI_RETRY_BASE_DELAY
+    for attempt in range(1, CLI_ATTEMPTS + 1):
+        try:
+            result = subprocess.run(
+                ["multica"] + args, capture_output=True, text=True,
+                timeout=CLI_TIMEOUT_SECONDS)
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout
+        except Exception:
+            pass
+        if attempt < CLI_ATTEMPTS:
+            time.sleep(delay)
+            delay *= 2
+    return None
+
+
+def read_cli_snapshot(path):
+    """读 CLI 本地快照 → {section: {"as_of": iso, "value": ...}}。
+
+    缺失 / 损坏 / schema 不符一律返回 {}（按「无快照」处理，由调用方失败）。
+    """
+    if not path or not os.path.exists(path):
+        return {}
     try:
-        result = subprocess.run(
-            ["multica"] + args, capture_output=True, text=True, timeout=60)
-        if result.returncode != 0:
-            return None
-        return result.stdout
-    except Exception:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(data, dict) or data.get("schema") != CLI_SNAPSHOT_SCHEMA:
+        return {}
+    sections = data.get("sections")
+    return sections if isinstance(sections, dict) else {}
+
+
+def update_cli_snapshot(path, section, value, now=None):
+    """把某数据源的最新成功结果并入快照（原子写，其余 section 保留）。
+
+    写失败不影响本次取值（快照是加速器，不是正确性依赖）——但下次仍会
+    走 live，不会因此发布错误数据。
+    """
+    if not path:
+        return
+    sections = read_cli_snapshot(path)
+    sections[section] = {"as_of": _iso(now), "value": value}
+    tmp = f"{path}.tmp"
+    try:
+        parent = os.path.dirname(os.path.abspath(path))
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"schema": CLI_SNAPSHOT_SCHEMA, "sections": sections},
+                      f, ensure_ascii=False, indent=1)
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+
+def _age_hours(as_of, now=None):
+    try:
+        ts = datetime.strptime(as_of, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
         return None
+    return max(0.0, (_utcnow(now) - ts).total_seconds() / 3600.0)
+
+
+def evaluate_cli_sources(cli_sources, max_stale_hours=26):
+    """判定 CLI 数据源是否可用于**发布** → (ok, failures, degraded)。
+
+    ok=False 时调用方必须非 0 退出并**拒绝覆盖已发布产物**（保留上一次正确产物，
+    恢复「失败即告警」）。判定口径：
+      missing            → 失败（没读到，且没有可用的同来源旧值）
+      ok=False           → 失败
+      snapshot 且超龄    → 失败（快照比 max_stale_hours 更旧 = 已跨过一个完整刷新周期）
+      snapshot 未超龄    → 降级（可用，但必须标注新鲜度）
+      cli / offline      → 正常
+    max_stale_hours=None 表示不设上限（只在观测期手工运行使用）。
+    """
+    failures, degraded = [], []
+    for name, status in (cli_sources or {}).items():
+        status = status or {}
+        source = status.get("source")
+        if source == "offline":
+            continue
+        if not status.get("ok") or source == "missing":
+            failures.append(f"{name}: {status.get('note') or '数据源不可用'}")
+            continue
+        if source == "snapshot":
+            age = status.get("age_hours")
+            if age is None:
+                failures.append(f"{name}: 快照缺少可解析时基（as_of="
+                                f"{status.get('as_of')}），无法判定新鲜度")
+            elif max_stale_hours is not None and age > max_stale_hours:
+                failures.append(
+                    f"{name}: 快照超龄 {age:.1f}h > {max_stale_hours}h"
+                    f"（as_of {status.get('as_of')}）")
+            else:
+                age_txt = f"{age:.1f}h 前" if age is not None else "时基未知"
+                degraded.append(
+                    f"{name}: 取本地快照（{age_txt}，as_of {status.get('as_of')}）")
+    return (not failures), failures, degraded
+
+
+def resolve_cli_source(name, fetch, snapshot_path=None, use_cli=True, now=None):
+    """解析一个 CLI 数据源 → (value, status)。
+
+    status = {name, source, ok, as_of, age_hours, note}
+      source: "cli"      live 成功（已写入快照）
+              "snapshot" CLI 不可用，取同一来源的上一次成功快照
+              "missing"  CLI 不可用且无快照 —— 调用方应失败
+              "offline"  显式 --no-cli，本就不取该源
+
+    fetch() 必须遵守「失败返回 None」而**不是**返回空值 —— 空字典在语义上
+    是「成功但没有数据」（如 95 个智能体里确实没有带 R-42 标签的），
+    与「没读到」必须可区分，这正是 KA-355 的失效点。
+    """
+    if not use_cli:
+        return None, {"name": name, "source": "offline", "ok": True,
+                      "as_of": None, "age_hours": None, "note": "offline（--no-cli）"}
+    note = None
+    try:
+        value = fetch()
+    except Exception as exc:                      # 数据源自身异常视同不可用
+        value = None
+        note = f"{type(exc).__name__}: {exc}"
+    if value is not None:
+        update_cli_snapshot(snapshot_path, name, value, now=now)
+        return value, {"name": name, "source": "cli", "ok": True,
+                       "as_of": _iso(now), "age_hours": 0.0, "note": note}
+    section = read_cli_snapshot(snapshot_path).get(name) or {}
+    cached = section.get("value")
+    if cached is not None:
+        as_of = section.get("as_of")
+        return cached, {"name": name, "source": "snapshot", "ok": True,
+                        "as_of": as_of, "age_hours": _age_hours(as_of, now),
+                        "note": f"{name}: multica CLI 不可用，取本地快照（{as_of}）"}
+    return None, {"name": name, "source": "missing", "ok": False,
+                  "as_of": None, "age_hours": None,
+                  "note": note or f"{name}: multica CLI 不可用且无本地快照"}
+
+
+def _parse_cli_agents(data):
+    """multica agent list 的 list 载荷 → [{name,id,category,archived,description}]。
+
+    平台侧 `engineering`/`management` 经 CAT_MAP 映射（与聚合器同源）。
+    """
+    agents = []
+    for agent in data:
+        if not isinstance(agent, dict) or not agent.get("name"):
+            continue
+        cat = agent.get("category") or agent.get("agent.category")
+        if not cat:
+            m = DESC_CATEGORY_RE.search(agent.get("description") or "")
+            if m:
+                cat = m.group(1)
+        cat = CAT_MAP.get(cat, cat)
+        if cat not in VALID_CATEGORIES:
+            cat = None
+        agents.append({
+            "name": agent["name"],
+            "id": agent.get("id"),
+            "category": cat,
+            "archived": bool(agent.get("archived_at")),
+            "description": agent.get("description") or "",
+        })
+    return agents
+
+
+def fetch_cli_agents():
+    """live 成员表；CLI 不可用返回 None（区别于「成功但列表为空」）。"""
+    out = run_cli(["agent", "list", "--output", "json"])
+    if not out:
+        return None
+    try:
+        data = json.loads(out)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, list):
+        return None
+    return _parse_cli_agents(data)
+
+
+def load_cli_agents():
+    """读 multica agent list 的实时成员表（best-effort，成员页同步数据源）。
+
+    返回 list[dict]（每名成员一条：{name, id, category, archived, description}）；
+    以**列表**返回而不按规范化名建字典，是因为「UI 设计师」与「UI设计师」是两个
+    不同成员，按 norm 去键会互相覆盖。CLI 不可用 / 返回结构异常时返回 []。
+
+    注意: `[]` 无法区分「CLI 失败」与「平台确实没有成员」。需要该区分时用
+    `fetch_cli_agents()`（失败返回 None），或直接读 build_feed 的 meta.cli_sources。
+    """
+    return fetch_cli_agents() or []
+
+
+def fetch_cli_categories():
+    """live R-42 类别表 {归一化名: 类别}；CLI 不可用返回 None。
+
+    返回 {} 是**合法**的（CLI 成功但无任何智能体带 R-42 标签），
+    与 None（没读到）语义不同 —— 调用方据此决定是否走快照/失败。
+    """
+    agents = fetch_cli_agents()
+    if agents is None:
+        return None
+    cats = {}
+    for rec in agents:
+        if rec.get("category"):
+            cats[NORM_RE.sub("", rec["name"].lower())] = rec["category"]
+    return cats
+
+
+def load_cli_categories():
+    """读 multica agent list 的 R-42 `[category=X]` 标签（best-effort）。
+
+    CLI 不可用时返回 {}（旧行为，保留兼容）。build_feed 内部改用
+    fetch_cli_categories() 以便区分「失败」与「无标签」。
+    """
+    return fetch_cli_categories() or {}
 
 
 def fetch_all_issues(page_size=200, max_pages=25):
@@ -542,53 +802,6 @@ def load_rating_stats(limit=200):
     if issues is None:
         return None, note
     return parse_pending_escalated(issues), note
-
-
-def load_cli_agents():
-    """读 multica agent list 的实时成员表（best-effort，成员页同步数据源）。
-
-    返回 list[dict]（每名成员一条：{name, id, category, archived, description}）；
-    以**列表**返回而不按规范化名建字典，是因为「UI 设计师」与「UI设计师」是两个
-    不同成员，按 norm 去键会互相覆盖。CLI 不可用 / 返回结构异常时返回 []。
-    """
-    agents = []
-    out = run_cli(["agent", "list", "--output", "json"])
-    if not out:
-        return agents
-    try:
-        data = json.loads(out)
-    except json.JSONDecodeError:
-        return agents
-    if not isinstance(data, list):
-        return agents
-    for agent in data:
-        if not isinstance(agent, dict) or not agent.get("name"):
-            continue
-        name = agent["name"]
-        cat = agent.get("category") or agent.get("agent.category")
-        if not cat:
-            m = DESC_CATEGORY_RE.search(agent.get("description") or "")
-            if m:
-                cat = m.group(1)
-        if cat not in VALID_CATEGORIES:
-            cat = None
-        agents.append({
-            "name": name,
-            "id": agent.get("id"),
-            "category": cat,
-            "archived": bool(agent.get("archived_at")),
-            "description": agent.get("description") or "",
-        })
-    return agents
-
-
-def load_cli_categories():
-    """读 multica agent list 的 R-42 `[category=X]` 标签（best-effort）。"""
-    cats = {}
-    for rec in load_cli_agents():
-        if rec.get("category"):
-            cats[NORM_RE.sub("", rec["name"].lower())] = rec["category"]
-    return cats
 
 
 ORG_SECTION_RE = re.compile(r"^\[department\s+(.+)\]$")
@@ -719,15 +932,40 @@ def runtime_state(agents_root, dirs):
     }
 
 
-def build_feed(agents_root, months, quarters, agents, use_cli=True):
+def fetch_issue_scan():
+    """一次分页拉取 issue 全量 → {"budget": [...], "rating_status": {...}}。
+
+    预算与 rating.status 同源于 `issue list`，合并成一次拉取（KA-355）：
+    既省一半请求，也把「会不会撞上平台抖动」的窗口减半 —— 原先两次
+    独立拉取，任一次失败就各自降级，产出更容易在两次运行间跳变。
+    CLI 不可用返回 None。
+    """
+    issues, note = fetch_all_issues()
+    if issues is None:
+        return None
+    return {
+        "budget": filter_budget_issues(issues),
+        "rating_status": parse_pending_escalated(issues),
+        "note": note,
+    }
+
+
+def build_feed(agents_root, months, quarters, agents, use_cli=True,
+               cli_snapshot_path=None, now=None):
     dirs = scoring_dirs(agents_root)
     profiles_root = os.path.join(agents_root, "profiles")
     benchmarks = load_benchmarks(agents_root)
-    cli_cats = load_cli_categories() if use_cli else {}
+
+    # CLI 数据源（KA-355）：live → 本地快照 → missing。missing 由调用方
+    # （generate-dashboard-data.py）判定为失败并非 0 退出。
+    cli_cats, cats_status = resolve_cli_source(
+        "categories", fetch_cli_categories, cli_snapshot_path, use_cli, now)
+    scan, scan_status = resolve_cli_source(
+        "issue_scan", fetch_issue_scan, cli_snapshot_path, use_cli, now)
 
     agent_list = []
     for agent in agents:
-        cat, cat_src = resolve_category(agent, profiles_root, cli_cats)
+        cat, cat_src = resolve_category(agent, profiles_root, cli_cats or {})
         agent_list.append({
             "name": agent,
             "category": cat,
@@ -781,24 +1019,34 @@ def build_feed(agents_root, months, quarters, agents, use_cli=True):
         if by_agent:
             distortion[quarter] = by_agent
 
-    budget = None
-    budget_note = None
-    rating_stats = None
-    rating_note = None
     if use_cli:
-        budget, budget_note = load_budget()
-        rating_stats, rating_note = load_rating_stats()
+        scan = scan or {}
+        budget = scan.get("budget")
+        rating_stats = scan.get("rating_status")
+        # scan_status.note = 源不可用/取快照；scan.note = 分页期间的部分降级。
+        # 两者都要透出，否则「拿到了数据」会把「数据可能不完整」盖掉。
+        notes = [n for n in (scan_status.get("note"), scan.get("note")) if n]
+        budget_note = rating_note = " / ".join(notes) or None
     else:
+        budget = None
+        rating_stats = None
         budget_note = "offline（--no-cli）"
+        rating_note = "offline（--no-cli）"
 
     return {
         "meta": {
-            "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "generated_at": _iso(now),
             "agents_root": agents_root,
             "months": months,
             "quarters": quarters,
             "schema_version": "1.0",
             "read_only": True,
+            # CLI 数据源的可观测面（KA-355）：每个源给出来源/时基/年龄，
+            # 调用方据此判失败，看板据此标注新鲜度。
+            "cli_sources": {
+                "categories": cats_status,
+                "issue_scan": scan_status,
+            },
         },
         "agents": agent_list,
         "monthly": monthly,
@@ -824,8 +1072,14 @@ def main():
     parser.add_argument("--all", action="store_true", help="扫描全部月份/季度")
     parser.add_argument("--no-cli", action="store_true",
                         help="离线：不调用 multica（预算/运行态计数缺省）")
+    parser.add_argument("--cli-snapshot", default=None,
+                        help="CLI 本地快照路径（KA-355）：CLI 成功时写入、失败时取用；"
+                             "缺省不写快照（纯离线/测试）")
     parser.add_argument("--pretty", action="store_true", help="缩进输出 JSON")
     args = parser.parse_args()
+
+    if args.cli_snapshot:
+        args.cli_snapshot = os.path.abspath(args.cli_snapshot)
 
     agents_root = os.path.abspath(args.agents_dir)
     dirs = scoring_dirs(agents_root)
@@ -854,8 +1108,23 @@ def main():
         print("❌ 未找到任何智能体数据目录", file=sys.stderr)
         sys.exit(1)
 
-    feed = build_feed(agents_root, months, quarters, agents, use_cli=not args.no_cli)
+    feed = build_feed(agents_root, months, quarters, agents, use_cli=not args.no_cli,
+                      cli_snapshot_path=args.cli_snapshot)
     print(json.dumps(feed, ensure_ascii=False, indent=2 if args.pretty else None))
+
+    # CLI 数据源完全缺失（连快照都没有）→ 输出里的类别是语义不同的兜底值，
+    # 不是真实口径；以非 0 退出，避免被当成正常数据消费（KA-355）。
+    missing = [f"{name}: {(st or {}).get('note')}"
+               for name, st in (feed["meta"]["cli_sources"] or {}).items()
+               if (st or {}).get("source") == "missing"]
+    if missing:
+        print("❌ CLI 数据源不可用且无本地快照（输出含兜底类别，非真实口径）:",
+              file=sys.stderr)
+        for line in missing:
+            print(f"   - {line}", file=sys.stderr)
+        print("   处理: 重试 / 检查 `multica agent list` / 传 --cli-snapshot 启用快照；"
+              "离线请显式加 --no-cli。", file=sys.stderr)
+        sys.exit(3)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,9 @@ venv/
 # 运行时缓存（调度器写入 ${TMPDIR}）
 multica-agent-cats-*.tmp
 
+# 看板 CLI 本地快照（KA-355；运行时产物，每台机器自持）
+dashboard/cache/
+
 # 报告（生成产物，已归档至 GitHub Release，不入库）
 reports/
 

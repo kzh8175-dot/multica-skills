@@ -24,8 +24,9 @@
 |---|---|
 | `index.html` | 生产看板 · 8 页（总览/排行榜/趋势/评分明细/事件流水/预算/升级队列/异常中心），数据驱动渲染 |
 | `dashboard-data.js` | 真实数据（`window.DASHBOARD_DATA`），由生成脚本只读产出 |
-| `dashboard-data-feed.py` | **团队标准数据接口**（KA-96 里程碑 1，仓库 `kzh8175-dot/multica-skills` commit `0093c62`，Schema v1.0 副本） |
-| `generate-dashboard-data.py` | 数据接口层：调用 `dashboard-data-feed.build_feed()` → 映射为 `window.DASHBOARD_DATA` |
+| `dashboard-data-feed.py` | **团队标准数据接口**（KA-96 里程碑 1，仓库 `kzh8175-dot/multica-skills` commit `0093c62`，Schema v1.0 副本；KA-355 起新增 CLI 快照与 `meta.cli_sources`） |
+| `generate-dashboard-data.py` | 数据接口层：调用 `dashboard-data-feed.build_feed()` → 映射为 `window.DASHBOARD_DATA`；CLI 源不可用时以退出码 3 拒绝落盘 |
+| `cache/cli-snapshot.json` | CLI 本地快照（KA-355，运行时产物）：live 成功时原子刷新，失败时按年龄取用；不进版本库 |
 | `shots/*.png` | 8 页 + 明细页渲染截图（1440×1200 视口，供验收预览） |
 
 ## 使用
@@ -57,6 +58,43 @@ python3 generate-dashboard-data.py \
   --prod-root <WORKSPACE>/prod/rating-system \
   --out dashboard-data.js
 ```
+
+生产刷新走包装脚本（推荐，含超时前置 + 快照 + 失败退出码）：
+
+```bash
+<WORKSPACE>/prod/dashboard/scripts/refresh-dashboard.sh
+# exit 0 正常 / 2 依赖缺失 / 3 CLI 数据源不可用（不落盘，保留上次产物）
+```
+
+#### CLI 数据源与失败即告警（KA-355）
+
+类别（R-42）/ 预算 / `rating.status` 来自 `multica` CLI，而平台侧会出现与响应体
+大小无关的随机超时（实测 `agent list` 连续 6 次失败 2/6，失败固定发生在 CLI 默认
+HTTP 超时 10.0s）。**旧行为**：CLI 失败 → 静默回退到档案 category / 关键词推断 →
+实测 95 个智能体里 **11 个换类别**（如「中国市场本地化策略师」marketing→technical），
+基准分、预算上限、agent 深链 slug 一起漂移（总预算上限在 **99300 / 100350** 之间
+随运行跳变），而退出码仍为 0 —— 命中验收口径「同输入同输出」的反面。
+
+**现行为**（`dashboard-data-feed.py` 的 `resolve_cli_source`）：
+
+| CLI | 本地快照 | 结果 |
+|---|---|---|
+| 成功 | — | 取值 = live，并刷新快照；exit 0 |
+| 失败 | 存在且 ≤ `--max-stale-hours`（默认 26h） | 取值 = **同来源的上一次成功快照**，输出与上次一致；exit 0，`meta.dataFreshness.degraded=true` 且页面 note 前置「⚠️ 数据新鲜度降级」 |
+| 失败 | 缺失 / 超龄 / 无时基 | **exit 3 且不落盘**，保留上一次正确产物 → 恢复「失败即告警」 |
+
+关键区别：快照是**同一来源的旧值**（只是陈旧），不是**换一个来源的兜底值**（那是错误）。
+后者会被下游当成真实口径，前者只影响新鲜度且被显式标注。
+
+配套：
+
+- `run_cli()` 指数退避重试（2s/4s，3 次），吃掉平台健康时的瞬时抖动；
+- 包装脚本前置 `MULTICA_HTTP_TIMEOUT=60`（KA-333 约定；**失效条件是平台整体降级**）；
+- 预算与 `rating.status` 合并为一次 `issue list` 分页拉取（原先两次独立拉取，
+  任一次失败各自降级，产出更易跳变）；
+- 平台侧 `engineering`/`management` 类别经 `CAT_MAP` 映射为 technical/execution
+  （与 `rating-aggregator.py` / `sync-agents-to-rating.py` 同源），消除看板与
+  R-41 报告的类别分叉。
 
 ## 数据接口层（只读 · 团队标准）
 
