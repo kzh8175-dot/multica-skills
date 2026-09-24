@@ -34,8 +34,10 @@ test-state-change-hook.py — 状态变更钩子（P2-11 / KA-76）验收测试
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 import unittest
+from unittest import mock
 
 HOOK = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -638,6 +640,101 @@ class TestMainFlow(unittest.TestCase):
         self.assertEqual(data["scanned"], 1)
         self.assertEqual(data["stats"].get("no-transition"), 1)
         self.assertEqual(data["events_written"], [])
+
+
+class TestRunCliRetry(unittest.TestCase):
+    """KA-416 回归：CLI 只读调用有限次重试 + 退避；写调用一律不重试。
+
+    背景：2026-09-24 00:20 运行中 2/393 条 `issue metadata list` 瞬时超时
+    （`Request timed out: the server did not respond in time`）→ 计 read-error
+    → 整轮 exit 1 → L1 告警。只读调用无副作用，重试即可收敛。
+    """
+
+    def _completed(self, rc=0, stdout="{}", stderr=""):
+        return subprocess.CompletedProcess(
+            args=["multica"], returncode=rc, stdout=stdout, stderr=stderr)
+
+    def _patch(self, results):
+        """results: 按调用顺序返回的 CompletedProcess 或待抛出的 Exception。"""
+        calls = []
+        sleeps = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append((list(cmd), kwargs.get("timeout")))
+            r = results[len(calls) - 1]
+            if isinstance(r, Exception):
+                raise r
+            return r
+
+        return fake_run, calls, sleeps
+
+    def _run(self, results, argv=None):
+        fake, calls, sleeps = self._patch(results)
+        with mock.patch.object(mod.subprocess, "run", fake), \
+                mock.patch.object(mod.time, "sleep", sleeps.append):
+            out = mod.run_cli(argv or ["issue", "list", "--limit", "100"])
+        return out, calls, sleeps
+
+    def test_first_attempt_success_does_not_retry(self):
+        out, calls, sleeps = self._run([self._completed(rc=0, stdout='{"a":1}')])
+        self.assertEqual(out, (True, '{"a":1}'))
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(sleeps, [])
+
+    def test_transient_failure_recovered_by_retry(self):
+        timeout = ("Request timed out: the server did not respond in time. "
+                   "Check your network connection or try again later.")
+        out, calls, sleeps = self._run([
+            self._completed(rc=2, stderr=timeout),
+            self._completed(rc=2, stderr=timeout),
+            self._completed(rc=0, stdout="[]"),
+        ])
+        self.assertEqual(out, (True, "[]"))
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(sleeps, [1, 3])   # 两次退避，最后一次失败后不再等待
+
+    def test_exhausted_retries_report_last_error(self):
+        timeout = "Request timed out: the server did not respond in time."
+        out, calls, sleeps = self._run([self._completed(rc=2, stderr=timeout)] * 3)
+        self.assertEqual(out, (False, timeout))
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(sleeps, [1, 3])
+
+    def test_exception_path_is_also_retried(self):
+        exc = subprocess.TimeoutExpired(cmd=["multica"], timeout=60)
+        out, calls, sleeps = self._run([exc, self._completed(rc=0, stdout="{}")])
+        self.assertEqual(out, (True, "{}"))
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(sleeps, [1])
+
+    def test_per_call_timeout_is_configurable(self):
+        _, calls, _ = self._run([self._completed(rc=0)], )
+        self.assertEqual(calls[0][1], mod.CLI_READ_TIMEOUT)
+
+    def test_write_path_never_retries(self):
+        """写 metadata 失败 → 只调用一次（重放会把「结果未知」变成「重复写入」）。"""
+        calls = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append(list(cmd))
+            return self._completed(rc=1, stderr="boom")
+
+        with mock.patch.object(mod.subprocess, "run", fake_run), \
+                mock.patch.object(mod.time, "sleep", lambda s: None):
+            ok, err = mod.set_metadata("i-1", "rating.status", "pending")
+        self.assertFalse(ok)
+        self.assertEqual(err, "boom")
+        self.assertEqual(len(calls), 1)
+
+    def test_gate_issue_list_shares_read_retry_budget(self):
+        """入口闸门 `issue list` 同样走只读重试（整轮中止比单条昂贵）。"""
+        out, calls, _ = self._run([
+            self._completed(rc=2, stderr="Could not reach the Multica server"),
+            self._completed(rc=0, stdout=json.dumps([
+                {"id": "i-1", "assignee_type": "agent"}] * 1)),
+        ], argv=["issue", "list"])
+        self.assertTrue(out[0])
+        self.assertEqual(len(calls), 2)
 
 
 if __name__ == "__main__":

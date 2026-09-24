@@ -38,6 +38,9 @@ state-change-hook.py — 状态变更钩子（方案C P2-11 / KA-76）
   - 0: 全部处理成功（含正常无事件、dry-run）
   - 1: 汇总含 write-error（写 metadata 失败）或 read-error（读 metadata 失败）时退出 1，
        cron/包装脚本（run-state-change-hook.sh）按「退出码非 0」告警
+  - 只读调用带有限次重试（KA-416，见 CLI_READ_RETRIES）：上游瞬时抖动在轮内收敛，
+    不再升级为 exit 1；**重试耗尽后仍失败才计 read-error** —— 此时是真实故障，
+    退出码非 0 是正确信号（不静默吞错）
 
 用法:
   python3 state-change-hook.py                     # 扫描全部 agent 分配 issue
@@ -54,9 +57,18 @@ import os
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 
 # ---------------------------------------------------------------- 常量
+
+# CLI 只读调用重试（KA-416）：上游 API 抖动（`Request timed out: the server did
+# not respond in time`）不应让单条 issue 计入 read-error 并令整轮退出 1。
+# 只读调用无副作用，可安全重放；**写调用一律不重试**（写可能已生效，重放会把
+# 「结果未知」变成「重复写入」）——见 set_metadata()。
+CLI_READ_RETRIES = 3         # 只读调用总尝试次数（含首次）
+CLI_READ_BACKOFF = (1, 3)    # 第 1/2 次失败后的退避秒数（最后一次失败不再等待）
+CLI_READ_TIMEOUT = 60        # 单次调用超时（秒）
 
 RETURN_FROM = {"done", "in_review"}    # 从这些状态退回 → 返工
 RETURN_TO = {"todo", "in_progress"}    # 退回到这些状态 → 返工
@@ -252,18 +264,38 @@ def _baseline_plan(issue, meta):
 
 # ---------------------------------------------------------------- IO
 
-def run_cli(args):
-    """执行 multica CLI，返回 (ok, output)。"""
-    try:
-        result = subprocess.run(
-            ["multica"] + args,
-            capture_output=True, text=True, timeout=60,
-        )
-        if result.returncode != 0:
-            return False, result.stderr.strip()
-        return True, result.stdout
-    except Exception as e:
-        return False, str(e)
+def run_cli(args, retries=CLI_READ_RETRIES, backoff=CLI_READ_BACKOFF,
+            timeout=CLI_READ_TIMEOUT):
+    """执行 multica CLI，返回 (ok, output)。
+
+    带有限次重试 + 退避（KA-416）：**只读调用**（`issue list` / `issue get` /
+    `issue metadata list`）遇失败时重试，抖动收敛后单条失败不再升级为整轮 exit 1。
+    写调用由 set_metadata() 传 retries=1 关闭重试。
+
+    全部尝试耗尽才返回失败 —— 此时是真实故障，read-error 与非 0 退出码仍是正确信号
+    （不静默吞错，与 runbook §3「静默 = 故障」口径一致）。
+    """
+    err = None
+    for attempt in range(1, retries + 1):
+        try:
+            result = subprocess.run(
+                ["multica"] + args,
+                capture_output=True, text=True, timeout=timeout,
+            )
+            if result.returncode != 0:
+                err = result.stderr.strip() or f"exit={result.returncode}"
+            else:
+                if attempt > 1:
+                    print(f"  ↻ multica {' '.join(args[:3])} 第 {attempt} 次尝试成功")
+                return True, result.stdout
+        except Exception as e:
+            err = str(e)
+        if attempt < retries:
+            wait = backoff[min(attempt - 1, len(backoff) - 1)]
+            print(f"  ⚠️ multica {' '.join(args[:3])} 第 {attempt}/{retries} 次失败"
+                  f"（{err}），{wait}s 后重试")
+            time.sleep(wait)
+    return False, err
 
 
 def list_agent_issues():
@@ -309,11 +341,15 @@ def get_issue_metadata(issue_id):
 
 
 def set_metadata(issue_id, key, value, vtype="string"):
-    """写入单个 metadata 键。返回 (ok, err)。"""
+    """写入单个 metadata 键。返回 (ok, err)。
+
+    **写调用不重试**（retries=1）：写可能已经生效只是响应丢失，盲目重放会把
+    「结果未知」变成「重复写入」。写失败仍按原语义上报 write-error → 退出码 1。
+    """
     ok, out = run_cli([
         "issue", "metadata", "set", issue_id,
         "--key", key, "--value", str(value), "--type", vtype, "--output", "json",
-    ])
+    ], retries=1)
     return ok, (None if ok else out)
 
 
