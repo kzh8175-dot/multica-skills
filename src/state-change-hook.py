@@ -34,13 +34,25 @@ state-change-hook.py — 状态变更钩子（方案C P2-11 / KA-76）
   - 已 escalated → 跳过并报告（升级人工处置，不改写）
   - --dry-run 只读预演，不产生任何写入
 
-退出码契约:
+退出码契约（KA-424 分轨；此前 read-error / write-error 一视同仁 exit 1）:
   - 0: 全部处理成功（含正常无事件、dry-run）
-  - 1: 汇总含 write-error（写 metadata 失败）或 read-error（读 metadata 失败）时退出 1，
-       cron/包装脚本（run-state-change-hook.sh）按「退出码非 0」告警
+  - 1: **脚本/写入故障** —— 汇总含 write-error（写 metadata 失败），或入口闸门
+       （`issue list` / `issue get`）失败、非 IO 类异常。
+       cron/包装脚本（run-state-change-hook.sh）按非 0 告警 → L1/P1 开单 @SRE
+  - 3: **输入不可用** —— 汇总**仅**含 read-error（`metadata list` 读失败，
+       且 KA-416 的只读重试已耗尽）。**不占 P1 通道**：记日志 + 摘要行，
+       等次日调度窗口自动自愈；同日连续 ≥3 次仍为 3 才升级人工
+       （与 runbook §3 / sync-agents-to-rating.sh 的既有分轨口径一致）
+
+  写错误优先于读错误：混轮时按更严重档报，避免真·写入故障被 read-error 掩盖。
+
+  退出码 3 的安全前提（不变量，回归锁定）: read-error 分支**不得推进
+  `rating.last_status`** —— 读失败即 `continue`，发生在任何写入路径之前。
+  一旦读失败仍写状态，read-error 就退化为静默数据丢失，**必须立刻回到 exit 1**。
+
   - 只读调用带有限次重试（KA-416，见 CLI_READ_RETRIES）：上游瞬时抖动在轮内收敛，
-    不再升级为 exit 1；**重试耗尽后仍失败才计 read-error** —— 此时是真实故障，
-    退出码非 0 是正确信号（不静默吞错）
+    不再升级为非 0 退出码；**重试耗尽后仍失败才计 read-error** —— 此时是真实故障，
+    非 0 退出码是正确信号（不静默吞错）
 
 用法:
   python3 state-change-hook.py                     # 扫描全部 agent 分配 issue
@@ -69,6 +81,13 @@ from datetime import datetime, timezone
 CLI_READ_RETRIES = 3         # 只读调用总尝试次数（含首次）
 CLI_READ_BACKOFF = (1, 3)    # 第 1/2 次失败后的退避秒数（最后一次失败不再等待）
 CLI_READ_TIMEOUT = 60        # 单次调用超时（秒）
+
+# 退出码分轨（KA-424）：把「输入不可用」从「脚本/写入故障」里拆出来，前者不占 P1 通道。
+# 分轨前 read-error 与 write-error 同为 exit 1 —— 0.5% 的瞬时读抖动直接进 P1（KA-415 /
+# KA-416 / KA-422 连开三单），而真正的写入故障被同一档掩盖。
+EXIT_OK = 0                    # 全部处理成功（含正常无事件、dry-run）
+EXIT_SCRIPT_ERROR = 1          # write-error / 入口闸门失败 / 非 IO 类异常 → L1/P1
+EXIT_INPUT_UNAVAILABLE = 3     # 仅 read-error（只读重试耗尽）→ 不占 P1，次日窗口自愈
 
 RETURN_FROM = {"done", "in_review"}    # 从这些状态退回 → 返工
 RETURN_TO = {"todo", "in_progress"}    # 退回到这些状态 → 返工
@@ -274,6 +293,10 @@ def run_cli(args, retries=CLI_READ_RETRIES, backoff=CLI_READ_BACKOFF,
 
     全部尝试耗尽才返回失败 —— 此时是真实故障，read-error 与非 0 退出码仍是正确信号
     （不静默吞错，与 runbook §3「静默 = 故障」口径一致）。
+
+    重试诊断走 **stderr**（KA-424 修正）：`--json` 模式下 stdout 必须是可解析的纯
+    JSON，把重试提示混进 stdout 会让消费方解析失败 —— 与 `multica --output json`
+    自身的约定（JSON 走 stdout、确认/警告走 stderr）一致。
     """
     err = None
     for attempt in range(1, retries + 1):
@@ -286,14 +309,15 @@ def run_cli(args, retries=CLI_READ_RETRIES, backoff=CLI_READ_BACKOFF,
                 err = result.stderr.strip() or f"exit={result.returncode}"
             else:
                 if attempt > 1:
-                    print(f"  ↻ multica {' '.join(args[:3])} 第 {attempt} 次尝试成功")
+                    print(f"  ↻ multica {' '.join(args[:3])} 第 {attempt} 次尝试成功",
+                          file=sys.stderr)
                 return True, result.stdout
         except Exception as e:
             err = str(e)
         if attempt < retries:
             wait = backoff[min(attempt - 1, len(backoff) - 1)]
             print(f"  ⚠️ multica {' '.join(args[:3])} 第 {attempt}/{retries} 次失败"
-                  f"（{err}），{wait}s 后重试")
+                  f"（{err}），{wait}s 后重试", file=sys.stderr)
             time.sleep(wait)
     return False, err
 
@@ -399,10 +423,59 @@ def process_issue(issue, meta, dry_run=False, no_auto_baseline=False, write=None
     return _apply_updates(issue, plan, dry_run=dry_run, write=write)
 
 
+def exit_code_for(stats):
+    """按故障类别分轨计算退出码（纯函数，KA-424）。返回 EXIT_OK / EXIT_SCRIPT_ERROR /
+    EXIT_INPUT_UNAVAILABLE。
+
+    - write-error 存在  → 1（脚本/写入故障，L1/P1）
+    - 仅 read-error 存在 → 3（输入不可用，不占 P1，次日窗口自愈）
+    - 无错误            → 0
+
+    **写错误优先于读错误**：混轮（既有写失败又有读失败）必须按更严重档报 —— 否则真·
+    写入故障会被 read-error 降级掉，正是本次分轨要消除的「同一档掩盖」。
+    """
+    if stats.get("write-error"):
+        return EXIT_SCRIPT_ERROR
+    if stats.get("read-error"):
+        return EXIT_INPUT_UNAVAILABLE
+    return EXIT_OK
+
+
+def exit_reason_for(code):
+    """退出码 → 摘要行口径（供日志/JSON 复读；不改变退出码语义）。"""
+    return {
+        EXIT_OK: "ok",
+        EXIT_SCRIPT_ERROR: "script-error",
+        EXIT_INPUT_UNAVAILABLE: "input-unavailable",
+    }.get(code, "unknown")
+
+
 def _exit_on_error(stats):
-    """写/读失败时退出码=1（cron/包装脚本按非 0 告警）；无错误不调用 exit（契约 exit 0）。"""
-    if stats.get("write-error") or stats.get("read-error"):
-        sys.exit(1)
+    """非 0 时按分轨退出码退出（cron/包装脚本据此告警）；无错误不调用 exit（契约 exit 0）。
+
+    口径来源 runbook §3「告警分轨」：引入退出码 3 是为了把**输入不可用**从 P1 通道里
+    摘出去（长期虚假 P1 → 告警疲劳 → 真故障被淹没）；退出码 1 保留给脚本/写入故障。
+    """
+    code = exit_code_for(stats)
+    if code:
+        sys.exit(code)
+
+
+def _exit_summary_line(stats):
+    """退出码分轨的摘要行（runbook §3：退出码 3 的动作是「记日志 + 摘要行」）。
+
+    摘要行是人读的处置提示，不改变退出码 —— 包装脚本把它一并 tee 进
+    logs/hook/YYYY-MM-DD.log，供次日复盘判断是「输入不可用、可自愈」还是「需开单」。
+    """
+    code = exit_code_for(stats)
+    if code == EXIT_SCRIPT_ERROR:
+        return (f"  ❌ 退出码 1（脚本/写入故障：write-error={stats.get('write-error', 0)}）"
+                f" → L1/P1：本 job issue 告警 + 开单 @SRE")
+    if code == EXIT_INPUT_UNAVAILABLE:
+        return (f"  ⚠️ 退出码 3（输入不可用：read-error={stats.get('read-error', 0)}，"
+                f"只读重试已耗尽）→ 不占 P1 通道：记日志待次日调度窗口自愈；"
+                f"同日连续 ≥3 次仍为 3 才升级人工")
+    return "  ✅ 退出码 0（无 write-error / read-error）"
 
 
 # ---------------------------------------------------------------- 主流程
@@ -422,20 +495,24 @@ def main():
     agents = load_agents()
 
     # 获取 issue 列表
+    # 入口闸门失败一律按 EXIT_SCRIPT_ERROR 报：闸门失败 = 整轮没跑（0 条 issue 被处理），
+    # 若按退出码 3「不占 P1、等次日自愈」处理，而本 job 每日只跑一次，就永远凑不满
+    # 「同日连续 ≥3 次」的升级条件 → 退化为静默失火（runbook §3「静默 = 故障」）。
+    # 退出码 3 只留给**逐条 metadata 读失败**这一种有界、可自愈的输入不可用。
     if args.issue:
         ok, out = run_cli(["issue", "get", args.issue, "--output", "json"])
         if not ok:
             print(f"❌ 获取 issue 失败: {out}")
-            sys.exit(1)
+            sys.exit(EXIT_SCRIPT_ERROR)
         issues = [json.loads(out)]
     else:
         issues, err = list_agent_issues()
         if err:
             print(f"❌ 列出 issue 失败: {err}")
-            sys.exit(1)
+            sys.exit(EXIT_SCRIPT_ERROR)
         if issues is None:
             print("❌ 无返回")
-            sys.exit(1)
+            sys.exit(EXIT_SCRIPT_ERROR)
 
     if not args.json:
         print("=== 状态变更钩子 (state-change-hook) ===")
@@ -450,6 +527,12 @@ def main():
         agent = agents.get(issue.get("assignee_id"), "未知智能体")
         meta, merr = get_issue_metadata(issue["id"])
         if merr or meta is None:
+            # ⚠️ 不变量（KA-424 退出码 3 的安全前提）：读失败必须在这里 `continue`，
+            # 即**在任何写入路径之前**返回 —— 本 issue 的 rating.last_status 不得推进。
+            # 读失败 + 不写状态 = 最坏只晚一个周期（次日窗口重读同一状态并补写事件），
+            # 不产生永久遗漏，所以 read-error 才敢降级为「不占 P1」。
+            # 若此处被改成「读失败也写状态」，read-error 即退化为静默数据丢失，
+            # 退出码必须立刻回到 1（回归见 test_read_error_does_not_advance_last_status）。
             if not args.json:
                 print(f"  ❌ {ident} [{agent}] 读取 metadata 失败: {merr}")
             stats["read-error"] = stats.get("read-error", 0) + 1
@@ -493,12 +576,15 @@ def main():
         print(line)
 
     if args.json:
+        code = exit_code_for(stats)
         report = {
             "run_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "mode": "dry-run" if args.dry_run else ("baseline" if args.baseline else "normal"),
             "scanned": len(issues),
             "stats": stats,
             "events_written": events_out,
+            "exit_code": code,
+            "exit_reason": exit_reason_for(code),
         }
         print(json.dumps(report, ensure_ascii=False, indent=2))
         _exit_on_error(stats)
@@ -509,6 +595,7 @@ def main():
     for k, v in sorted(stats.items(), key=lambda kv: -kv[1]):
         print(f"  {k}: {v}")
     print(f"  合计: {sum(stats.values())}")
+    print(_exit_summary_line(stats))
     _exit_on_error(stats)
 
 

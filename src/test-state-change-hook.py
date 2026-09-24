@@ -39,10 +39,27 @@ import sys
 import unittest
 from unittest import mock
 
-HOOK = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "state-change-hook.py",
-))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _resolve_hook(here=_HERE):
+    """定位被测模块，兼容两种布局（KA-424）：
+
+      - 仓库布局：被测模块与测试同目录      → src/state-change-hook.py
+      - 生产树布局：测试在 tests/ 子目录      → agents/capability-system/state-change-hook.py
+
+    生产树把测试放在 `agents/capability-system/tests/`（runbook §5 的复验命令路径），
+    旧实现只按同目录解析 → `python3 agents/capability-system/tests/test-state-change-hook.py`
+    直接 FileNotFoundError，本文件的用例在生产树**一条都跑不了**（同目录下的
+    test-rating-aggregator.py 用的是 dirname(dirname(...))，故不受影响）。
+    """
+    same_dir = os.path.normpath(os.path.join(here, "state-change-hook.py"))
+    if os.path.exists(same_dir):
+        return same_dir
+    return os.path.normpath(os.path.join(here, os.pardir, "state-change-hook.py"))
+
+
+HOOK = _resolve_hook()
 
 spec = importlib.util.spec_from_file_location("state_change_hook", HOOK)
 mod = importlib.util.module_from_spec(spec)
@@ -398,9 +415,12 @@ class TestProcessIssue(unittest.TestCase):
         self.assertEqual(self.writes, [("rating.last_status", "done", "string")])
 
 
-class TestMainFlow(unittest.TestCase):
-    """main() 集成：patch run_cli/set_metadata，验证完整编排
-    （baseline → transition → event-written → 幂等）。"""
+class _HookMainFixture(unittest.TestCase):
+    """main() 集成测试夹具：patch run_cli / set_metadata / load_agents / get_issue_metadata。
+
+    只提供夹具，不含用例 —— 供 TestMainFlow（编排/幂等）与 TestExitCodeSplit
+    （KA-424 退出码分轨）共用，避免两份 fake 漂移。
+    """
 
     def setUp(self):
         self.store = {}          # issue_id -> metadata dict（共享 fake）
@@ -447,6 +467,11 @@ class TestMainFlow(unittest.TestCase):
             iid = args[3]
             return True, json.dumps(self.store.get(iid, {}), ensure_ascii=False)
         return False, f"unexpected cli: {args}"
+
+
+class TestMainFlow(_HookMainFixture):
+    """main() 集成：patch run_cli/set_metadata，验证完整编排
+    （baseline → transition → event-written → 幂等）。"""
 
     def test_full_lifecycle_baseline_then_event_then_idempotent(self):
         it = issue(id="i-1", identifier="KA-1", status="in_progress",
@@ -589,15 +614,16 @@ class TestMainFlow(unittest.TestCase):
             mod.main()
         self.assertEqual(cm.exception.code, 1)
 
-    def test_main_exits_1_on_read_error(self):
-        # 读 metadata 失败 → 计入 read-error → 退出码=1
+    def test_main_exits_3_on_read_error(self):
+        # KA-424 分轨：读 metadata 失败（只读重试耗尽）→ 输入不可用 → 退出码 **3**，
+        # 不占 P1 通道。分轨前此处断言 1（read-error 与 write-error 同档）。
         it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
         self.issues = [it]
         mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
         sys.argv = ["state-change-hook.py", "--issue", "i-1"]
         with self.assertRaises(SystemExit) as cm:
             mod.main()
-        self.assertEqual(cm.exception.code, 1)
+        self.assertEqual(cm.exception.code, 3)
 
     def test_main_no_error_exits_zero(self):
         # 无错误：不抛 SystemExit（退出码=0 契约）
@@ -640,6 +666,298 @@ class TestMainFlow(unittest.TestCase):
         self.assertEqual(data["scanned"], 1)
         self.assertEqual(data["stats"].get("no-transition"), 1)
         self.assertEqual(data["events_written"], [])
+
+
+class TestExitCodeFor(unittest.TestCase):
+    """KA-424：退出码分轨的纯函数口径（read-error→3 / write-error→1）。
+
+    分轨前 `_exit_on_error()` 对 read-error 与 write-error 一视同仁 exit 1，
+    后果是 0.5% 的瞬时读抖动直接进 P1 通道（KA-415 / KA-416 / KA-422 连开三单），
+    而真正的写入故障被同一档掩盖。
+    """
+
+    def test_clean_stats_is_zero(self):
+        for stats in ({}, {"no-transition": 399}, {"event-written": 2, "baseline": 1}):
+            self.assertEqual(mod.exit_code_for(stats), mod.EXIT_OK)
+            self.assertEqual(mod.exit_code_for(stats), 0)
+
+    def test_write_error_is_one(self):
+        self.assertEqual(mod.exit_code_for({"write-error": 1}), 1)
+
+    def test_read_error_is_three(self):
+        self.assertEqual(mod.exit_code_for({"read-error": 1}), 3)
+        self.assertEqual(mod.exit_code_for({"read-error": 3, "no-transition": 396}), 3)
+
+    def test_write_error_wins_over_read_error(self):
+        # 混轮：真·写入故障不得被 read-error 降级掩盖（否则就是换个档位重演旧缺陷）
+        self.assertEqual(mod.exit_code_for({"read-error": 2, "write-error": 1}), 1)
+
+    def test_exit_code_constants_match_runbook_contract(self):
+        # 与 runbook §3「告警分轨」/ sync-agents-to-rating.sh 既有口径一致
+        self.assertEqual(mod.EXIT_OK, 0)
+        self.assertEqual(mod.EXIT_SCRIPT_ERROR, 1)
+        self.assertEqual(mod.EXIT_INPUT_UNAVAILABLE, 3)
+
+    def test_exit_reason_labels(self):
+        self.assertEqual(mod.exit_reason_for(0), "ok")
+        self.assertEqual(mod.exit_reason_for(1), "script-error")
+        self.assertEqual(mod.exit_reason_for(3), "input-unavailable")
+
+    def test_summary_line_distinguishes_branches(self):
+        # runbook §3：退出码 3 的动作含「记日志 + 摘要行」——摘要行必须能区分三档
+        self.assertIn("退出码 0", mod._exit_summary_line({}))
+        self.assertIn("退出码 1", mod._exit_summary_line({"write-error": 1}))
+        line = mod._exit_summary_line({"read-error": 2})
+        self.assertIn("退出码 3", line)
+        self.assertIn("不占 P1", line)
+
+
+class TestExitCodeSplit(_HookMainFixture):
+    """KA-424 验收：main() 层面的退出码分轨 + read-error 不变量。
+
+    验收 (b) 的 main 层版本在此；(a) 与 (b) 的端到端（真·重试循环）版本见
+    TestReadRetryComposition。
+    """
+
+    def test_read_error_exits_three(self):
+        # 验收 (b)：读失败（只读重试耗尽）→ exit 3
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, mod.EXIT_INPUT_UNAVAILABLE)
+
+    def test_read_error_does_not_advance_last_status(self):
+        """不变量（退出码 3 的全部依据）：read-error 分支不得推进 rating.last_status。
+
+        读失败必须发生在任何写入路径之前 —— 最坏只晚一个周期（次日窗口重读同一状态
+        并补写事件），不产生永久遗漏。若此断言失败，read-error 已退化为静默数据丢失，
+        必须把退出码立刻改回 1。
+        """
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.last_status": "in_review"}
+        mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 3)
+        self.assertEqual(self.writes, [])                                   # 零写入
+        self.assertEqual(self.store["i-1"], {"rating.last_status": "in_review"})
+
+    def test_read_error_does_not_advance_last_status_in_baseline_mode(self):
+        # --baseline 模式同样适用：读失败不建 baseline（不写 rating.last_status）
+        it = issue(id="i-1", identifier="KA-1", status="in_progress", assignee_id="a-1")
+        self.issues = [it]
+        mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
+        sys.argv = ["state-change-hook.py", "--baseline"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 3)
+        self.assertEqual(self.writes, [])
+        self.assertEqual(self.store, {})
+
+    def test_read_error_is_isolated_to_the_failing_issue(self):
+        # 单条读失败不阻断整轮：坏条计入 read-error，好条照常处理
+        good = issue(id="i-1", identifier="KA-1", status="in_progress", assignee_id="a-1")
+        bad = issue(id="i-2", identifier="KA-2", status="done", assignee_id="a-1")
+        self.issues = [good, bad]
+        self.store["i-1"] = {}
+
+        def flaky(iid):
+            if iid == "i-2":
+                return None, "simulated read failure"
+            return self.store.get(iid, {}), None
+
+        mod.get_issue_metadata = flaky
+        sys.argv = ["state-change-hook.py", "--json"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 3)
+        self.assertEqual(self.store["i-1"].get("rating.last_status"), "in_progress")
+        self.assertNotIn("i-2", self.store)          # 坏条零写入
+
+    def test_json_report_carries_exit_code_and_reason(self):
+        # --json 消费方无需自己重算退出码口径
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
+        from contextlib import redirect_stdout
+        import io
+        buf = io.StringIO()
+        sys.argv = ["state-change-hook.py", "--json"]
+        with redirect_stdout(buf), self.assertRaises(SystemExit) as cm:
+            mod.main()
+        data = json.loads(buf.getvalue())
+        self.assertEqual(data["stats"]["read-error"], 1)
+        self.assertEqual(data["exit_code"], 3)
+        self.assertEqual(data["exit_reason"], "input-unavailable")
+        self.assertEqual(cm.exception.code, 3)
+
+    def test_json_exits_three_on_read_error(self):
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        mod.get_issue_metadata = lambda iid: (None, "simulated read failure")
+        sys.argv = ["state-change-hook.py", "--json", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 3)
+
+    def test_write_error_still_exits_one(self):
+        # 写失败语义不变：仍是 L1/P1
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.last_status": "in_review"}
+        mod.set_metadata = lambda *a, **k: (False, "simulated write failure")
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_mixed_write_and_read_error_exits_one(self):
+        # 同轮既有 write-error 又有 read-error → 按更严重档 1 报
+        writing = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        unreadable = issue(id="i-2", identifier="KA-2", status="done", assignee_id="a-1")
+        self.issues = [writing, unreadable]
+        self.store["i-1"] = {"rating.last_status": "in_review"}
+        mod.set_metadata = lambda *a, **k: (False, "simulated write failure")
+
+        def flaky(iid):
+            if iid == "i-2":
+                return None, "simulated read failure"
+            return self.store.get(iid, {}), None
+
+        mod.get_issue_metadata = flaky
+        sys.argv = ["state-change-hook.py", "--json"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_entry_gate_failure_stays_one(self):
+        """入口闸门（issue list / issue get）失败仍按 1 报，**不得**降级为 3。
+
+        闸门失败 = 整轮没跑；本 job 每日只跑一次，若按「不占 P1、等次日自愈」处理，
+        就永远凑不满「同日连续 ≥3 次」的升级条件 → 退化为静默失火。
+        """
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        mod.run_cli = lambda args: (False, "simulated list failure")
+        sys.argv = ["state-change-hook.py"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+        mod.run_cli = self._fake_run_cli
+        mod.get_issue_metadata = lambda iid: (None, "irrelevant")
+        sys.argv = ["state-change-hook.py", "--issue", "missing"]
+        with self.assertRaises(SystemExit) as cm:
+            mod.main()
+        self.assertEqual(cm.exception.code, 1)
+
+    def test_no_error_exits_zero(self):
+        # 无错误不抛 SystemExit（契约 exit 0）
+        it = issue(id="i-1", identifier="KA-1", status="done", assignee_id="a-1")
+        self.issues = [it]
+        self.store["i-1"] = {"rating.last_status": "done"}
+        sys.argv = ["state-change-hook.py", "--issue", "i-1"]
+        mod.main()
+        self.assertEqual(self.writes, [])
+
+
+class TestReadRetryComposition(unittest.TestCase):
+    """验收 (a) 端到端：读抖动被 KA-416 的只读重试吸收 → exit 0 且 read-error=0。
+
+    这里**不替换 `run_cli`**，而是替换更底层的 `subprocess.run`，走真实的重试循环 ——
+    「重试 + 分轨」只有组合起来才成立的口径，必须由组合测试锁定：只有重试没有分轨，
+    抖动仍会推进 exit 码；只有分轨没有重试，抖动会被计成 read-error → exit 3。
+    """
+
+    TIMEOUT_ERR = ("Request timed out: the server did not respond in time. "
+                   "Check your network connection or try again later.")
+    ISSUE = {"id": "i-1", "identifier": "KA-1", "status": "done",
+             "assignee_type": "agent", "assignee_id": "a-1", "due_date": None,
+             "updated_at": "2026-08-16T10:00:00Z"}
+
+    def setUp(self):
+        self._orig_argv = sys.argv
+        self._store = {"rating.last_status": "done"}   # 无 transition → 本轮无需写入
+        self._meta_calls = 0
+        self._sleeps = []
+        self._metadata_always_fails = False
+
+    def tearDown(self):
+        sys.argv = self._orig_argv
+
+    @staticmethod
+    def _completed(rc=0, stdout="", stderr=""):
+        return subprocess.CompletedProcess(
+            args=["multica"], returncode=rc, stdout=stdout, stderr=stderr)
+
+    def _fake_run(self, cmd, **kwargs):
+        argv = list(cmd[1:])
+        if argv[:2] == ["agent", "list"]:
+            return self._completed(0, "[]")
+        if argv[:2] == ["issue", "get"]:
+            return self._completed(0, json.dumps(self.ISSUE, ensure_ascii=False))
+        if argv[:3] == ["issue", "metadata", "list"]:
+            self._meta_calls += 1
+            if self._metadata_always_fails or self._meta_calls == 1:
+                return self._completed(2, "", self.TIMEOUT_ERR)
+            return self._completed(0, json.dumps(self._store, ensure_ascii=False))
+        if argv[:3] == ["issue", "metadata", "set"]:
+            raise AssertionError("本轮不应发生任何写入")
+        raise AssertionError(f"unexpected cli call: {argv}")
+
+    def _run_main(self, argv):
+        from contextlib import redirect_stdout, redirect_stderr
+        import io
+        out, err = io.StringIO(), io.StringIO()
+        sys.argv = ["state-change-hook.py"] + argv
+        with mock.patch.object(mod.subprocess, "run", self._fake_run), \
+                mock.patch.object(mod.time, "sleep", self._sleeps.append), \
+                redirect_stdout(out), redirect_stderr(err):
+            try:
+                mod.main()
+                code = 0
+            except SystemExit as e:
+                code = e.code
+        return code, out.getvalue(), err.getvalue()
+
+    def test_transient_read_failure_absorbed_by_retry_exits_zero(self):
+        """验收 (a)：首次读失败、重试成功 → exit 0 且 read-error=0。"""
+        code, out, _ = self._run_main(["--issue", "i-1", "--json"])
+        self.assertEqual(code, 0)                       # 不抛 SystemExit
+        data = json.loads(out)                          # stdout 仍是纯 JSON
+        self.assertEqual(data["stats"].get("read-error", 0), 0)
+        self.assertNotIn("read-error", data["stats"])
+        self.assertEqual(data["exit_code"], 0)
+        self.assertEqual(data["stats"].get("no-transition"), 1)
+        self.assertEqual(self._meta_calls, 2)           # 首次失败 + 第 2 次成功
+        self.assertEqual(self._sleeps, [1])             # 一次退避
+
+    def test_exhausted_read_retries_exit_three_without_advancing_status(self):
+        """验收 (b) 端到端：3 次尝试全部耗尽 → exit 3，且该 issue 的
+        rating.last_status 未被写入（不变量在真·重试路径上同样成立）。"""
+        self._metadata_always_fails = True
+        code, out, _ = self._run_main(["--issue", "i-1", "--json"])
+        self.assertEqual(code, 3)
+        data = json.loads(out)
+        self.assertEqual(data["stats"]["read-error"], 1)
+        self.assertEqual(data["exit_code"], 3)
+        self.assertEqual(data["exit_reason"], "input-unavailable")
+        self.assertEqual(self._meta_calls, mod.CLI_READ_RETRIES)   # 3 次全耗尽
+        self.assertEqual(self._sleeps, [1, 3])                     # 2 次退避
+        self.assertEqual(data["events_written"], [])
+
+    def test_retry_diagnostics_go_to_stderr_not_stdout(self):
+        """重试提示不得污染 `--json` 的 stdout（否则消费方解析失败）。"""
+        self._metadata_always_fails = True
+        _, out, err = self._run_main(["--issue", "i-1", "--json"])
+        json.loads(out)                                  # stdout 必须可解析
+        self.assertIn("次失败", err)
+        self.assertNotIn("次失败", out)
 
 
 class TestRunCliRetry(unittest.TestCase):
@@ -735,6 +1053,41 @@ class TestRunCliRetry(unittest.TestCase):
         ], argv=["issue", "list"])
         self.assertTrue(out[0])
         self.assertEqual(len(calls), 2)
+
+
+class TestHookResolution(unittest.TestCase):
+    """KA-424 顺带修正：被测模块定位必须兼容仓库布局与生产树布局。
+
+    否则 `python3 agents/capability-system/tests/test-state-change-hook.py`
+    （runbook §5 的复验路径）在本补丁新增用例之前就先 FileNotFoundError ——
+    即回归在生产树里一条都跑不了，验收 2 无从核验。
+    """
+
+    def test_repo_layout_resolves_to_sibling(self):
+        # 仓库布局：src/test-state-change-hook.py 与 src/state-change-hook.py 同目录
+        self.assertTrue(os.path.exists(HOOK))
+        self.assertEqual(os.path.basename(HOOK), "state-change-hook.py")
+        self.assertEqual(_resolve_hook(_HERE), HOOK)
+
+    def test_prod_layout_resolves_to_parent_dir(self):
+        # 生产树布局：tests/ 子目录，被测模块在上一级
+        import tempfile
+        with tempfile.TemporaryDirectory() as root:
+            tests_dir = os.path.join(root, "tests")
+            os.makedirs(tests_dir)
+            target = os.path.join(root, "state-change-hook.py")
+            open(target, "w", encoding="utf-8").close()
+            self.assertEqual(_resolve_hook(tests_dir), target)
+
+    def test_missing_module_still_raises_loudly(self):
+        # 两种布局都找不到时不得静默兜底成错误路径 —— 交给 importlib 响亮报错
+        import tempfile
+        with tempfile.TemporaryDirectory() as root:
+            with self.assertRaises(FileNotFoundError):
+                spec = importlib.util.spec_from_file_location(
+                    "nowhere", _resolve_hook(root))
+                m = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(m)
 
 
 if __name__ == "__main__":
