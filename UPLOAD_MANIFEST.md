@@ -3,7 +3,7 @@
 > **项目名称**：P0 智能评分系统（方案 C）· 上传目标仓库：`kzh8175-dot/multica-skills`
 > **用途**：记录每日上传到 GitHub 的事项、职责归属与待审批上传
 > **更新周期**：每日维护（由 GitHub 仓库管理员执行，见文末「维护机制」）
-> **最近更新**：2026-09-27
+> **最近更新**：2026-09-28
 
 ---
 
@@ -649,6 +649,22 @@
 > **分支与 PR 分叉复核（本运行 `gh api compare` 独立复核，均为实测值）**：`multica-skills` `agent/agent/bc99f7824b6e`（`b5b3da3d`）= `diverged` **ahead 1 / behind 14**（上期 1 / 8，behind +6 = 该仓 `main` 在本角色上期 manifest 之后新增的 6 笔清单订正提交）；`multica-skills` `agent/agent/18af5f53066b`（KA-355，`9250672`）= `diverged` **ahead 2 / behind 15**（上期 2 / 9，behind +6 同上）；`multica-rating-system` `agent/agent/18af5f53066b`（`bbf084b0`）= `diverged` **ahead 1 / behind 35**（上期 1 / 23，behind **+12** = 该仓 CST 09-26 的 6 笔 + CST 09-27 的 6 笔）。**三处分叉增量的自洽性经交叉核对**（+6 / +6 / +12 分别等于对应仓库在对应窗口的 `main` 新增笔数），无异常。OPEN PR 状态：multica-skills #1 / #2 / #8 / #9 / #10 / #15（**最近更新仍 #15 = 08-31**）、multica-rating-system #1（08-17）、multica-arb-console #1（08-20）**均仍 OPEN，当日零变化**。
 
 > **白名单检查**：✅ 已通过。本日 manifest 相关提交 = **1 笔**（本清单正文 + 能力档案 v0.58 **同批入同一 commit**），合计 **2 个文件** —— `UPLOAD_MANIFEST.md`（本清单本身）与 `agents/profiles/GitHub仓库管理员/capabilities.md`（本人 v0.58 R-22 学习记录），**均为项目文档**，无凭据、无个人隐私、无日志/缓存/生成产物。对本仓库 `origin/main` 全量 `git ls-tree -r`（**89 项**，与 09-21 ~ 09-25 持平、**当日零新增文件**）复核：**文件名黑名单扫描**（`secret` / `credential` / `.env` / `.pem` / `.key` / `.log` / `password` / `token` / `__pycache__` / `node_modules` / `.DS_Store` / `.tar.gz` / `.zip` / `.png` / `.jpg`）**零命中**；**扩展名分布**仅 `md`(47) / `py`(15) / `sh`(13) / `gitkeep`(8) / `conf`(3) / `js`(1) / `html`(1) / `gitignore`(1)，无异常产物；`git status --porcelain` 工作区干净。**未发现与代码开发无关的文件**，无新增「待审批」拦截项。**⚠️ 与 09-25 的差别**：09-25 记为「prod ↔ git 逐字节比对整体失效」，**本日该复核项因生产树恢复而可用**（已在上文用于看板快照对比），但**仅覆盖 `prod/dashboard/dashboard-data.js` 一个文件**，**全量逐字节比对本运行未做**，不作过度声明。
+
+---
+
+### 2026-09-28（`multica-skills` 1 笔业务提交 + 本清单登记 = **KA-456 看板数据链路缺陷修复落库**）
+
+| # | 时间 | 上传事项 | 开发 | 验收 | 审批 | 提交上传需求 | 上传者 | commit |
+|---|------|----------|------|------|------|--------------|--------|--------|
+| 1 | 02:15 | **KA-456 看板数据链路缺陷修复**（看板 canon，9 文件 `+539/-147`）：`src/dashboard-data-feed.py`（`CLI_MAX_LIMIT=100` 常量集中 + 默认值全取它 + 越界在边界夹取并留痕；`run_cli` 改返回 `(stdout, error)` 保留 CLI 原文；`_join_notes` 防降级说明互相覆盖；新增顶层 `degraded` 块 `any/mode/items/failed_reads`）+ `dashboard/generate-dashboard-data.py`（透传 `meta.degraded`；降级时 `✓` 降级为 `⚠`、新增「升级队列 pending/escalated/credited」日志行、退出码 3）+ `dashboard/index.html`（总览/预算页/异常中心三处降级横幅）+ `dashboard/README.md` / `dashboard/crontab-dashboard.conf` / `dashboard/docs/DEPLOY.md` / `docs/dashboard-data-interface.md`（退出码与降级契约成文）+ `src/test-dashboard-data-feed.py`（35 → 47 条：`FakeMulticaCli` 复刻真 CLI `--limit` 契约 + 常量钉真 CLI + `TestDegradedVisibility` 4 + `TestGeneratorDegradedExitCode` 2）+ 根 `README.md` 测试计数同步 | 系统稳定性工程师 | GitHub 仓库管理员（**交付点复核**：`git apply --check` 干净；落地后 feed 套件 **47/47 通过**、回归 聚合器 15 / 防失真 24 / 结算器 11 / 状态钩子 95 通过；**独立实跑真 CLI 复核** `fetch_all_issues() → 452 条 / note None`、`load_budget() → 7 行`（KA-17/18/19/20/40/43/44）、`load_rating_stats() → pending 5 / escalated 0 / credited 283`、`page_size=200` 被夹住并留痕；**生产树基线复核** `…/prod/dashboard/` 的 6 份 canon 文件与 `git main` `shasum -a 256` **逐字节相等**，物化不覆盖 prod 独有改动） | —（非破坏性常规提交，按交接规则放行） | 系统稳定性工程师（交接） | GitHub 仓库管理员 | `cf0402d` |
+
+> **⭐ 缺陷本体**：`fetch_all_issues(page_size=200)` 以 `--limit 200` 调用 CLI，而服务端硬上限为 100 ⇒ 首页即 `rc=1` ⇒ `budget.sop` 与 `runtime.ratingStatus` **两张表同时恒空**，而刷新任务 `exit=0`、日志全 `✓`、无告警，**潜伏约两周**。`ratingStatus` 是 escalated 计数的载体 ⇒ 「升级队列 / SLA 48h」处于监控盲区（「无升级项」与「读取失败」不可区分）。旧降级文案「不可用（**离线？**）」把**参数契约破裂**误报成网络不可达。**本运行在生产侧实测缺陷仍在**：`prod/dashboard/dashboard-data.js` 当前 `budget.sop` **0 行** / `ratingStatus` **{}** / 无 `meta.degraded`。
+
+> **⚠️ 目标仓库更正（交付方上报、本运行确认）**：issue KA-456 描述写的目标仓库 `multica-rating-system` **不成立** —— 该仓下无任何 dashboard 文件（仅 `docs/p3-quarterly-prereq/05`、`06` 两份规格/原型）；看板 canon 在 **`multica-skills`**。本次按 canon 实际所在仓入库。随之产生的 R-22 能力档案更新走 `multica-rating-system`（该仓清单 #91）。
+
+> **⏳ 待拍板（未阻塞本次入库）**：**降级时退出码 3**。理由是不再让「发布不完整数据 + `exit=0` + 日志全 `✓`」这个签名出现；但看板 autopilot 任务模板目前写「退出码非 0 = 失败 → 创建 P1 issue」，存在制造**假 P1** 的可能。交付方建议保持 3、归因按评分系统 runbook §3 KA-356 分轨写成「输入可用性」而非「脚本故障」；若裁决改为「仅日志 + 产物标记、退出码仍为 0」，是**一行改动**。**该裁决超出 GitHub 提交通道权限，本运行不代拍**，随本次交付上报。
+
+> **白名单检查**：✅ 已通过。本次 `multica-skills` 提交 **9 个文件**逐一核对 —— `src/dashboard-data-feed.py` / `src/test-dashboard-data-feed.py`（源代码与测试）、`dashboard/generate-dashboard-data.py` / `dashboard/index.html`（看板代码）、`dashboard/README.md` / `dashboard/docs/DEPLOY.md` / `docs/dashboard-data-interface.md` / 根 `README.md`（项目文档）、`dashboard/crontab-dashboard.conf`（部署配置），**全部命中白名单**。文件名黑名单扫描（`secret` / `credential` / `.env` / `.pem` / `.key` / `.log` / `password` / `token` / `__pycache__` / `node_modules` / `.DS_Store` / `.tar.gz` / `.zip` / `.png` / `.jpg`）**零命中**；暂存 diff 逐行 secret 扫描（`api[_-]?key` / `secret` / `password` / `token` / `BEGIN * PRIVATE KEY`）**零命中**。**未发现与代码开发无关的文件**，无新增「待审批」拦截项。
 
 ---
 
