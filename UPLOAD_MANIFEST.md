@@ -652,12 +652,13 @@
 
 ---
 
-### 2026-09-28（`multica-skills` 2 笔提交 = **KA-456 看板数据链路缺陷修复落库** + 本档案 v0.59 / 本清单登记）
+### 2026-09-28（`multica-skills` 3 笔提交 = **KA-456 看板数据链路缺陷修复落库** + 档案 v0.59 / 清单登记 + **退出码口径闭环（runbook §3/§5 对齐）**）
 
 | # | 时间 | 上传事项 | 开发 | 验收 | 审批 | 提交上传需求 | 上传者 | commit |
 |---|------|----------|------|------|------|--------------|--------|--------|
 | 1 | 02:15 | **KA-456 看板数据链路缺陷修复**（看板 canon，9 文件 `+539/-147`）：`src/dashboard-data-feed.py`（`CLI_MAX_LIMIT=100` 常量集中 + 默认值全取它 + 越界在边界夹取并留痕；`run_cli` 改返回 `(stdout, error)` 保留 CLI 原文；`_join_notes` 防降级说明互相覆盖；新增顶层 `degraded` 块 `any/mode/items/failed_reads`）+ `dashboard/generate-dashboard-data.py`（透传 `meta.degraded`；降级时 `✓` 降级为 `⚠`、新增「升级队列 pending/escalated/credited」日志行、退出码 3）+ `dashboard/index.html`（总览/预算页/异常中心三处降级横幅）+ `dashboard/README.md` / `dashboard/crontab-dashboard.conf` / `dashboard/docs/DEPLOY.md` / `docs/dashboard-data-interface.md`（退出码与降级契约成文）+ `src/test-dashboard-data-feed.py`（35 → 47 条：`FakeMulticaCli` 复刻真 CLI `--limit` 契约 + 常量钉真 CLI + `TestDegradedVisibility` 4 + `TestGeneratorDegradedExitCode` 2）+ 根 `README.md` 测试计数同步 | 系统稳定性工程师 | GitHub 仓库管理员（**交付点复核**：`git apply --check` 干净；落地后 feed 套件 **47/47 通过**、回归 聚合器 15 / 防失真 24 / 结算器 11 / 状态钩子 95 通过；**独立实跑真 CLI 复核** `fetch_all_issues() → 452 条 / note None`、`load_budget() → 7 行`（KA-17/18/19/20/40/43/44）、`load_rating_stats() → pending 5 / escalated 0 / credited 283`、`page_size=200` 被夹住并留痕；**生产树基线复核** `…/prod/dashboard/` 的 6 份 canon 文件与 `git main` `shasum -a 256` **逐字节相等**，物化不覆盖 prod 独有改动） | —（非破坏性常规提交，按交接规则放行） | 系统稳定性工程师（交接） | GitHub 仓库管理员 | `cf0402d` |
 | 2 | 02:25 | 档案：GitHub 仓库管理员 能力档案 v0.59（KA-456 交付点复核与双仓落库后 R-22 自我优化，`agents/profiles/GitHub仓库管理员/capabilities.md`，持续学习 +1 条） | GitHub 仓库管理员 | — | — | 自评（R-22） | GitHub 仓库管理员 | `--`（与本清单同 commit） |
+| 3 | 03:10 | **KA-456 退出码口径闭环 · runbook §3/§5 对齐**（`docs/runbook.md` `+25/-3`）：① §3 新增 **L1′ 输入不可用（退出码 3）**、把 L1 限定为「非 0 **且非 3**」；② §3 失败判定表拆出 `退出码 3` 行 + 新增「告警分轨（KA-356 / KA-456）」小节（0/1/2/3/其它 五分轨 + 「退出码是机器契约，告警分级是消费端策略」的裁决定性 + 两个消费端 autopilot id）；③ §5 期望值由「4 个验收点全部通过」改为**实测 3/4**，并注明验收点 1 为**既有失败**而非下调标准 | GitHub 仓库管理员 | GitHub 仓库管理员（交付点复核：裁定原文逐项对照；**独立复跑** `test-review-scheduler-category.sh` 得「通过 3 项 / 失败 1 项」，与裁定所述 `SEO优化专家` / `百度SEO专家` 期望 marketing/350 实得 technical/300 一致；**独立 `multica autopilot get`** 核验 `7151602b` / `54039383` 两模板确已改写为 3 / 2 / 其它非 0 三分支且 `updated_at=2026-09-27T18:08Z`；白名单检查通过、黑名单与 secret 扫描零命中） | —（依 2026-09-28 退出码裁决；非破坏性文档提交） | 资深战略领导者（退出码裁决） | GitHub 仓库管理员 | 本笔（与本清单同 commit） |
 
 > **⭐ 缺陷本体**：`fetch_all_issues(page_size=200)` 以 `--limit 200` 调用 CLI，而服务端硬上限为 100 ⇒ 首页即 `rc=1` ⇒ `budget.sop` 与 `runtime.ratingStatus` **两张表同时恒空**，而刷新任务 `exit=0`、日志全 `✓`、无告警，**潜伏约两周**。`ratingStatus` 是 escalated 计数的载体 ⇒ 「升级队列 / SLA 48h」处于监控盲区（「无升级项」与「读取失败」不可区分）。旧降级文案「不可用（**离线？**）」把**参数契约破裂**误报成网络不可达。**本运行在生产侧实测缺陷仍在**：`prod/dashboard/dashboard-data.js` 当前 `budget.sop` **0 行** / `ratingStatus` **{}** / 无 `meta.degraded`。
 
@@ -665,7 +666,11 @@
 
 > **⏳ 待拍板（未阻塞本次入库）**：**降级时退出码 3**。理由是不再让「发布不完整数据 + `exit=0` + 日志全 `✓`」这个签名出现；但看板 autopilot 任务模板目前写「退出码非 0 = 失败 → 创建 P1 issue」，存在制造**假 P1** 的可能。交付方建议保持 3、归因按评分系统 runbook §3 KA-356 分轨写成「输入可用性」而非「脚本故障」；若裁决改为「仅日志 + 产物标记、退出码仍为 0」，是**一行改动**。**该裁决超出 GitHub 提交通道权限，本运行不代拍**，随本次交付上报。
 
-> **白名单检查**：✅ 已通过（#1 与 #2 合并核对，共 **10 个文件**）。#1 的 **9 个文件**逐一核对 —— `src/dashboard-data-feed.py` / `src/test-dashboard-data-feed.py`（源代码与测试）、`dashboard/generate-dashboard-data.py` / `dashboard/index.html`（看板代码）、`dashboard/README.md` / `dashboard/docs/DEPLOY.md` / `docs/dashboard-data-interface.md` / 根 `README.md`（项目文档）、`dashboard/crontab-dashboard.conf`（部署配置）；#2 的 **1 个文件** —— `agents/profiles/GitHub仓库管理员/capabilities.md`（智能体能力档案）与 `UPLOAD_MANIFEST.md`（本清单自身）。**全部命中白名单**。文件名黑名单扫描（`secret` / `credential` / `.env` / `.pem` / `.key` / `.log` / `password` / `token` / `__pycache__` / `node_modules` / `.DS_Store` / `.tar.gz` / `.zip` / `.png` / `.jpg`）**零命中**；暂存 diff 逐行 secret 扫描（`api[_-]?key` / `secret` / `password` / `token` / `BEGIN * PRIVATE KEY`）**零命中**。**未发现与代码开发无关的文件**，无新增「待审批」拦截项。
+> **白名单检查**：✅ 已通过（#1 ~ #3 合并核对，共 **11 个文件**）。#1 的 **9 个文件**逐一核对 —— `src/dashboard-data-feed.py` / `src/test-dashboard-data-feed.py`（源代码与测试）、`dashboard/generate-dashboard-data.py` / `dashboard/index.html`（看板代码）、`dashboard/README.md` / `dashboard/docs/DEPLOY.md` / `docs/dashboard-data-interface.md` / 根 `README.md`（项目文档）、`dashboard/crontab-dashboard.conf`（部署配置）；#2 的 **1 个文件** —— `agents/profiles/GitHub仓库管理员/capabilities.md`（能力档案）；#3 的 **1 个文件** —— `docs/runbook.md`（运维 runbook）。另 `UPLOAD_MANIFEST.md`（本清单自身）。**全部命中白名单**。文件名黑名单扫描（`secret` / `credential` / `.env` / `.pem` / `.key` / `.log` / `password` / `token` / `__pycache__` / `node_modules` / `.DS_Store` / `.tar.gz` / `.zip` / `.png` / `.jpg`）**零命中**；暂存 diff 逐行 secret 扫描（`api[_-]?key` / `secret` / `password` / `token` / `BEGIN * PRIVATE KEY`）**零命中**。**未发现与代码开发无关的文件**，无新增「待审批」拦截项。
+
+> **⚠️ 本次连带发现：`评分系统定时任务 Runbook` 存在两份同名文件，且口径已分叉。** ① `multica-skills/docs/runbook.md`（6.5 KB，无 KA-356 分轨）；② `multica-rating-system/runbook.md`（14 KB，含 §3.1 / §5.1 / KA-356 分轨）。**代码注释与 `dashboard/crontab-dashboard.conf` 引用的「评分系统 runbook §3 KA-356 分轨」只存在于第 ② 份的根目录** —— 即交付方所言「runbook 里查无实据」并不准确：分轨**写了**，只是写在另一个仓库、且作用域被限定在 `sync-agents-to-rating.sh`。本次已把 §3 分轨同时补进两份（第 ② 份另加看板链条目）。**两份同名文件的权威归属待裁定。**
+
+> **⏳ 本次新登记的待裁定项：升级阈值不一致。** 第 ② 份 runbook 的 KA-356 行写「**同一日连续 ≥3 次**仍为 3 才升级人工」，而 2026-09-28 落地的两个消费端模板（`7151602b` / `54039383`）写的是「**连续两日** exit=3 才升级」。两者对「多久升级人工」给出不同答案；本次**不擅自合并**，两份 runbook 均已加「阈值对照（待统一）」标注并上报。
 
 ---
 
