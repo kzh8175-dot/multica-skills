@@ -43,7 +43,7 @@
 
 > **口径说明**
 > - 报告 1 的指标口径（on-time 执行率、结算失败数、escalated 数、pending 滞留、流水完整性）沿用
->   `docs/runbook.md` §6「监控与周报」，不另立口径。
+>   `multica-rating-system/runbook.md` §6「监控与周报」，不另立口径。
 > - 报告 2/3 的评分口径（R-41 / R-51 / 综合分 / 等级 / 防失真）沿用聚合器与判定器代码实现，
 >   以 `docs/dashboard-data-interface.md` §3「数据来源」为准。
 > - 报告 4 为能力档案体系的一部分，格式由 `agents/capability-system/template.md` 与自优化协议定义。
@@ -84,7 +84,7 @@
 
 ### 3.3 风险与异常（统一事件分类）
 
-- **升级事件**：`escalated` 状态事件（含 pending > 48h）→ 周报必须列出，升级路径见 `docs/runbook.md` §3（P2-14 交付后并入 SLA 制度）。
+- **升级事件**：`escalated` 状态事件（含 pending > 48h）→ 周报必须列出，升级路径见 `multica-rating-system/runbook.md` §3（P2-14 交付后并入 SLA 制度）。
 - **异常标记**：E-01~E-07（聚合器/判定器产出）→ 月报、季度报告必须列出并分类计数。
 - **防失真标记**：R-71 红线上限 C / R-72 缺自评降档 → 季度报告必须列出。
 - **静默失火（L3）**：当日应有 run 但无日志/无 run → 周报必须显式核验（静默 = 故障）。
@@ -130,7 +130,7 @@
 
 | 文档 | 关系 |
 |------|------|
-| `docs/runbook.md` | 周报指标口径（§6）、升级路径（§3）的事实来源；本规范引用不重述 |
+| `multica-rating-system/runbook.md` | 周报指标口径（§6）、升级路径（§3）的事实来源；本规范引用不重述 |
 | `docs/dashboard-data-interface.md` | 月报/季度报告评分口径（§3 数据来源）的事实来源 |
 | `docs/report-templates/` | 本规范配套的三份统一模板，报告产出时直接套用 |
 | `agents/capability-system/reviewer-guide.md` | 行为类事件写入口径；与评分报告数据同源 |

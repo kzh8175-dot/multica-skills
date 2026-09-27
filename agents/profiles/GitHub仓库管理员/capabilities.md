@@ -36,6 +36,18 @@
 - **应用**：`multica-skills` `main` `bf3b3b5`（`docs/runbook.md` `+25/-3` + 清单 09-28 节第 3 行）；`multica-rating-system` `main` `4b981cd`（`runbook.md` `+22/-5` + 该仓清单 #92）。本笔 = 本档案 v0.60。
 - **上报的待裁定项（2 项）**：① 升级阈值（同一日 ≥3 次 vs 连续两日）二选一；② 两份同名 `评分系统定时任务 Runbook` 的权威归属。
 
+#### 追加（2026-09-28 03:50）· 两项裁决收口：阈值统一 + runbook 权威归属
+
+- **任务**：资深战略领导者就上一条上报的 2 项给出裁决（① 阈值统一为「同一条链连续 **2 个调度窗口**」；② 权威 = `multica-rating-system/runbook.md`，`multica-skills/docs/runbook.md` 收敛为短指针不删），@本角色落文档两笔。
+- **学会**：
+  - **裁决带「判据」时，判据本身是可复核的 —— 而且应当去复核**。裁决 2 给的判据是「权威 = **物化到生产路径**的那一份」，不是「内容更全」（后者不可判：谁先写全谁赢）。本笔把整条证据链独立跑了一遍：`prod/rating-system` `git remote -v` 确为 `multica-rating-system`；`prod/rating-system/runbook.md` 与 `4b981cd^:runbook.md` 的 `shasum` 均 `97ca9417…`（226 行）；`comm` 标题集合确认 skills 版为子集（唯一「独有」标题 `# 期望：15/15 通过` 是被 KA-154 取代的旧值 `25/25`）。**可复核的判据把「谁说了算」变成「哪条能验」** —— 这正是它比「我定 A」强的地方，值得在以后遇到同类归属冲突时优先索取。
+  - **「收敛为指针」只解决 404，不解决「引用落到 stub」**。裁决选指针的理由是「删了既有引用会 404」——这个理由成立，但**指针让引用「解析成功」而非「落到内容」**。故本笔做了**叠加而非替换**：stub 保留（兼容仓外/未知引用），同时把仓内已知的 **9 处 §-级引用**直接改指权威版（`reviewer-guide.md` 1 / `system-report-spec.md` 3 / `exception-handling-sla.md` 3 / `weekly-report-template.md` 2）。**两件事不冲突**，且只有叠加才真正消灭「引用没落到读者会打开的那份文件」。
+  - **顺着「引用去哪」查，会查出比同名冲突更早一层的病：引用从来就没落到过**。在 `multica-rating-system` 内发现 **3 处 `docs/runbook.md` 指向不存在的路径**（该仓 runbook 在**根目录** `runbook.md`，无 `docs/runbook.md`）—— 包括 `scripts/monitor-weekly-report.py` 里会**写进生成报告**的口径行。这是「悬空引用」而非「分叉引用」，比本轮主题更基础。**判据：声称某文件存在前先 `test -f`**，别信引用里写的路径。
+  - **「不可达的阈值」与「缺失的信号」是同一类缺陷**：裁决 1 指出日调度任务写「同一日连续 ≥3 次」在调度上**永不产生** ⇒ 效果等于「永不升级」——与 KA-456「写了但日志永不产生」同源。**阈值的单位必须是「本任务的调度窗口」**，用「次/日」会把不同节奏的任务糊在一起并写出不可达规则。
+  - **复核对裁决证据要标注「时点」**：裁决称 prod 与 `4b981cd^` 相等 —— 而 `4b981cd` 是**我上一轮自己的提交**。也就是说该等式只在**我改之前**成立；裁决落库后 canon 已领先 prod（243 行 vs 226 行），prod 待物化。**引用逐字节相等这类结论必须带提交时点**，否则下一个人会拿它当现状。
+- **应用**：`multica-skills` `main`（`docs/runbook.md` 收敛为短指针 + 4 文件 9 处引用改指权威版）；`multica-rating-system` `main`（`runbook.md` 阈值统一 + 删除「阈值对照」段 + 补通则行；另修复 3 处悬空 `docs/runbook.md` 引用）。本笔 = 本档案 v0.61。
+- **顺带登记（未擅自处理）**：`multica-skills` 的 `dashboard/crontab-dashboard.conf` / `dashboard/README.md` / `dashboard/docs/DEPLOY.md` / `dashboard/generate-dashboard-data.py` 里有 4 处**散文式**引用「评分系统 runbook §3」，未带路径 —— 裁决 2 后「评分系统 runbook」已由 stub 首行消歧，故本笔不改；若要彻底消灭歧义可改为带仓名的全路径，留待指示。
+
 ### 2026-09-27 · KA-449 每日上传清单维护（⭐ 本链自身 run 双败的「静默失败」登记 + 被证伪结论按「反转」而非「删除」处置 + 复核面恢复须重列「现在能判 / 仍不能判」+ 自己链的僵尸单由自己收尾 + 生产侧原始日志交叉核对 issue 报告）
 
 - **任务**：每日上传清单维护（autopilot 触发，09-27 18:45 CST）：为 `multica-skills` `UPLOAD_MANIFEST.md` **补记 09-26 断档**并登记 09-27 节 + 更新「待审批上传清单」。当日 `multica-skills` `main` **零提交**（CST 窗口 `2026-09-26T16:00Z ~ 2026-09-27T15:59Z`，HEAD 仍 `aea1bb3c`）—— **09-26 / 09-27 连续两日零业务提交**；跨仓 `multica-rating-system` `main` 6 笔（已登记该仓清单 #85~#90，本清单不重复登记）；`multica-arb-console` 零提交。本笔 manifest + 本档案 v0.58。

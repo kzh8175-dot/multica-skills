@@ -6,7 +6,7 @@
 > **生成方**：SRE稳定性工程师 + 数据可视化工程师（P2-13）
 > **数据来源**：三任务日志 / autopilot runs / `audit-events.py` / 流水完整性对账
 > **模板**：`docs/report-templates/weekly-report-template.md`（依据 `docs/system-report-spec.md`）
-> **口径基准**：`docs/runbook.md` §6「监控与周报」
+> **口径基准**：`multica-rating-system/runbook.md` §6「监控与周报」
 
 ---
 
@@ -59,7 +59,7 @@ python3 scripts/audit-events.py --month {YYYY-MM}
 | 3 | L3 静默失火 | `{描述}` | `{影响}` | 补触发 + 告警（静默 = 故障） | 处置中/已闭环 |
 | 4 | escalated 事件 | `{R-XX}` | `{影响}` | `{升级路径}` | 处置中/已闭环 |
 
-> 升级路径与时限：`docs/runbook.md` §3；P2-14 异常处理 SLA 交付后以此为准。
+> 升级路径与时限：`multica-rating-system/runbook.md` §3；P2-14 异常处理 SLA 交付后以此为准。
 
 ## 五、结论与行动项
 

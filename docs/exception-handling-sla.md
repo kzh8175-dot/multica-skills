@@ -17,7 +17,7 @@
 **读者**：值班处置方（运行 agent / DevOps自动化工程师 / SRE稳定性工程师 / 最小变更工程师）、事故响应指挥官、项目负责人、资深战略领导者（最高决策者 / 终裁）。
 
 **配套文档**：
-- 定时任务 Runbook：`docs/runbook.md`（三任务 cron、手动触发、幂等判定、监控周报）
+- 定时任务 Runbook：`multica-rating-system/runbook.md`（三任务 cron、手动触发、幂等判定、监控周报）
 - 负责人评审指引：`agents/capability-system/reviewer-guide.md`（行为事件写入、权限红线、E 系列升级口径）
 - 结算器：`src/rating-settler.py`（`pending → credited/escalated` 状态机）
 - 防失真模块：`src/anti-distortion-rules.py`（E-02/E-05/E-06 自动化修正，唯一权威）
@@ -162,14 +162,14 @@ L4 复盘闭环  事故响应指挥官主持 blameless postmortem
 
 1. **时限数字**：第 5 节 S1~S4 的响应/处置/恢复时限为**建议基线**，可结合团队实际排班与 agent 异步触发节奏调整后固化。
 2. **值守口径**：S1 是否需 7×24 值守，或按工作日（W/7x24）口径执行。
-3. **固化范围**：是否将本 SLA 正式固化到 `docs/runbook.md` §3 并纳入监控周报指标（第 10 节）。
+3. **固化范围**：是否将本 SLA 正式固化到 `multica-rating-system/runbook.md` §3 并纳入监控周报指标（第 10 节）。
 
 ---
 
 ## 十三、维护与版本
 
 - 本 SLA 随运行态（cron/autopilot/脚本）与规则（规则书 / E 系列 / R 系列）变更同步更新。
-- 与 `docs/runbook.md` §3、`agents/capability-system/reviewer-guide.md` 互为衔接；口径冲突以本 SLA 为准，并同步修订对端文档。
+- 与 `multica-rating-system/runbook.md` §3、`agents/capability-system/reviewer-guide.md` 互为衔接；口径冲突以本 SLA 为准，并同步修订对端文档。
 - 执行人分工：响应侧设计（分级/时限/复盘）由事故响应指挥官提供，文档合并与维护由技术文档撰写者负责。
 
 | 日期 | 版本 | 更新内容 |

@@ -303,5 +303,5 @@ multica issue metadata set <issue-id> --key rating.occurred_at --value "$(date -
 - 结算器：`rating-settler.py`（`pending → credited/escalated`，指数退避 ≤3 次）
 - 聚合器：`rating-aggregator.py`（月度 R-41 / 季度 R-51）
 - 调度器：`review-scheduler.sh`（周/月/季度审查与季度人评触发）
-- 定时任务 Runbook：`docs/runbook.md`（告警与 SLA、流水完整性对账）
+- 定时任务 Runbook：`multica-rating-system/runbook.md`（告警与 SLA、流水完整性对账）
 - 本文件由**技术文档撰写者**维护，随规则书（v1.1+）或运行时边界变更同步更新。
