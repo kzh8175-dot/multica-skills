@@ -373,6 +373,9 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
     deduped.sort(key=lambda x: (0 if x["status"] == "待处理" else 1, x["agentId"]))
 
     with_data = [a for a in agents_out if a["hasData"]]
+    # KA-456：把 feed 的降级状态带进产物。下游只消费 entries / rating_status，
+    # 降级说明留在 note 里等于没有 ⇒「读取失败」与「真的为空」不可区分。
+    degraded = feed.get("degraded") or {"any": False, "mode": "unknown", "items": {}, "failed_reads": []}
     return {
         "meta": {
             "project": "评分方案 C · 智能评分系统",
@@ -392,6 +395,7 @@ def build_dashboard(prod_root, feed_mod, use_cli=True):
             "gradeThresholds": {"S": "≥95", "A": "85-94", "B": "70-84",
                                 "C": "60-69", "D": "<60"},
             "categoryLabels": CATEGORY_LABELS,
+            "degraded": degraded,
             "note": f"试点初期·数据样本不足：{len(agents_out)} 个智能体中仅 {len(with_data)} 个有 {month_short} 事件流水；"
                     f"{quarter_lbl} 人评待运行（{window}），综合分/等级按系统当前状态显示「待运行」，"
                     "参考等级（预估）由客观分映射，随季度人评转正式。",
@@ -445,15 +449,39 @@ def main():
         f.write(body)
 
     with_data = [a for a in data["agents"] if a["hasData"]]
+    degraded = data["meta"].get("degraded") or {}
+    failed = set(degraded.get("failed_reads") or [])
+    rs = data["runtime"].get("ratingStatus")
+    # parse_pending_escalated 恒返回三个键 ⇒ 空 dict 只可能来自「读取失败」，
+    # 不能渲染成 pending 0 / escalated 0（那正是升级队列的监控盲区）。
+    rs_txt = (f"pending {rs.get('pending')} / escalated {rs.get('escalated')} / "
+              f"credited {rs.get('credited')}") if rs else "读取失败"
     print(f"✓ 智能体: {len(data['agents'])}（有数据 {len(with_data)}）")
     print(f"✓ 事件: {len(data['events'])} 条（含系统运行态）")
-    print(f"✓ 预算: 积分上限 {data['budget']['points']['ceiling']} / 已用 {data['budget']['points']['spent']} / "
+    # KA-456：读取失败时不再打 ✓ ——「✓ SOP 行 0」与「真的没有 SOP」在日志里
+    # 长得一样，这正是本缺陷潜伏两周的直接原因。
+    print(f"{'⚠' if 'budget' in failed else '✓'} 预算: "
+          f"积分上限 {data['budget']['points']['ceiling']} / 已用 {data['budget']['points']['spent']} / "
           f"SOP 行 {len(data['budget']['sop'])}")
     print(f"✓ 异常: {len(data['anomalies'])} 条")
     print(f"✓ 运行态: 结算 {data['runtime']['settlement']} / 聚合 {data['runtime']['aggregation']} / "
           f"人评 {data['runtime']['review']}")
+    print(f"{'⚠' if 'rating_status' in failed else '✓'} 升级队列: {rs_txt}")
     print(f"✓ 输出: {os.path.abspath(args.out)}")
     print(f"注意: {data['meta']['note']}")
+
+    if degraded.get("any"):
+        if degraded.get("mode") == "offline":
+            print("○ 降级: offline（--no-cli，操作者显式选择，不视为故障）")
+        else:
+            print("⚠ 降级: 下列读数不完整 —— 产物中对应的空值不代表真的为空")
+            for name, reason in (degraded.get("items") or {}).items():
+                print(f"⚠   降级 {name}: {reason}")
+            print(f"⚠   整体读取失败: {'/'.join(degraded.get('failed_reads') or []) or '无'}")
+            # 退出码 3 = 输入不可用（沿用 runbook §3 KA-356 分轨：不占 P1 通道，
+            # 记录 + 等下一个调度窗口重跑）。**已发布产物仍带 meta.degraded 标记**，
+            # 界面侧据此显示「数据不完整」，不会把降级当空值渲染。
+            sys.exit(3)
 
 
 if __name__ == "__main__":

@@ -56,6 +56,14 @@ from datetime import datetime, timezone
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 AGENTS_ROOT_DEFAULT = os.path.normpath(os.path.join(SCRIPT_DIR, ".."))
 
+# multica issue list 的 --limit 硬上限（CLI 契约，超出即 rc=1 整页失败）：
+#   $ multica issue list --limit 200
+#   rc=1  --limit must be between 1 and 100 ...
+# KA-456：本模块曾以 page_size=200 调用，首页即整页失败 ⇒ 预算/SOP 与
+# ratingStatus 两张表**同时**恒空，而刷新任务 exit=0、日志全 ✓（无告警）。
+# 契约上限集中在此常量，越界由 fetch_all_issues 在边界处收敛并不再静默。
+CLI_MAX_LIMIT = 100
+
 MONTH_RE = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])$")
 QUARTER_RE = re.compile(r"^(\d{4})-Q([1-4])$")
 POINTS_RE = re.compile(r"^[+-]?\d+$")
@@ -458,51 +466,77 @@ def parse_pending_escalated(issues):
 
 # ---------------------------------------------------------------- CLI 读取（best-effort）
 
+def _join_notes(*notes):
+    """拼接多条降级说明（忽略 None），避免后一条覆盖前一条。"""
+    kept = [n for n in notes if n]
+    return "；".join(kept) if kept else None
+
+
 def run_cli(args):
+    """执行 multica CLI，返回 (stdout, error)。
+
+    error 为 None 表示成功；失败时携带 **CLI 的原文错误**（含退出码），
+    供上层降级说明复述事实。KA-456：旧实现丢弃 stderr 只返回 None，
+    降级说明只能猜「离线？」——把**参数契约破裂**误报成网络不可达，
+    把排查方向从「改一个数字」带偏到「查网络」。
+    """
     try:
         result = subprocess.run(
             ["multica"] + args, capture_output=True, text=True, timeout=60)
         if result.returncode != 0:
-            return None
-        return result.stdout
-    except Exception:
-        return None
+            detail = (result.stderr or "").strip() or (result.stdout or "").strip()
+            first = detail.splitlines()[0] if detail else "无 stderr 输出"
+            return None, f"rc={result.returncode}：{first}"
+        return result.stdout, None
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
 
 
-def fetch_all_issues(page_size=200, max_pages=25):
+def fetch_all_issues(page_size=CLI_MAX_LIMIT, max_pages=25):
     """分页拉取全量 issue（multica issue list --limit/--offset）。
 
-    单次 `--limit 200` 会在工作区 issue >200 时静默截断尾部，导致预算条目
+    单次 `--limit N` 会在工作区 issue >N 时静默截断尾部，导致预算条目
     与 rating.status 计数遗漏（KA-98 #7）。本函数按页拉取，直到空页 / 非满页 /
     has_more=false / 达最大页数，并对分页期间新插入的 issue 按 id 去重。
 
+    page_size 在边界处按 CLI 契约收敛：> CLI_MAX_LIMIT 的值会被夹到
+    CLI_MAX_LIMIT，并记入 note（KA-456：越界值会让首页直接 rc=1，整表丢失）。
+
     返回 (issues, note):
       issues  合并后的全量 issue 列表；首页即失败返回 None
-      note    非致命降级说明（后续页失败 / 达最大页数），正常为 None
+      note    非致命降级说明（参数越界被夹 / 后续页失败 / 达最大页数），正常为 None
     """
+    clamp_note = None
+    if page_size > CLI_MAX_LIMIT:
+        clamp_note = (f"page_size={page_size} 超过 multica issue list 上限 "
+                      f"{CLI_MAX_LIMIT}，已按 {CLI_MAX_LIMIT} 分页（调用方违反 CLI 契约）")
+        page_size = CLI_MAX_LIMIT
+    if page_size < 1:
+        page_size = 1
+
     collected = []
     offset = 0
-    note = None
+    note = clamp_note
     for page in range(1, max_pages + 1):
-        out = run_cli(["issue", "list", "--limit", str(page_size),
-                       "--offset", str(offset), "--output", "json"])
-        if not out:
+        out, err = run_cli(["issue", "list", "--limit", str(page_size),
+                            "--offset", str(offset), "--output", "json"])
+        if out is None:
             if not collected:
-                return None, "multica issue list 不可用（离线？）"
-            note = f"第 {page} 页拉取失败，已返回前 {len(collected)} 条"
+                return None, f"multica issue list 不可用（{err}）"
+            note = _join_notes(clamp_note, f"第 {page} 页拉取失败（{err}），已返回前 {len(collected)} 条")
             break
         try:
             data = json.loads(out)
         except json.JSONDecodeError:
             if not collected:
                 return None, "multica 返回 JSON 解析失败"
-            note = f"第 {page} 页 JSON 解析失败，已返回前 {len(collected)} 条"
+            note = _join_notes(clamp_note, f"第 {page} 页 JSON 解析失败，已返回前 {len(collected)} 条")
             break
         issues = data.get("issues", data) if isinstance(data, dict) else data
         if not isinstance(issues, list):
             if not collected:
                 return None, "multica 返回结构异常"
-            note = f"第 {page} 页结构异常，已返回前 {len(collected)} 条"
+            note = _join_notes(clamp_note, f"第 {page} 页结构异常，已返回前 {len(collected)} 条")
             break
         if not issues:
             break
@@ -512,7 +546,9 @@ def fetch_all_issues(page_size=200, max_pages=25):
             break
         offset += page_size
     else:
-        note = f"已达最大分页数（{max_pages} 页 × {page_size} 条），结果可能不完整"
+        note = _join_notes(
+            clamp_note,
+            f"已达最大分页数（{max_pages} 页 × {page_size} 条），结果可能不完整")
 
     # 分页期间工作区可能插入新 issue，offset 分页会重复/偏移：按 id 去重
     seen = set()
@@ -528,15 +564,18 @@ def fetch_all_issues(page_size=200, max_pages=25):
     return deduped, note
 
 
-def load_budget(limit=200):
-    """通过 multica issue list 分页读预算 metadata；CLI 不可用返回 (None, "CLI 不可用")。"""
+def load_budget(limit=CLI_MAX_LIMIT):
+    """通过 multica issue list 分页读预算 metadata；CLI 不可用返回 (None, 原因)。
+
+    limit 默认 CLI_MAX_LIMIT（CLI 契约上限）；传入更大值会被夹住并在 note 中留痕。
+    """
     issues, note = fetch_all_issues(page_size=limit)
     if issues is None:
         return None, note
     return filter_budget_issues(issues), note
 
 
-def load_rating_stats(limit=200):
+def load_rating_stats(limit=CLI_MAX_LIMIT):
     """统计 rating.status 分布（异常中心/运行态用）；分页拉取避免 >limit 截断。"""
     issues, note = fetch_all_issues(page_size=limit)
     if issues is None:
@@ -552,7 +591,7 @@ def load_cli_agents():
     不同成员，按 norm 去键会互相覆盖。CLI 不可用 / 返回结构异常时返回 []。
     """
     agents = []
-    out = run_cli(["agent", "list", "--output", "json"])
+    out, _err = run_cli(["agent", "list", "--output", "json"])
     if not out:
         return agents
     try:
@@ -791,6 +830,27 @@ def build_feed(agents_root, months, quarters, agents, use_cli=True):
     else:
         budget_note = "offline（--no-cli）"
 
+    # KA-456：降级必须**在产物里可见**。旧实现把降级说明留在 budget.note /
+    # rating_status_note，而下游只消费 entries / rating_status ⇒「读取失败」
+    # 与「真的为空」在产物里长得一模一样，缺陷因此潜伏两周无人发现。
+    degraded_items = {}
+    if budget_note:
+        degraded_items["budget"] = budget_note
+    if use_cli:
+        if rating_note:
+            degraded_items["rating_status"] = rating_note
+    else:
+        degraded_items["rating_status"] = "offline（--no-cli）"
+    degraded = {
+        "any": bool(degraded_items),
+        "mode": "ok" if not degraded_items else ("offline" if not use_cli else "degraded"),
+        "items": degraded_items,
+        # 整体读取失败（None）的读数：产物中会退化成「空」，必须点名才可区分
+        "failed_reads": [name for name, val in
+                         (("budget", budget), ("rating_status", rating_stats))
+                         if val is None],
+    }
+
     return {
         "meta": {
             "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -805,6 +865,7 @@ def build_feed(agents_root, months, quarters, agents, use_cli=True):
         "quarterly": quarterly,
         "events": events,
         "anti_distortion": distortion,
+        "degraded": degraded,
         "budget": {"entries": budget, "note": budget_note},
         "runtime": {
             **runtime_state(agents_root, dirs),

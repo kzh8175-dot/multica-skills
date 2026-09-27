@@ -1,8 +1,8 @@
-# 智能看板 · 数据接口契约（KA-96 里程碑 1 · KA-97 迭代 0 收敛 · KA-98 迭代 1 分页）
+# 智能看板 · 数据接口契约（KA-96 里程碑 1 · KA-97 迭代 0 收敛 · KA-98 迭代 1 分页 · KA-456 参数契约与降级可见）
 
 > 归属：KA-96 智能看板研发立项 · 协作人：开发者工具工程师（聚合器/结算数据接口对接）
 > 面向：前端工程师（页面实现）、数据可视化工程师（真实数据接入 + 图表）
-> 状态：接口 v1.0 已落地（`src/dashboard-data-feed.py`）；KA-97 迭代 0 完成**单一数据源收敛**；KA-98 #7 完成 **CLI 分页拉取**（35 条测试全通过）
+> 状态：接口 v1.0 已落地（`src/dashboard-data-feed.py`）；KA-97 迭代 0 完成**单一数据源收敛**；KA-98 #7 完成 **CLI 分页拉取**；KA-456 修正 **`--limit` 越界**并让降级在产物中可见（47 条测试全通过）
 
 ## 0. 单一数据源收敛（KA-97 · #3）
 
@@ -24,12 +24,44 @@
 - **背景**：预算与 rating.status 计数经 `multica issue list` 只读拉取，旧实现单次
   `--limit 200`，工作区 issue >200 时静默截断尾部（预算条目漏、pending 计数偏少）。
 - **修复**：`fetch_all_issues()` 按页拉取（`--limit/--offset`），直到空页 / 非满页 /
-  `has_more=false` / 达最大页数（25 页 × 200），并对分页期间新插入 issue 按 id 去重。
-  预算/pending 计数全量覆盖，不再有 200 上限截断；后续页失败时降级返回已拉取部分
+  `has_more=false` / 达最大页数（25 页），并对分页期间新插入 issue 按 id 去重。
+  预算/pending 计数全量覆盖，不再有单页上限截断；后续页失败时降级返回已拉取部分
   并附 `note` 说明。
-- **回归**：`TestCliPagination` 13 条——超量（>200）时预算/pending 跨页不漏、
+- **回归**：`TestCliPagination` 覆盖超量时预算/pending 跨页不漏、
   精确倍数、空工作区、CLI 不可用、中途页失败部分返回、达最大页数、老 CLI 裸数组、
   跨页去重、note 传播。
+
+## 0.2 CLI 参数契约与降级可见（KA-456）
+
+- **缺陷**：KA-98 的分页修复把页大小写成字面量 `200`，而 `multica issue list --limit`
+  的**服务端硬上限是 100**：
+
+  ```
+  $ multica issue list --limit 200 --offset 0 --output json
+  rc=1  --limit must be between 1 and 100 (the server returns at most 100 issues
+        per request); use --offset to page through more
+  ```
+
+  首页即 `rc=1` ⇒ `fetch_all_issues` 直接返回 `None` ⇒ `budget.sop == []`、
+  `runtime.ratingStatus == {}` 两张表**同时恒空**，而刷新任务 `exit=0`、日志全 `✓`。
+  更糟的是旧 `run_cli` 丢弃 stderr，降级说明只能写成「multica issue list 不可用（**离线？**）」
+  —— 把**参数契约破裂**误报成网络不可达，把排查方向从「改一个数字」带偏到「查网络」。
+- **修复**：
+  1. `CLI_MAX_LIMIT = 100` 常量集中在模块头，默认值全部取它
+     （`fetch_all_issues(page_size=CLI_MAX_LIMIT)` / `load_budget(limit=…)` /
+     `load_rating_stats(limit=…)`）；
+  2. `fetch_all_issues` 在**边界处**收敛越界值：`page_size > CLI_MAX_LIMIT` 夹到上限
+     并记入 `note`（调用方违约不再等于整表丢失，但违约本身仍留痕）；
+  3. `run_cli()` 改为返回 `(stdout, error)`，`error` 携带 **CLI 原文 + 退出码**，
+     降级说明复述事实而非猜测；`_join_notes()` 保证多条降级说明不互相覆盖。
+- **降级可见（本缺陷潜伏两周的直接原因）**：`build_feed` 早已产出 `budget.note` /
+  `rating_status_note`，但下游只消费 `entries` / `rating_status` ⇒「读取失败」与
+  「真的为空」在产物里**长得一模一样**。现在新增顶层 `degraded` 块（见 §4），由
+  `generate-dashboard-data.py` 透传到 `meta.degraded`，并让刷新任务在降级时
+  **退出码 3**、日志打 `⚠ 降级`（退出码分轨口径见 `dashboard/README.md`）。
+- **测试**：`FakeMulticaCli` 复刻真 CLI 的 `--limit` 契约（假实现不得比被替换的对象更宽松），
+  越界调用在测试里同样失败；`test_cli_max_limit_is_pinned_to_real_cli` 把
+  `CLI_MAX_LIMIT` 钉在真 CLI 上（上限放宽或收紧都会报警）。
 
 ## 1. 一句话
 
@@ -119,10 +151,18 @@ python3 src/dashboard-data-feed.py --no-cli --pretty
                           "corrections": [{ "rule","action","from","to" }] }
     }
   },
+  "degraded": {                    // KA-456：降级必须在产物里可见
+    "any": false,                  // 是否有任何读数降级
+    "mode": "ok",                  // "ok" | "degraded" | "offline"
+    "items": {},                   // {"budget"|"rating_status": "<降级原文>"}
+    "failed_reads": []             // 整体读取失败（值为 None）的读数名
+                                   // 产物中它们退化成空 → 只有这里能区分
+                                   // 「读取失败」与「真的为空」
+  },
   "budget": {
     "entries": [ { "issue","identifier","title","status",
                    "ceiling","spent","variance" } ],  // 只含带 budget.* 的 issue
-    "note": null | "offline（--no-cli）"
+    "note": null | "offline（--no-cli）" | "<降级原文>"
   },
   "runtime": {
     "settlement_last_run", "aggregation_last_run", "review_last_run",  // UTC 时基

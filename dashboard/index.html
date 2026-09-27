@@ -294,6 +294,11 @@ svg { display: block; }
 .src-tag:hover::after { opacity: 1; transform: translateY(0); }
 .src-tag.field { background: var(--primary-50); color: var(--primary-700); border-color: var(--primary-100); }
 .src-note { font-size: 11.5px; color: var(--text-3); }
+  /* KA-456：降级横幅——「读取失败」与「真的为空」在页面上必须看起来不一样 */
+  .degraded-banner { display: block; margin: 0 0 10px; padding: 8px 12px; border-radius: 8px;
+    background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger);
+    font-size: 12.5px; font-weight: 600; }
+  .degraded-banner .src-note { color: var(--danger); opacity: .8; }
 
 /* ---------- 徽标 / Pill ---------- */
 .pill {
@@ -1234,9 +1239,34 @@ function meanObjective() {
   return s / w.length;
 }
 
+/* ================= 降级提示（KA-456） ================= */
+/* 产物中的空值可能来自「读取失败」而非「真的为空」——meta.degraded 由
+   dashboard-data-feed.py 透传（any/mode/items/failed_reads），这里显式提示，
+   界面不再把降级当空值渲染。 */
+var READ_LABELS = { budget: '预算 / SOP', rating_status: '升级队列（rating.status）' };
+function degradedBanner(only) {
+  var dg = D.meta && D.meta.degraded;
+  if (!dg || !dg.any || dg.mode === 'ok') return '';
+  if (only && !(dg.items && dg.items[only])) return '';
+  if (dg.mode === 'offline') {
+    return '<span class="degraded-banner">离线模式（--no-cli）：预算 / 升级队列计数未接入，' +
+           '页面相关数值不代表真实为空。</span>';
+  }
+  var names = (only ? [only] : (dg.failed_reads || [])).map(function (n) {
+    return READ_LABELS[n] || n;
+  });
+  var detail = (dg.items && (dg.items[only] || dg.items.budget || dg.items.rating_status)) || '';
+  detail = String(detail).replace(/[<>]/g, '');
+  return '<span class="degraded-banner">⚠ 数据不完整：' +
+         (names.length ? names.join('、') + ' 读取失败' : '部分读数降级') +
+         ' —— 页面上对应的空值 <b>不代表真的为空</b>。' +
+         (detail ? '<span class="src-note">（' + detail + '）</span>' : '') + '</span>';
+}
+
 /* ================= 总览 ================= */
 function renderOverview() {
   document.getElementById('ov-desc').innerHTML =
+    degradedBanner() +
     '智能体评分全貌 · 数据每日 00:30 结算（R-41），月末聚合（R-51）；Q3 人评待运行 → 综合分/等级为<span class="est-tag">参考（预估）</span> · 有数据 <b>' + D.meta.agentsWithData + ' / ' + D.meta.agentCount + '</b> 个智能体 · <span class="src-note">' + D.meta.note + '</span>';
 
   var kpis = [];
@@ -1599,6 +1629,7 @@ function renderEvents() {
 /* ================= 预算 ================= */
 function renderBudget() {
   document.getElementById('bd-desc').innerHTML =
+    degradedBanner('budget') +
     '积分预算（R-42 基准推导）+ SOP 项目预算（平台元数据）· budget.ceiling / spent / variance · 每周预算对账';
   var b = D.budget.points;
   var kpis = [
@@ -1695,6 +1726,7 @@ function renderPromotion() {
 /* ================= 异常中心 ================= */
 function renderEscalation() {
   document.getElementById('es-desc').innerHTML =
+    degradedBanner('rating_status') +
     '数据缺口 / 解析告警 / 防失真标记 · E-01~E-07 跟踪 · SLA（季度人评后统一判定）';
   var anoms = D.anomalies;
   var pending = anoms.filter(function (x) { return x.status === '待处理'; }).length;

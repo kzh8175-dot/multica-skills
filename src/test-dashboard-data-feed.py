@@ -19,6 +19,7 @@ import importlib.util
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -492,11 +493,11 @@ class TestSingleSourceConvergence(unittest.TestCase):
         agents = feed.discover_agents(self.root, feed.scoring_dirs(self.root))
         data = feed.build_feed(self.root, ["2026-08"], ["2026-Q3"], agents,
                                use_cli=False)
-        # 顶层结构 = Schema v1.0 八段，无 derived 派生块
+        # 顶层结构 = Schema v1.0 八段 + degraded 降级标记（KA-456），无 derived 派生块
         self.assertEqual(
             set(data.keys()),
             {"meta", "agents", "monthly", "quarterly", "events",
-             "anti_distortion", "budget", "runtime"})
+             "anti_distortion", "budget", "runtime", "degraded"})
         self.assertNotIn("derived", data)
         # 智能体条目不含 loader 分叉口径
         for a in data["agents"]:
@@ -523,14 +524,60 @@ class TestSingleSourceConvergence(unittest.TestCase):
             data["quarterly"]["2026-Q3"]["仅月度智能体"]["objective"], 9)
 
 
-class TestCliPagination(unittest.TestCase):
-    """KA-98 #7：issue list 分页拉取，避免 `--limit 200` 截断预算/pending 计数。
+class FakeMulticaCli:
+    """multica CLI 假实现：**复刻真 CLI 的参数契约**（KA-456）。
 
-    回归覆盖超量场景：工作区 issue >200 时，预算条目与 rating.status 分布
-    必须从全部页拉取，不能只取首页（旧实现静默截断尾部）。
+    旧假实现无脑接受任何 `--limit`，于是 `page_size=200` 在单测里全绿、
+    在真 CLI 上首页即 `rc=1` —— 预算/SOP 与 ratingStatus 两张表同时静默归零。
+    判据：**假实现不得比被替换的对象更宽松**；越界调用必须像真 CLI 一样失败。
     """
 
-    def page(self, items, offset=0, limit=200, total=None, has_more=None):
+    # 真 CLI 实测原文（2026-09-28）：
+    #   rc=1  --limit must be between 1 and 100 (the server returns at most
+    #         100 issues per request); use --offset to page through more
+    LIMIT_ERROR = ("rc=1：--limit must be between 1 and {m} "
+                   "(the server returns at most {m} issues per request); "
+                   "use --offset to page through more")
+
+    def __init__(self, pages, fail_offsets=()):
+        """pages: {offset: payload(str)} 或 serve(offset) -> payload(str) | None。
+
+        返回 None 表示该页 rc=1（页不存在 / 上游抖动）。fail_offsets 显式指定
+        必然失败的页，用于「中途失败保留部分结果」用例。
+        """
+        self.pages = pages
+        self.fail_offsets = set(fail_offsets)
+        self.calls = []
+        self.limits = []        # 每次调用实际传出的 --limit
+        self.violations = []    # 超出 CLI 上限的调用（真 CLI 会 rc=1）
+
+    def __call__(self, args):
+        self.calls.append(args)
+        limit = int(args[args.index("--limit") + 1])
+        offset = int(args[args.index("--offset") + 1])
+        self.limits.append(limit)
+        if not 1 <= limit <= feed.CLI_MAX_LIMIT:
+            self.violations.append(limit)
+            return None, self.LIMIT_ERROR.format(m=feed.CLI_MAX_LIMIT)
+        if offset in self.fail_offsets:
+            return None, "rc=1：multica: connection refused"
+        payload = self.pages(offset) if callable(self.pages) else self.pages.get(offset)
+        if payload is None:
+            return None, "rc=1：multica: connection refused"
+        return payload, None
+
+
+class TestCliPagination(unittest.TestCase):
+    """KA-98 #7：issue list 分页拉取，避免截断预算/pending 计数。
+
+    KA-456：分页参数必须落在 CLI 契约内（`--limit` ≤ 100），越界即首页 rc=1。
+    回归覆盖超量场景：工作区 issue 超过单页上限时，预算条目与 rating.status
+    分布必须从全部页拉取（旧实现静默截断尾部），且**不得越界调用真 CLI**。
+    """
+
+    LIMIT = feed.CLI_MAX_LIMIT
+
+    def page(self, items, offset=0, total=None, has_more=None):
         """构造 multica issue list --output json 的页响应（dict 形态）。"""
         if total is None:
             total = max(offset + len(items), len(items))
@@ -538,7 +585,7 @@ class TestCliPagination(unittest.TestCase):
             has_more = offset + len(items) < total
         return json.dumps({
             "issues": items, "total": total,
-            "limit": limit, "offset": offset, "has_more": has_more,
+            "limit": self.LIMIT, "offset": offset, "has_more": has_more,
         }, ensure_ascii=False)
 
     def issue(self, iid, **md):
@@ -548,178 +595,322 @@ class TestCliPagination(unittest.TestCase):
     def call_offsets(self, calls):
         return [c[c.index("--offset") + 1] for c in calls]
 
-    def test_fetch_single_page_short(self):
-        calls = []
+    def workspace(self, total, decorate=None):
+        """按 CLI 上限切页的合成工作区；末页为非满页（真 CLI 的分页形状）。"""
+        size = self.LIMIT
 
-        def fake_cli(args):
-            calls.append(args)
-            return self.page([self.issue(i) for i in range(50)], offset=0)
+        def serve(offset):
+            n = min(size, total - offset)
+            if n <= 0:
+                return None
+            items = [self.issue(offset + i) for i in range(n)]
+            if decorate:
+                decorate(offset, items)
+            return self.page(items, offset=offset, total=total,
+                             has_more=offset + n < total)
+        return serve
 
-        with mock.patch.object(feed, "run_cli", fake_cli):
+    def full_pages(self, total, has_more=True):
+        """每页都满且 has_more 可控（用于最大页数截断用例）。"""
+        return lambda offset: self.page(
+            [self.issue(offset + i) for i in range(self.LIMIT)],
+            offset=offset, total=total, has_more=has_more)
+
+    # ---------------------------------------------------------- CLI 契约本身
+
+    def test_cli_limit_constant_matches_real_cli(self):
+        self.assertEqual(feed.CLI_MAX_LIMIT, 100)
+
+    def test_loader_defaults_are_within_cli_contract(self):
+        """默认值必须落在契约内——越界默认值 = 每次刷新整表丢失（KA-456）。"""
+        import inspect
+        for fn, param in ((feed.fetch_all_issues, "page_size"),
+                          (feed.load_budget, "limit"),
+                          (feed.load_rating_stats, "limit")):
+            default = inspect.signature(fn).parameters[param].default
+            self.assertLessEqual(default, feed.CLI_MAX_LIMIT, fn.__name__)
+            self.assertGreaterEqual(default, 1, fn.__name__)
+
+    @unittest.skipUnless(shutil.which("multica"), "需要 multica CLI 才能钉住契约")
+    def test_cli_max_limit_is_pinned_to_real_cli(self):
+        """把 CLI_MAX_LIMIT 钉在真 CLI 上：上限放宽或收紧都会在此报警。"""
+        out, err = feed.run_cli(["issue", "list", "--limit",
+                                 str(feed.CLI_MAX_LIMIT + 1),
+                                 "--offset", "0", "--output", "json"])
+        self.assertIsNone(out, "CLI 已接受超过 CLI_MAX_LIMIT 的值——请同步该常量")
+        self.assertIn("between 1 and", err or "")
+        out2, err2 = feed.run_cli(["issue", "list", "--limit",
+                                   str(feed.CLI_MAX_LIMIT),
+                                   "--offset", "0", "--output", "json"])
+        self.assertIsNotNone(out2, f"CLI 拒绝了上限值本身：{err2}")
+
+    # ---------------------------------------------------------- KA-456 回归
+
+    def test_page_size_over_cli_limit_is_clamped_not_fatal(self):
+        """KA-456 回归：旧实现 page_size=200 → 首页 rc=1 → (None, "离线？")，两张表恒空。"""
+        cli = FakeMulticaCli(self.workspace(450))
+        with mock.patch.object(feed, "run_cli", cli):
             issues, note = feed.fetch_all_issues(page_size=200)
+        self.assertEqual(len(issues), 450)              # 不再整表丢失
+        self.assertEqual(cli.violations, [])            # 真 CLI 从未被越界调用
+        self.assertTrue(all(l <= feed.CLI_MAX_LIMIT for l in cli.limits))
+        self.assertIn("超过", note)                     # 越界本身仍留痕
+        self.assertIn("CLI 契约", note)
+
+    def test_clamp_note_survives_max_pages_truncation(self):
+        """两条降级说明不得互相覆盖（旧实现后一条直接覆盖前一条）。"""
+        cli = FakeMulticaCli(self.full_pages(10_000))
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues(page_size=200, max_pages=2)
+        self.assertEqual(len(issues), 2 * self.LIMIT)
+        self.assertIn("超过", note)
+        self.assertIn("已达最大分页数", note)
+
+    def test_cli_failure_note_quotes_cli_error_not_offline_guess(self):
+        """KA-456：降级说明必须复述 CLI 原文，不能把契约破裂猜成「离线？」。"""
+        cli = FakeMulticaCli({}, fail_offsets=[0])
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
+        self.assertIsNone(issues)
+        self.assertIn("rc=1", note)
+        self.assertIn("connection refused", note)
+        self.assertNotIn("离线？", note)
+
+    # ---------------------------------------------------------- 分页行为
+
+    def test_fetch_single_page_short(self):
+        cli = FakeMulticaCli(self.workspace(50))
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
         self.assertEqual(len(issues), 50)
         self.assertIsNone(note)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(cli.calls), 1)
 
     def test_fetch_paginates_over_page_size(self):
-        # 250 条：page1 满 200（has_more），page2 余 50
-        calls = []
-
-        def fake_cli(args):
-            calls.append(args)
-            offset = int(args[args.index("--offset") + 1])
-            if offset == 0:
-                return self.page([self.issue(i) for i in range(200)],
-                                 offset=0, total=250)
-            return self.page([self.issue(i) for i in range(200, 250)],
-                             offset=200, total=250)
-
-        with mock.patch.object(feed, "run_cli", fake_cli):
-            issues, note = feed.fetch_all_issues(page_size=200)
+        # 250 条：page1/page2 满 100（has_more），page3 余 50
+        cli = FakeMulticaCli(self.workspace(250))
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
         self.assertEqual(len(issues), 250)
         self.assertIsNone(note)
-        self.assertEqual(self.call_offsets(calls), ["0", "200"])
+        self.assertEqual(self.call_offsets(cli.calls), ["0", "100", "200"])
 
     def test_fetch_exact_multiple_stops_on_has_more_false(self):
-        # 恰好 400 条：page2 满页但 has_more=false → 停止，不多拉
-        calls = []
-
-        def fake_cli(args):
-            calls.append(args)
-            offset = int(args[args.index("--offset") + 1])
-            if offset == 0:
-                return self.page([self.issue(i) for i in range(200)],
-                                 offset=0, total=400, has_more=True)
-            return self.page([self.issue(i) for i in range(200, 400)],
-                             offset=200, total=400, has_more=False)
-
-        with mock.patch.object(feed, "run_cli", fake_cli):
-            issues, note = feed.fetch_all_issues(page_size=200)
-        self.assertEqual(len(issues), 400)
+        # 恰好 200 条：page2 满页但 has_more=false → 停止，不多拉
+        cli = FakeMulticaCli(self.workspace(200))
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
+        self.assertEqual(len(issues), 200)
         self.assertIsNone(note)
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(cli.calls), 2)
 
     def test_fetch_empty_workspace(self):
-        def fake_cli(args):
-            return self.page([], offset=0, total=0, has_more=False)
-
-        with mock.patch.object(feed, "run_cli", fake_cli):
+        cli = FakeMulticaCli({0: self.page([], offset=0, total=0, has_more=False)})
+        with mock.patch.object(feed, "run_cli", cli):
             issues, note = feed.fetch_all_issues()
         self.assertEqual(issues, [])
         self.assertIsNone(note)
 
     def test_fetch_cli_unavailable(self):
-        with mock.patch.object(feed, "run_cli", return_value=None):
+        with mock.patch.object(feed, "run_cli",
+                               return_value=(None, "rc=1：multica: connection refused")):
             issues, note = feed.fetch_all_issues()
         self.assertIsNone(issues)
         self.assertIn("不可用", note)
+        self.assertIn("connection refused", note)
 
     def test_fetch_midway_page_failure_keeps_partial(self):
-        def fake_cli(args):
-            offset = int(args[args.index("--offset") + 1])
-            if offset == 0:
-                return self.page([self.issue(i) for i in range(200)],
-                                 offset=0, total=500)
-            return None
-
-        with mock.patch.object(feed, "run_cli", fake_cli):
-            issues, note = feed.fetch_all_issues(page_size=200)
-        self.assertEqual(len(issues), 200)
+        cli = FakeMulticaCli(self.workspace(500), fail_offsets=[self.LIMIT])
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
+        self.assertEqual(len(issues), self.LIMIT)
         self.assertIn("第 2 页拉取失败", note)
 
     def test_fetch_max_pages_truncation_note(self):
         # 每页都满且 has_more=true → 达最大页数后停止并给降级说明
-        def fake_cli(args):
-            offset = int(args[args.index("--offset") + 1])
-            return self.page([self.issue(offset + i) for i in range(200)],
-                             offset=offset, total=10_000, has_more=True)
-
-        with mock.patch.object(feed, "run_cli", fake_cli):
-            issues, note = feed.fetch_all_issues(page_size=200, max_pages=3)
-        self.assertEqual(len(issues), 600)
+        cli = FakeMulticaCli(self.full_pages(10_000))
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues(max_pages=3)
+        self.assertEqual(len(issues), 3 * self.LIMIT)
         self.assertIn("已达最大分页数", note)
 
     def test_fetch_bare_list_response_fallback(self):
         # 老 CLI 可能直接返回数组（无 has_more）：按非满页判断终止
-        calls = []
-
-        def fake_cli(args):
-            calls.append(args)
-            offset = int(args[args.index("--offset") + 1])
-            return json.dumps([self.issue(offset + i) for i in range(50)],
-                              ensure_ascii=False)
-
-        with mock.patch.object(feed, "run_cli", fake_cli):
-            issues, note = feed.fetch_all_issues(page_size=200)
+        cli = FakeMulticaCli({0: json.dumps(
+            [self.issue(i) for i in range(50)], ensure_ascii=False)})
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
         self.assertEqual(len(issues), 50)
         self.assertIsNone(note)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(cli.calls), 1)
 
     def test_fetch_dedupes_ids_across_pages(self):
-        # page1 与 page2 交叠（offset 分页遇并发插入的防御）：按 id 去重
-        def fake_cli(args):
-            offset = int(args[args.index("--offset") + 1])
+        # page1 满页 + page2 与 page1 交叠 10 条（offset 分页遇并发插入的防御）
+        def serve(offset):
             if offset == 0:
-                return self.page([self.issue(i) for i in range(210)],
-                                 offset=0, total=410)
-            return self.page([self.issue(i) for i in range(200, 210)],
-                             offset=200, total=410)
+                return self.page([self.issue(i) for i in range(110)],
+                                 offset=0, total=210)
+            return self.page([self.issue(i) for i in range(100, 110)],
+                             offset=100, total=210)
 
-        with mock.patch.object(feed, "run_cli", fake_cli):
-            issues, note = feed.fetch_all_issues(page_size=200)
-        self.assertEqual(len(issues), 210)          # 200 + 10 不重复
+        cli = FakeMulticaCli(serve)
+        with mock.patch.object(feed, "run_cli", cli):
+            issues, note = feed.fetch_all_issues()
+        self.assertEqual(len(issues), 110)          # 100 + 10 不重复
         self.assertIsNone(note)
 
     def test_load_budget_includes_overflow_entries(self):
-        # >200 条时预算条目分布在第 1/2 页 → 两页都要进 budget（旧 --limit 200 漏尾部）
-        def fake_cli(args):
-            offset = int(args[args.index("--offset") + 1])
+        # 250 条时预算条目分布在第 1/3 页 → 三页都要进 budget（旧 --limit 截断漏尾部）
+        def decorate(offset, items):
             if offset == 0:
-                p1 = [self.issue(i) for i in range(200)]
-                p1[0] = self.issue(0, **{"budget.ceiling": 100, "budget.spent": 99,
-                                         "budget.variance": -0.01})
-                return self.page(p1, offset=0, total=250)
-            p2 = [self.issue(200 + i) for i in range(50)]
-            p2[0] = self.issue(200, **{"budget.ceiling": 50, "budget.spent": 65.5,
-                                       "budget.variance": 0.31})
-            return self.page(p2, offset=200, total=250)
+                items[0] = self.issue(0, **{"budget.ceiling": 100, "budget.spent": 99,
+                                            "budget.variance": -0.01})
+            if offset == 200:
+                items[0] = self.issue(200, **{"budget.ceiling": 50, "budget.spent": 65.5,
+                                              "budget.variance": 0.31})
 
-        with mock.patch.object(feed, "run_cli", fake_cli):
+        cli = FakeMulticaCli(self.workspace(250, decorate))
+        with mock.patch.object(feed, "run_cli", cli):
             entries, note = feed.load_budget()
         ids = {e["identifier"] for e in entries}
         self.assertIn("KA-000", ids)      # 首页预算
-        self.assertIn("KA-200", ids)      # 第 2 页预算（旧 --limit 200 会漏掉）
+        self.assertIn("KA-200", ids)      # 末页预算（单页截断会漏掉）
         self.assertEqual(len(entries), 2)
         self.assertIsNone(note)
 
     def test_load_rating_stats_includes_overflow(self):
-        def fake_cli(args):
-            offset = int(args[args.index("--offset") + 1])
-            if offset == 0:
-                p1 = [self.issue(i, **{"rating.status": "pending"})
-                      for i in range(200)]
-                return self.page(p1, offset=0, total=250)
-            p2 = [self.issue(200 + i, **{"rating.status": "escalated"})
-                  for i in range(50)]
-            return self.page(p2, offset=200, total=250)
+        def decorate(offset, items):
+            status = "pending" if offset == 0 else "escalated"
+            for it in items:
+                it["metadata"] = {"rating.status": status}
 
-        with mock.patch.object(feed, "run_cli", fake_cli):
+        cli = FakeMulticaCli(self.workspace(250, decorate))
+        with mock.patch.object(feed, "run_cli", cli):
             stats, note = feed.load_rating_stats()
-        self.assertEqual(stats["pending"], 200)
-        self.assertEqual(stats["escalated"], 50)     # 旧 --limit 200 会漏掉
+        self.assertEqual(stats["pending"], 100)
+        self.assertEqual(stats["escalated"], 150)     # 单页截断会漏掉
         self.assertIsNone(note)
 
     def test_load_budget_returns_note_on_cli_failure(self):
-        with mock.patch.object(feed, "run_cli", return_value=None):
+        with mock.patch.object(feed, "run_cli", return_value=(None, "rc=1：boom")):
             entries, note = feed.load_budget()
         self.assertIsNone(entries)
         self.assertIn("不可用", note)
 
     def test_load_rating_stats_returns_note_on_cli_failure(self):
-        with mock.patch.object(feed, "run_cli", return_value=None):
+        with mock.patch.object(feed, "run_cli", return_value=(None, "rc=1：boom")):
             stats, note = feed.load_rating_stats()
         self.assertIsNone(stats)
         self.assertIn("不可用", note)
+
+
+class TestDegradedVisibility(unittest.TestCase):
+    """KA-456：降级必须在**产物里**可见。
+
+    缺陷潜伏两周的直接原因：build_feed 已产出 budget.note / rating_status_note，
+    但下游 generate-dashboard-data.py 只消费 entries / rating_status —— 于是
+    「读取失败」与「真的为空」在产物里长得一模一样。
+    """
+
+    def setUp(self):
+        self.root, self.dirs = seed_fixture(*make_agents_root())
+
+    def tearDown(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def build(self, budget, rating):
+        agents = feed.discover_agents(self.root, feed.scoring_dirs(self.root))
+        with mock.patch.object(feed, "load_budget", return_value=budget), \
+                mock.patch.object(feed, "load_rating_stats", return_value=rating):
+            return feed.build_feed(self.root, ["2026-08"], ["2026-Q3"], agents,
+                                   use_cli=True)
+
+    def test_read_failure_is_marked_degraded(self):
+        reason = ("multica issue list 不可用（rc=1：--limit must be between 1 "
+                  "and 100 ...）")
+        data = self.build((None, reason), (None, reason))
+        degraded = data["degraded"]
+        self.assertTrue(degraded["any"])
+        self.assertEqual(degraded["mode"], "degraded")
+        self.assertEqual(sorted(degraded["failed_reads"]),
+                         ["budget", "rating_status"])
+        self.assertIn("between 1 and 100", degraded["items"]["budget"])
+        # 产物里的空值与「真的为空」仍同形，但 failed_reads 已能点名区分
+        self.assertIsNone(data["budget"]["entries"])
+        self.assertIsNone(data["runtime"]["rating_status"])
+
+    def test_clean_read_is_not_degraded(self):
+        data = self.build(([], None),
+                          ({"pending": 0, "escalated": 0, "credited": 1}, None))
+        self.assertFalse(data["degraded"]["any"])
+        self.assertEqual(data["degraded"]["mode"], "ok")
+        self.assertEqual(data["degraded"]["failed_reads"], [])
+        self.assertEqual(data["degraded"]["items"], {})
+
+    def test_partial_degradation_names_only_the_failed_read(self):
+        data = self.build(([], None),
+                          (None, "第 2 页拉取失败（rc=1：boom），已返回前 100 条"))
+        self.assertTrue(data["degraded"]["any"])
+        self.assertEqual(data["degraded"]["failed_reads"], ["rating_status"])
+        self.assertNotIn("budget", data["degraded"]["items"])
+        self.assertIn("rating_status", data["degraded"]["items"])
+
+    def test_offline_is_a_distinct_mode(self):
+        """--no-cli 是操作者显式选择，不与「读取失败」混为一谈。"""
+        agents = feed.discover_agents(self.root, feed.scoring_dirs(self.root))
+        data = feed.build_feed(self.root, ["2026-08"], ["2026-Q3"], agents,
+                               use_cli=False)
+        self.assertEqual(data["degraded"]["mode"], "offline")
+        self.assertTrue(data["degraded"]["any"])
+
+
+class TestGeneratorDegradedExitCode(unittest.TestCase):
+    """KA-456：产物降级必须让刷新任务**退出码非 0**。
+
+    缺陷的原始签名是「发布不完整数据 + exit=0 + 日志全 ✓」。产物落盘仍带
+    meta.degraded 标记，但退出码必须让调度侧的 L1 判据看得见。
+    退出码 3 = 输入不可用（沿用 runbook §3 KA-356 分轨：不占 P1）。
+    """
+
+    SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+    GEN = os.path.normpath(os.path.join(SRC, "..", "dashboard",
+                                        "generate-dashboard-data.py"))
+    FEED = os.path.normpath(os.path.join(SRC, "dashboard-data-feed.py"))
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="gen-test-")
+        self.prod = os.path.join(self.tmp, "prod")
+        os.makedirs(os.path.join(self.prod, "agents"), exist_ok=True)
+        self.out = os.path.join(self.tmp, "dashboard-data.js")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def run_gen(self, env=None, extra=()):
+        cmd = [sys.executable, self.GEN, "--prod-root", self.prod,
+               "--feed-script", self.FEED, "--out", self.out, *extra]
+        return subprocess.run(cmd, capture_output=True, text=True,
+                              env=env or os.environ.copy(), timeout=120)
+
+    def test_offline_mode_exits_zero_and_marks_offline(self):
+        proc = self.run_gen(extra=("--no-cli",))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        with open(self.out, encoding="utf-8") as f:
+            body = f.read()
+        self.assertIn('"mode": "offline"', body)
+
+    @unittest.skipUnless(shutil.which("multica"), "需要 multica CLI 才能构造读取失败")
+    def test_cli_read_failure_exits_3_and_marks_degraded(self):
+        # PATH 摘掉 multica → load_budget/load_rating_stats 首页即失败
+        env = dict(os.environ, PATH="/nonexistent")
+        proc = self.run_gen(env=env)
+        self.assertEqual(proc.returncode, 3, proc.stdout + proc.stderr)
+        self.assertIn("⚠ 降级", proc.stdout)
+        self.assertIn("整体读取失败: budget/rating_status", proc.stdout)
+        with open(self.out, encoding="utf-8") as f:
+            body = f.read()
+        self.assertIn('"failed_reads"', body)
+        self.assertIn('"budget"', body)
 
 
 if __name__ == "__main__":

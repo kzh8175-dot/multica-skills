@@ -42,6 +42,29 @@
 - 定时：`crontab-dashboard.conf`（每日 01:45 Asia/Shanghai，晚于结算 00:30 与聚合 01:15），
   待接入 Multica autopilot schedule trigger。
 
+### 退出码与降级（KA-456 · 2026-09-28）
+
+2026-09-27 刷新 run（KA-446）实测发现：`dashboard-data-feed.py` 以 `--limit 200` 调用
+`multica issue list`，而 CLI 硬上限为 100 ⇒ 首页即 `rc=1` ⇒ `budget.sop` 与
+`runtime.ratingStatus` **两张表同时恒空**，而任务 `exit=0`、日志全 `✓`、无告警，
+该状态已持续约两周未被发现。修复后：
+
+- `exit=0`：读数完整；
+- `exit=3`：**读数降级**（CLI 不可用 / 分页中途失败 / 参数契约破裂）。产物仍落盘并带
+  `meta.degraded` 标记（`any/mode/items/failed_reads`），日志打 `⚠ 降级` 与
+  `⚠ 预算` / `⚠ 升级队列`；调度侧 L1 告警应按**输入可用性**归因（沿用评分系统
+  runbook §3 KA-356 分轨），不是脚本逻辑故障；
+- `exit=2`：生成器自身故障（feed 脚本缺失等）→ P1。
+
+验证（2026-09-28，非破坏性：在 `prod/dashboard` 的临时副本上跑，未改动生产文件）：
+
+| 场景 | 修复前 | 修复后 |
+|------|--------|--------|
+| 真 CLI 正常 | `SOP 行 0` / `ratingStatus {}` / exit 0 | `SOP 行 7` / `pending 4 · escalated 0 · credited 283` / exit 0 |
+| CLI 不可用 | 全 `✓` / exit 0 | `⚠ 降级` 三项 / exit 3 |
+
+`meta.degraded` 使「读取失败」与「真的为空」在产物中可区分——这正是该缺陷潜伏两周的直接原因。
+
 ## 访问验证（2026-08-17）
 
 | 页 | 直达锚点 | 数据源字段 | 验证 |
