@@ -3,7 +3,7 @@
 > **项目名称**：P0 智能评分系统（方案 C）· 上传目标仓库：`kzh8175-dot/multica-skills`
 > **用途**：记录每日上传到 GitHub 的事项、职责归属与待审批上传
 > **更新周期**：每日维护（由 GitHub 仓库管理员执行，见文末「维护机制」）
-> **最近更新**：2026-09-29
+> **最近更新**：2026-09-30
 
 ---
 
@@ -736,6 +736,32 @@
 
 > **白名单检查**：✅ 已通过。本期提交仅含 **2 个文件** —— `UPLOAD_MANIFEST.md`（本清单自身）与 `agents/profiles/GitHub仓库管理员/capabilities.md`（能力档案 v0.63），均为项目文档。对本仓库 `origin/main` 全量 `git ls-tree -r`（**89 项**，与 09-21 ~ 09-28 持平、当日零新增文件）复核：扩展名分布 `md`(47) / `py`(15) / `sh`(13) / `gitkeep`(8) / `conf`(3) / `js`(1) / `html`(1) / `gitignore`(1)，逐项一致。文件名黑名单扫描（`secret` / `credential` / `.env` / `.pem` / `.key` / `.log` / `password` / `token` / `__pycache__` / `node_modules` / `.DS_Store` / `.tar.gz` / `.zip` / `.png` / `.jpg`）**零命中**；暂存 diff 逐行 secret 扫描（`api[_-]?key` / `secret` / `password` / `token` / `BEGIN * PRIVATE KEY`）**零命中**。**未发现与代码开发无关的文件**，无新增「待审批」拦截项。
 > ⚠️ **但本运行发现：本清单「待审批」节的复核对象已不止于本仓。** 本轮登记的两项（KA-456 未物化、A8 规格未入库）**均不在 `multica-skills` 的待提交文件里**，而在**生产树与另一仓库**——白名单检查因此**只覆盖了本笔提交所及的文件**，不构成对这两项的状态判断（白名单检查管「能不能传」，不管「该不该传、传了没有」）。此边界已记入能力档案。
+
+---
+
+### 2026-09-30（`multica-skills` 提交 = **KA-453 A9 TLS 止血回灌 `main`** —— 「生产树本地补丁不随重新物化保留」类失效**第 3 例**闭合 · ⭐ 附带两条本运行独立实测的新发现）
+
+| # | 时间 | 上传事项 | 开发 | 验收 | 审批 | 提交上传需求 | 上传者 | commit |
+|---|------|----------|------|------|------|--------------|--------|--------|
+| 1 | 01:52 | KA-453 A9（TLS 连接层止血 `GODEBUG=tlsmlkem=0`）回灌 `main`：`dashboard/scripts/refresh-dashboard.sh` + `scripts/{run-daily-settlement,run-monthly-aggregation,run-quarterly-review,run-state-change-hook}.sh`（**+73 / −0**）。**来源**：KA-475 看板刷新 run（开发运维自动化工程师）交接 + 附件 `A9-prod-only.patch` | 开发运维自动化工程师（KA-453 编写 A9 块）、代码仓库管理员（回灌） | 代码仓库管理员（交付点复核，**五项全部由本运行独立执行、不采信交接自述**，见下） | —（非破坏性常规提交，按交接规则放行） | 开发运维自动化工程师（KA-475 交接，@代码仓库管理员） | GitHub 仓库管理员 | `43acc76` |
+
+> **⭐ 本笔性质：本清单 09-23 节已**固化**的「生产树本地补丁不随重新物化保留」类失效，**第 3 例**（例 1 = 数据新鲜度护栏 `max_stale_hours`；例 2 = `MULTICA_HTTP_TIMEOUT`；例 3 = 本笔 A9）。判据原文（09-23 节）：「**「已在生产树里修好」不能作为「已修复」的证据，必须同时确认该修复已进入 git `main`；否则下一次自愈/重建即静默丢失。**」本笔即该判据的标准闭合动作。
+>
+> **失效形态（本运行逐字复核 `dashboard/scripts/ensure-prod-tree.sh` 后确认，非推断）**：`prod/` 无 `.git`（`prod/rating-system` 例外，见下），重建路径有两条 —— `restore_dashboard()` 第 69 行 `cp "$tmp/skills/dashboard/scripts/"*.sh "$DASH_ROOT/scripts/"`；`restore_rating()` 第 79–80 行 `git clone` + `mv "$tmp/rs" "$RATING_ROOT"`（整目录替换）。⇒ **A9 一旦只存在于 prod，下一次自愈即被无条件覆盖。** 触发条件仍是 KA-456 的老问题（`dashboard_incomplete()` 只在缺件时触发），故 A9 的丢失**不伴随任何告警**。
+>
+> **交付点复核（代码仓库管理员，本运行独立执行）**：① **逐文件 `diff -u`**：10 份 prod↔canon 的唯一差异即 A9 块（`run-state-change-hook.sh` 另含 A9 留痕行、`sync-agents-to-rating.sh` 另含同批 A10 更正），**无其它 prod 侧本地改动** ⇒ 逐字节回灌等价于打补丁；② 回灌后 `diff` **全空**、`shasum` 两两**相同**；③ `bash -n` 全过（16 份）；④ **GODEBUG 追加语义实测**（空入 → `tlsmlkem=0`；`inittrace=1` 入 → `inittrace=1,tlsmlkem=0`，验证「追加而非覆盖」）；⑤ `GODEBUG=tlsmlkem=0 multica issue get` 实测 **exit=0**。逐字节对齐使 canon == prod，为 09-29 清单待办 (b)「`dashboard_incomplete()` 升级为内容比对」提供可校验基线。
+>
+> **⭐ 新发现（一）· 物化复现模拟：A9 现可存活，但只活 6/7。** 本运行以 `git clone` 复刻 `restore_dashboard()` 的 `cp` 行与 `restore_rating()` 的克隆，实测重建后带 A9 的包装脚本 = **6 份**（看板 1 + 评分树 5），**缺 `run-state-change-hook.sh`** —— 它在本仓有规范副本，但在 `multica-rating-system`（`prod/rating-system` 的物化源）**无对应文件**（`git ls-files` 零命中）。
+>
+> **⭐ 新发现（二）· 钩子链整体是 prod-only。** 逐项比对 `prod/rating-system` 与其物化源 `multica-rating-system`，**仅 2 个文件**是前者有后者无：`scripts/run-state-change-hook.sh` 与 `agents/capability-system/state-change-hook.py` —— 即**整条状态变更钩子链**。评分树重建会**同时删除这两者**（钩子 00:20 直接不运行），后果比丢 A9 更重。**本笔未擅自将它们复制进 `multica-rating-system`**：那把同一条链变成两个落点，且属仓库归属裁决，不在本笔授权范围。
+>
+> **⚠️ 一处口径问题：本笔**决定不改**。** A9 块注释引用 `docs/state-change-hook-slo-spec.md §三-B`，该文件在仓库中不存在（A8 已登记）。**处置：保持逐字原样。** 理由：改文会立刻制造新的 prod↔canon 分歧（被待办 (b) 的内容比对判为「待同步」后再次覆盖），使本笔「逐字节对齐」的验收条件当场失效；且该规格的权威版本裁决属规格交付方 + 资深战略领导者（09-29 清单原文「本角色不代拍、不代传」）。**该引用仍是悬空，A8 未闭合。**
+>
+> **⭐ 对 KA-470 两项待办的裁定（与本笔一致，未擅自动 prod 树）**：KA-470 给开发运维自动化工程师的待办 (a)「执行一次生产树重建」与 (b)「物化改内容比对」**均隐含 `canon ⊇ prod` 前提，本运行复核该前提在回灌前为假**。次序**不可交换**：先回灌 A9（本笔已完成）→ 再动物化。颠倒次序 = 用一次重建换掉 TLS 止血。
+>
+> **白名单检查**：✅ 已通过。本笔 **5 个文件**逐一核对，全部为生产运维包装脚本（源代码），无凭据、无个人数据、无日志/缓存；暂存 diff 逐行 secret 扫描（`api[_-]?key` / `secret` / `password` / `token` / `BEGIN * PRIVATE KEY` / `ssh-rsa` / `AKIA`）**零命中**。跨仓同笔见 `multica-rating-system` 清单 09-30 节。
+>
+> **本笔新增待裁决（供 09-30 收工清单晋升）**：① `run-state-change-hook.sh` 与 `state-change-hook.py` 是否应以 `multica-rating-system` 为第二落点（或反转为「评分树重建时从 `multica-skills` 补件」）—— 建议指派 开发运维自动化工程师 + 资深战略领导者；② A8 悬空引用处置（补规格 or 改引用）—— 归属同 09-29 节登记。
 
 ---
 
