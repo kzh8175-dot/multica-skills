@@ -5,6 +5,20 @@
 #   - 日志：logs/review/YYYY-MM-DD.log
 set -uo pipefail
 
+# ---- KA-453 A9：TLS 连接层止血（GODEBUG=tlsmlkem=0）-------------------------
+# 09-28 钩子 write-error 的根因是本机网络路径丢弃大体积 TLS 握手，而该变量是 CLI
+# 错误报文**自己**给出的缓解手段：`Retry with the environment variable
+# GODEBUG=tlsmlkem=0 set, and keep it set for the CLI and the daemon`。
+# 机制：关闭 ML-KEM（X25519MLKEM768，后量子）密钥交换、回退经典 ECDHE，使
+# ClientHello 变小。可逆；代价是网络路径修好前失去后量子抗性。
+# 范围：环境级，对本脚本派生的**全部** multica CLI 调用同时生效（钩子 / 结算 /
+# 聚合 / 人评 / 巡检 / 同步 / 看板），不止钩子的写路径。
+# 写法：追加而非覆盖 —— GODEBUG 为逗号分隔多键，Go 运行时对重复键取**最后**一次
+# （本机实测：`inittrace=1,inittrace=0` 静默 / `inittrace=0,inittrace=1` 有输出），
+# 故追加即确保生效，同时保留外部已设的其它 GODEBUG 键。
+# 规格：docs/state-change-hook-slo-spec.md §三-B
+export GODEBUG="${GODEBUG:+$GODEBUG,}tlsmlkem=0"
+
 PROD_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 JOB="review"
 LOG_DIR="$PROD_ROOT/logs/$JOB"
